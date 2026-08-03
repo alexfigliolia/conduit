@@ -1,0 +1,20 @@
+{
+  "compilerOptions": {
+    "target": "ES2015",
+    "lib": ["dom", "dom.iterable", "esnext"],
+    "allowJs": true,
+    "skipLibCheck": true,
+    "esModuleInterop": true,
+    "allowSyntheticDefaultImports": true,
+    "strict": true,
+    "forceConsistentCasingInFileNames": true,
+    "noFallthroughCasesInSwitch": true,
+    "module": "esnext",
+    "resolveJsonModule": true,
+    "isolatedModules": true,
+    "noEmit": true,
+    "paths": {}
+  },
+  "include": ["src", "ci", ".eslintrc.cjs", "**/*.json", "**/*.ts", "**/*.js"],
+  "exclude": ["coverage", "dist", "node_modules"]
+}
