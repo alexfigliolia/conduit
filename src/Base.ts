@@ -1,8 +1,8 @@
 import { EventEmitter } from "@figliolia/event-emitter";
 
-import { Status, type IKey, type IReactive, type Mutator } from "./types";
+import { Status, type IKey, type IConduit, type Mutator } from "./types";
 
-export abstract class Base<T extends IReactive<any>> {
+export abstract class Base<T extends IConduit<any>> {
   public lastExecution = 0;
   public readonly key: string;
   public status = Status.UNINITIALIZED;
@@ -57,10 +57,7 @@ export abstract class Base<T extends IReactive<any>> {
     this.setStatus(Status.IDOL);
   }
 
-  private static toCacheInit<T extends IReactive<any>>(
-    key: string,
-    options: T,
-  ) {
+  private static toCacheInit<T extends IConduit<any>>(key: string, options: T) {
     if (!("defaultValue" in options)) {
       return options.getCache().get(key);
     }

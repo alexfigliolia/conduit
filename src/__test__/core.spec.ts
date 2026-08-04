@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import { State } from "@figliolia/galena";
 
-import { ReactivePaginated } from "../ReactivePaginated";
-import { Reactive } from "../Reactive";
+import { ConduitPaginated } from "../ConduitPaginated";
+import { Conduit } from "../Conduit";
 import { Cache } from "../Cache";
 import { Base } from "../Base";
 
@@ -18,7 +18,7 @@ describe("Flow", () => {
       data: true,
       paginated: [1, 2, 3, 4],
     });
-    new ReactivePaginated({
+    new ConduitPaginated({
       getCache: () => cache,
       key: ["paginated"],
       operation: (value: number) => value,
@@ -30,10 +30,10 @@ describe("Flow", () => {
     });
   });
 
-  it("Reactives", async () => {
+  it("Conduits", async () => {
     const globalSub = vi.fn();
     const localSub = vi.fn();
-    const query = new Reactive({
+    const query = new Conduit({
       expiresIn: 1000 * 60 * 5,
       getCache: () => cache,
       key: ["test"],
@@ -57,10 +57,10 @@ describe("Flow", () => {
     unsubscribeGlobal();
   });
 
-  it("Reactive Paginateds", async () => {
+  it("Conduit Paginateds", async () => {
     const globalSub = vi.fn();
     const localSub = vi.fn();
-    const query = new ReactivePaginated({
+    const query = new ConduitPaginated({
       expiresIn: 1000 * 60 * 5,
       getCache: () => cache,
       key: ["test"],

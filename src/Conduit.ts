@@ -1,7 +1,7 @@
-import { Status, type IReactive, type ISetter, type IValueType } from "./types";
+import { Status, type IConduit, type ISetter, type IValueType } from "./types";
 import { Base } from "./Base";
 
-export class Reactive<T extends IReactive<any>> extends Base<T> {
+export class Conduit<T extends IConduit<any>> extends Base<T> {
   public execute(...args: Parameters<T["operation"]>) {
     this.setStatus(Status.COMPUTING);
     const result = this.options.operation(...args);

@@ -1,5 +1,5 @@
 export * from "./Cache";
-export * from "./Reactive";
+export * from "./Conduit";
 export * from "./types";
-export * from "./ReactivePaginated";
+export * from "./PaginatedConduit";
 export * from "./Base";

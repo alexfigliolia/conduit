@@ -1,16 +1,13 @@
 import type { NonFunction } from "@figliolia/galena";
 
-import type { Reactive } from "./Reactive";
+import type { Conduit } from "./Conduit";
 import type { Cache } from "./Cache";
 
 export type IKey = string | (string | number)[];
 
 export type IOperation = (...args: any[]) => NonFunction<any>;
 
-export interface IReactive<
-  O extends IOperation,
-  D = IValueType<O> | undefined,
-> {
+export interface IConduit<O extends IOperation, D = IValueType<O> | undefined> {
   key: IKey;
   operation: O;
   expiresIn?: number;
@@ -18,7 +15,7 @@ export interface IReactive<
   defaultValue?: D;
 }
 
-export interface IReactivePaginated<O extends IOperation> extends IReactive<
+export interface IPaginatedConduit<O extends IOperation> extends IConduit<
   O,
   IValueType<O>[]
 > {
@@ -27,7 +24,7 @@ export interface IReactivePaginated<O extends IOperation> extends IReactive<
 
 export type IValueType<O extends IOperation> = Awaited<ReturnType<O>>;
 
-export type ValueType<T extends Reactive<any>> = Awaited<
+export type ValueType<T extends Conduit<any>> = Awaited<
   ReturnType<T["execute"]>
 >;
 

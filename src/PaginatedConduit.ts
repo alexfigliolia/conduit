@@ -1,17 +1,17 @@
 import {
   type IOperation,
-  type IReactivePaginated,
+  type IPaginatedConduit,
   type IValueType,
   type IPaginatedSetter,
   Status,
 } from "./types";
-import { Reactive } from "./Reactive";
+import { Conduit } from "./Conduit";
 import { Base } from "./Base";
 
-export class ReactivePaginated<O extends IOperation> extends Reactive<
-  IReactivePaginated<O>
+export class PaginatedConduit<O extends IOperation> extends Conduit<
+  IPaginatedConduit<O>
 > {
-  constructor(options: Omit<IReactivePaginated<O>, "defaultValue">) {
+  constructor(options: Omit<IPaginatedConduit<O>, "defaultValue">) {
     const cache = options.getCache();
     const defaultValue =
       cache.get<IValueType<O>[]>(Base.toKey(options.key)) ?? [];
