@@ -1,4 +1,10 @@
-import type { IOperation, IReactivePaginated, IValueType } from "./types";
+import {
+  type IOperation,
+  type IReactivePaginated,
+  type IValueType,
+  type IPaginatedSetter,
+  Status,
+} from "./types";
 import { Reactive } from "./Reactive";
 import { Base } from "./Base";
 
@@ -17,14 +23,15 @@ export class ReactivePaginated<O extends IOperation> extends Reactive<
   }
 
   public execute(...args: Parameters<O>) {
+    this.setStatus(Status.COMPUTING);
     const result = this.options.operation(...args);
     const page = this.options.getPage(args);
     if (result instanceof Promise) {
       void result.then(value => {
-        this.processValue(page, value);
+        this.write(page, value);
       });
     } else {
-      this.processValue(page, result);
+      this.write(page, result);
     }
     return result as ReturnType<O>;
   }
@@ -36,15 +43,19 @@ export class ReactivePaginated<O extends IOperation> extends Reactive<
     for (const _ of value) {
       cache.evict(Base.toKey([this.key, ++idx]));
     }
-    cache.evict(this.key);
+    super.evict();
   }
 
-  private processValue(page: number, value: IValueType<O>) {
+  // @ts-expect-error "type modified for pagination"
+  public override mutate(value: IPaginatedSetter<O>) {
+    this.runMutation(value);
+  }
+
+  private write(page: number, value: IValueType<O>) {
     const cache = this.options.getCache();
     const cachedValue = [...(cache.get<IValueType<O>[]>(this.key) ?? [])];
     cachedValue[page] = value;
-    cache.initialize(this.key, cachedValue);
-    this.lastExecution = performance.now();
+    super.processValue(cachedValue);
     const pageKey = Base.toKey([this.key, page]);
     cache.initialize(pageKey, value);
   }
