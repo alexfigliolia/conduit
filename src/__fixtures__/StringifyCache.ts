@@ -22,7 +22,7 @@ export class StringifyCache {
     this.storage = {};
   }
 
-  private hash(args: any) {
+  protected hash(args: any) {
     return JSON.stringify(args, (_, val) => {
       if (Indexable.isHashTable(val)) {
         return Object.keys(val)

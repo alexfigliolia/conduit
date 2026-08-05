@@ -31,12 +31,14 @@
     "bench": "npx tsx src/__benchmarks__/storage.ts",
     "build": "tsdown",
     "lint": "pnpm oxlint --type-aware --report-unused-disable-directives --fix && pnpm oxfmt",
-    "test": "vitest"
+    "test": "vitest",
+    "visualize": "npx tsx src/__examples__/storage.ts"
   },
   "devDependencies": {
     "@figliolia/event-emitter": "^1.2.0",
     "@figliolia/galena": "^4.0.5",
     "@types/node": "^25.9.3",
+    "chalk": "^4.1.2",
     "mitata": "^1.0.34",
     "oxfmt": "^0.55.0",
     "oxlint": "^1.14.0",

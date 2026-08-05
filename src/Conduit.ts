@@ -1,5 +1,5 @@
-import type { IExecuteOptions, IValueType } from "./types";
 import { type IConduit, type IOperation } from "./types";
+import type { IExecuteOptions, IValueType } from "./types";
 import { Cache } from "./Cache";
 
 export class Conduit<O extends IOperation> {

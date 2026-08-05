@@ -3,18 +3,30 @@ import { run, bench, group, lineplot, summary } from "mitata";
 import { Cache } from "../Cache";
 import { TEST_TYPES } from "../__fixtures__/types";
 import { StringifyCache } from "../__fixtures__/StringifyCache";
+import { OptimizedStringifyCache } from "../__fixtures__/OptimizedStringifyCache";
 
-const stringCache = new StringifyCache();
 const graphCache = new Cache();
+const stringifyCacheWithFlatStorage = new StringifyCache();
+const optimizedStringifyCacheWithFlatStorage = new OptimizedStringifyCache();
 
 group("Storage Comparison - Insertion", () => {
   lineplot(() => {
     summary(() => {
-      bench("Plain Object", () => {
+      bench("Flat Storage with JSON.stringify", () => {
         TEST_TYPES.forEach(type => {
-          stringCache.set(type, type);
+          stringifyCacheWithFlatStorage.set(type, type);
         });
-        return stringCache.get(TEST_TYPES[TEST_TYPES.length - 1]);
+        return stringifyCacheWithFlatStorage.get(
+          TEST_TYPES[TEST_TYPES.length - 1],
+        );
+      });
+      bench("Flat Storage with optimized Stringify", () => {
+        TEST_TYPES.forEach(type => {
+          optimizedStringifyCacheWithFlatStorage.set(type, type);
+        });
+        return optimizedStringifyCacheWithFlatStorage.get(
+          TEST_TYPES[TEST_TYPES.length - 1],
+        );
       });
       bench("Tree Storage", () => {
         TEST_TYPES.forEach(type => {
@@ -29,11 +41,21 @@ group("Storage Comparison - Insertion", () => {
 group("Storage Comparison - Retrieval", () => {
   lineplot(() => {
     summary(() => {
-      bench("Plain Object", () => {
+      bench("Flat Storage with JSON.stringify", () => {
         TEST_TYPES.forEach(type => {
-          stringCache.get(type);
+          stringifyCacheWithFlatStorage.get(type);
         });
-        return stringCache.get(TEST_TYPES[TEST_TYPES.length - 1]);
+        return stringifyCacheWithFlatStorage.get(
+          TEST_TYPES[TEST_TYPES.length - 1],
+        );
+      });
+      bench("Flat Storage with optimized Stringify", () => {
+        TEST_TYPES.forEach(type => {
+          optimizedStringifyCacheWithFlatStorage.get(type);
+        });
+        return optimizedStringifyCacheWithFlatStorage.get(
+          TEST_TYPES[TEST_TYPES.length - 1],
+        );
       });
       bench("Tree Storage", () => {
         TEST_TYPES.forEach(type => {
