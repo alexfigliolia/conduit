@@ -1,43 +1,33 @@
-import type { NonFunction } from "@figliolia/galena";
-
-import type { Conduit } from "./Conduit";
 import type { Cache } from "./Cache";
 
-export type IKey = string | (string | number)[];
+export type IToken = string | number;
+export type IKey = IToken | IToken[];
 
-export type IOperation = (...args: any[]) => NonFunction<any>;
+export type CacheGetter = Cache | (() => Cache);
 
-export interface IConduit<O extends IOperation, D = IValueType<O> | undefined> {
+export type IOperation = (...args: any[]) => any;
+
+export interface IConduit<O extends IOperation> {
   key: IKey;
   operation: O;
-  expiresIn?: number;
-  getCache: () => Cache;
-  defaultValue?: D;
+  cache?: CacheGetter;
+  expires?: number;
 }
 
-export interface IPaginatedConduit<O extends IOperation> extends IConduit<
-  O,
-  IValueType<O>[]
-> {
-  getPage: (args: Parameters<O>) => number;
+export type CachePolicy = "read-cache-with-respect-to-expiry" | "no-cache";
+
+export interface IExecuteOptions<O extends IOperation> {
+  expires?: number;
+  args: Parameters<O>;
+  cachePolicy?: CachePolicy;
 }
+
+export enum ConduitStatus {
+  UNINITIALIZED,
+  IN_FLIGHT,
+  IDOL,
+}
+
+export type Primative = string | number | symbol | undefined | null;
 
 export type IValueType<O extends IOperation> = Awaited<ReturnType<O>>;
-
-export type ValueType<T extends Conduit<any>> = Awaited<
-  ReturnType<T["execute"]>
->;
-
-export type Mutator<T> =
-  | NonFunction<T>
-  | ((prevState: NonFunction<T> | undefined) => NonFunction<T>);
-
-export type ISetter<O extends IOperation> = Mutator<IValueType<O>>;
-
-export type IPaginatedSetter<O extends IOperation> = Mutator<IValueType<O>[]>;
-
-export enum Status {
-  IDOL,
-  COMPUTING,
-  UNINITIALIZED,
-}
