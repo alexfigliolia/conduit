@@ -1,23 +1,12 @@
-import { State } from "@figliolia/galena";
-
-import type { IExecuteOptions, IValueType } from "./types";
 import { ConduitStatus, type IConduit, type IOperation } from "./types";
+import type { IExecuteOptions, IValueType } from "./types";
 import { Cache } from "./Cache";
 
 export class Conduit<O extends IOperation> {
   public readonly options: IConduit<O>;
   public static readonly DEFAULT_LIFE_TIME = 1000 * 60 * 5;
-  private readonly Status = new State(ConduitStatus.UNINITIALIZED);
   constructor(options: IConduit<O>) {
     this.options = Object.freeze(options);
-  }
-
-  public subscribe(callback: (status: ConduitStatus) => void) {
-    return this.Status.subscribe(callback);
-  }
-
-  public getStatus() {
-    return this.Status.getState();
   }
 
   public prepare(options: Omit<IExecuteOptions<O>, "args"> = {}) {
@@ -46,7 +35,7 @@ export class Conduit<O extends IOperation> {
   }
 
   public executeAndCache(cacheKey: any[], ...args: Parameters<O>) {
-    this.Status.set(ConduitStatus.IN_FLIGHT);
+    this.getCache()?.get?.(cacheKey)?.Status?.set(ConduitStatus.IN_FLIGHT);
     const result = this.options.operation(...args);
     if (result instanceof Promise) {
       void result.then(v => this.onExecutionResult(cacheKey, v));
@@ -69,6 +58,15 @@ export class Conduit<O extends IOperation> {
     return node.State.getState() as unknown as IValueType<O>;
   }
 
+  public getCache() {
+    if (typeof this.options.cache === "function") {
+      return this.options.cache();
+    }
+    if (this.options.cache instanceof Cache) {
+      return this.options.cache;
+    }
+  }
+
   public getCachedNode(cacheKey: any[]) {
     const cache = this.getCache();
     return cache?.get?.(cacheKey);
@@ -82,17 +80,8 @@ export class Conduit<O extends IOperation> {
     return cacheState.getState() as IValueType<O>;
   }
 
-  private getCache() {
-    if (typeof this.options.cache === "function") {
-      return this.options.cache();
-    }
-    if (this.options.cache instanceof Cache) {
-      return this.options.cache;
-    }
-  }
-
   private onExecutionResult(key: any[], value: IValueType<O>) {
-    this.getCache()?.set?.(key, value);
-    this.Status.set(ConduitStatus.IDOL);
+    const node = this.getCache()?.set?.(key, value);
+    node?.Status?.set?.(ConduitStatus.IDOL);
   }
 }

@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CachePolicy } from "../types";
 import { ConduitStatus } from "../types";
+import type { CachePolicy } from "../types";
 import { Graph } from "../Graph";
 import { Conduit } from "../Conduit";
 import { Cache } from "../Cache";
@@ -19,36 +19,45 @@ describe("Conduits", () => {
 
   describe("Conduit Status", () => {
     it("Conduit Status is reactive", async () => {
+      const args = [1, 2, 3, 4];
       [createAsyncConduit(cache), createSyncConduit(cache)].forEach(
         async conduit => {
           const onStatus = vi.fn();
-          const off = conduit.subscribe(onStatus);
-          await conduit.execute({ args: [1, 2, 3, 4] });
+          const off = conduit
+            .getCache()
+            ?.subscribeToStatus?.([conduit.options.key, args], onStatus);
+          await conduit.execute({ args });
           expect(onStatus).toHaveBeenCalledWith(ConduitStatus.IN_FLIGHT);
           expect(onStatus).toHaveBeenCalledWith(ConduitStatus.IDOL);
-          off();
+          off?.();
         },
       );
     });
 
     it("Conduit Status does not change during cache lookups", () => {
       const args = [1, 2, 3, 4];
-      [createAsyncConduit(cache), createSyncConduit(cache)].forEach(conduit => {
-        (["cache-only", "read-cache-with-respect-to-expiry"] as const).forEach(
-          async cachePolicy => {
-            const onStatus = vi.fn();
-            const off = conduit.subscribe(onStatus);
-            // prepopulate the cache
-            cache.set([conduit.options.key, args], args);
-            await conduit.execute({
-              args,
-              cachePolicy,
-            });
-            expect(onStatus).toHaveBeenCalledTimes(0);
-            off();
-          },
-        );
-      });
+
+      (["cache-only", "read-cache-with-respect-to-expiry"] as const).forEach(
+        cachePolicy => {
+          [createAsyncConduit(cache), createSyncConduit(cache)].forEach(
+            async conduit => {
+              const onStatus = vi.fn();
+              const off = conduit
+                .getCache()
+                ?.subscribeToStatus?.([conduit.options.key, args], onStatus);
+              // prepopulate the cache
+              cache.set([conduit.options.key, args], args);
+              await conduit.execute({
+                args,
+                cachePolicy,
+              });
+              expect(conduit.options.operation).not.toHaveBeenCalled();
+              expect(onStatus).not.toHaveBeenCalled();
+              off?.();
+            },
+          );
+        },
+      );
     });
   });
 

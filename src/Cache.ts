@@ -19,12 +19,18 @@ export class Cache {
     return this.storage.index(args, value);
   }
 
-  public subscribe<T>(
-    args: any,
+  public subscribeToValue<T>(
+    key: any,
     defaultValue: T,
     onChange: (value: T) => void,
   ) {
-    return this.storage.subscribe(args, defaultValue, onChange);
+    return this.storage.subscribeToValue(key, defaultValue, onChange);
+  }
+
+  public subscribeToStatus(
+    ...args: Parameters<Cache["storage"]["subscribeToStatus"]>
+  ) {
+    return this.storage.subscribeToStatus(...args);
   }
 
   public get<T>(args: any) {

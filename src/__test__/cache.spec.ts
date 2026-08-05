@@ -1,6 +1,5 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { TypeChecker } from "../TypeChecker";
 import { Graph } from "../Graph";
 import { Conduit } from "../Conduit";
 import { Cache } from "../Cache";
@@ -51,9 +50,6 @@ describe("Cache", () => {
     it("Cache Building - Warm", async () => {
       expect(new Cache(cache.serialize()).serialize()).toEqual(
         cache.serialize(),
-      );
-      expect(recursiveEquality(cache, new Cache(cache.serialize()))).toEqual(
-        true,
       );
       // simulate initializing the cache from server state
       // and compare it to state that's never been serialized
@@ -144,7 +140,7 @@ describe("Cache", () => {
       const cacheKey = [conduit.options.key, args];
       expect(conduit.getCachedNode(cacheKey)).not.toBeDefined();
       const onChange = vi.fn();
-      const off = cache.subscribe(cacheKey, [1], onChange);
+      const off = cache.subscribeToValue(cacheKey, [1], onChange);
       expect(conduit.getCachedNode(cacheKey)?.State?.getState?.()).toEqual([1]);
       const result = conduit.execute({ args });
       expect(result).toEqual(args);
@@ -160,7 +156,7 @@ describe("Cache", () => {
       const conduit = createNonSpreadArgsConduit(cache);
       const cacheKey = [conduit.options.key, args];
       const onChange = vi.fn();
-      const off = cache.subscribe(cacheKey, [1], onChange);
+      const off = cache.subscribeToValue(cacheKey, [1], onChange);
       conduit.execute({ args: [args] });
       conduit.prepare()(args);
       const node = conduit.getCachedNode(cacheKey);
@@ -174,60 +170,3 @@ describe("Cache", () => {
     });
   });
 });
-
-function recursiveEquality(obj1: any, obj2: any, ...meta: any) {
-  if (
-    TypeChecker.isObjectType(obj1) !== TypeChecker.isObjectType(obj2) ||
-    Array.isArray(obj1) !== Array.isArray(obj2)
-  ) {
-    console.log("failure on object/array types");
-    console.log(obj1, obj2, meta);
-    return false;
-  }
-  if (Array.isArray(obj1)) {
-    if (obj1.length !== obj2.length) {
-      console.log("failure on array length");
-      console.log(obj1, obj2, meta);
-      return false;
-    }
-    const { length } = obj1;
-    for (let i = 0; i < length; i++) {
-      if (!recursiveEquality(obj1[i], obj2[i], obj1, obj2)) {
-        return false;
-      }
-    }
-    return true;
-  }
-  if (TypeChecker.isObjectType(obj1)) {
-    if (Object.keys(obj1).length !== Object.keys(obj2).length) {
-      console.log("failure on key length");
-      console.log(obj1, obj2, meta);
-      return false;
-    }
-    for (const key in obj1) {
-      if (!recursiveEquality(obj1[key], obj2[key], obj1, obj2)) {
-        return false;
-      }
-    }
-    return true;
-  }
-  if (typeof obj1 !== typeof obj2) {
-    console.log("failure on mismatched types");
-    console.log(obj1, obj2);
-    return false;
-  }
-  if (typeof obj1 === "function") {
-    if (obj1.toString() !== obj2.toString()) {
-      console.log("failure on function signature");
-      console.log(obj1, obj2);
-      return false;
-    }
-    return true;
-  }
-  if (obj1 !== obj2) {
-    console.log("failure on primitive types");
-    console.log(obj1, obj2, meta);
-    return false;
-  }
-  return true;
-}

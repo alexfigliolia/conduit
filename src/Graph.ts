@@ -1,13 +1,15 @@
-import type { NonFunction } from "@figliolia/galena";
 import { State } from "@figliolia/galena";
+import type { NonFunction } from "@figliolia/galena";
 
-import type { Primative, SerializedNode } from "./types";
+import { ConduitStatus } from "./types";
+import { type Primative, type SerializedNode } from "./types";
 import { Indexable } from "./Indexable";
 
 export class Graph<T = any> {
   public lastRead = 0;
   public updatedAt = 0;
   public State?: State<T>;
+  public Status?: State<ConduitStatus>;
   public readonly nodes: Record<any, Graph> = {};
 
   public static from(node: SerializedNode) {
@@ -32,17 +34,29 @@ export class Graph<T = any> {
     return node;
   }
 
-  public subscribe(args: any, defaultValue: T, onChange: (value: T) => void) {
-    const node = this.createIfNotExists(args);
+  public subscribeToValue(
+    key: any,
+    defaultValue: T,
+    onChange: (value: T) => void,
+  ) {
+    const node = this.createIfNotExists(key);
     if (!node.State) {
       node.State = new State(defaultValue as NonFunction<T>);
     }
     return node.State.subscribe(onChange);
   }
 
-  public createIfNotExists(args: any) {
+  public subscribeToStatus(key: any, onChange: (value: ConduitStatus) => void) {
+    const node = this.createIfNotExists(key);
+    if (!node.Status) {
+      node.Status = new State<ConduitStatus>(ConduitStatus.UNINITIALIZED);
+    }
+    return node.Status.subscribe(onChange);
+  }
+
+  public createIfNotExists(key: any) {
     let current = this as Graph;
-    Indexable.traverse(args, primative => {
+    Indexable.traverse(key, primative => {
       const next = current.get(primative) ?? new Graph();
       current.set(primative, next);
       current = next;
@@ -51,9 +65,9 @@ export class Graph<T = any> {
     return current;
   }
 
-  public lookup<T>(args: any) {
+  public lookup<T>(key: any) {
     let current = this as Graph;
-    const found = Indexable.traverse(args, primative => {
+    const found = Indexable.traverse(key, primative => {
       const next = current.get(primative);
       if (!next) {
         return false;
