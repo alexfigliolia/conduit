@@ -12,9 +12,13 @@ export interface IConduit<O extends IOperation> {
   operation: O;
   cache?: CacheGetter;
   expires?: number;
+  cachePolicy?: CachePolicy;
 }
 
-export type CachePolicy = "read-cache-with-respect-to-expiry" | "no-cache";
+export type CachePolicy =
+  | "read-cache-with-respect-to-expiry"
+  | "no-cache"
+  | "cache-only";
 
 export interface IExecuteOptions<O extends IOperation> {
   expires?: number;
@@ -31,3 +35,10 @@ export enum ConduitStatus {
 export type Primative = string | number | symbol | undefined | null;
 
 export type IValueType<O extends IOperation> = Awaited<ReturnType<O>>;
+
+export interface SerializedNode<T = unknown> {
+  lastRead: number;
+  updatedAt: number;
+  nodes: Record<string, SerializedNode>;
+  value?: T;
+}
