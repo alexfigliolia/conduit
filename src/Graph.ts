@@ -1,18 +1,24 @@
-import type { Primative } from "./types";
+import type { NonFunction } from "@figliolia/galena";
+import { State } from "@figliolia/galena";
+
+import type { Primative, SerializedNode } from "./types";
 import { Indexable } from "./Indexable";
 
-export class Graph<T = unknown> {
+export class Graph<T = any> {
   public lastRead = 0;
   public updatedAt = 0;
+  public State?: State<T>;
   public readonly nodes: Record<any, Graph> = {};
-  constructor(public value?: T) {}
 
-  public static from<G extends Graph<any>>(node: G) {
-    const graph = new Graph(Indexable.deserialize(node.value));
+  public static from(node: SerializedNode) {
+    const graph = new Graph();
     graph.lastRead = node.lastRead;
     graph.updatedAt = node.updatedAt;
+    if (node.value !== undefined) {
+      graph.setValue(Indexable.deserialize(node.value), false);
+    }
     for (const key in node.nodes) {
-      const childNode = node.nodes[key as any];
+      const childNode = node.nodes[key];
       if (childNode) {
         graph.set(key, Graph.from(childNode));
       }
@@ -21,6 +27,20 @@ export class Graph<T = unknown> {
   }
 
   public index(args: any, value: T) {
+    const node = this.createIfNotExists(args);
+    node.setValue(value);
+    return node;
+  }
+
+  public subscribe(args: any, defaultValue: T, onChange: (value: T) => void) {
+    const node = this.createIfNotExists(args);
+    if (!node.State) {
+      node.State = new State(defaultValue as NonFunction<T>);
+    }
+    return node.State.subscribe(onChange);
+  }
+
+  public createIfNotExists(args: any) {
     let current = this as Graph;
     Indexable.traverse(args, primative => {
       const next = current.get(primative) ?? new Graph();
@@ -28,10 +48,10 @@ export class Graph<T = unknown> {
       current = next;
       return true;
     });
-    current.update(value);
+    return current;
   }
 
-  public lookup(args: any) {
+  public lookup<T>(args: any) {
     let current = this as Graph;
     const found = Indexable.traverse(args, primative => {
       const next = current.get(primative);
@@ -44,13 +64,8 @@ export class Graph<T = unknown> {
     if (!found) {
       return;
     }
-    current.lastRead = performance.now();
-    return current;
-  }
-
-  public update(value: T) {
-    this.value = value;
-    this.updatedAt = performance.now();
+    current.lastRead = Date.now();
+    return current as Graph<T>;
   }
 
   public get(key: Primative) {
@@ -67,24 +82,38 @@ export class Graph<T = unknown> {
     }
   }
 
-  public serialize() {
-    const nodes = Object.keys(this.nodes).reduce(
-      (acc, next) => {
-        if (this.nodes[next]) {
-          acc[next] = this.nodes[next].serialize();
-        }
-        return acc;
-      },
-      {} as Record<string, Graph>,
-    );
+  public setValue(value: T, mark = true) {
+    let written = false;
+    if (!this.State) {
+      this.State = new State(value as NonFunction<T>);
+      written = true;
+    } else if (value !== this.State.getState()) {
+      this.State.set(value as NonFunction<T>);
+      written = true;
+    }
+    if (mark && written) {
+      this.updatedAt = Date.now();
+    }
+  }
+
+  public serialize(): SerializedNode {
+    const nodes = Object.keys(this.nodes).reduce<
+      Record<string, SerializedNode>
+    >((acc, next) => {
+      if (this.nodes[next]) {
+        acc[next] = this.nodes[next].serialize();
+      }
+      return acc;
+    }, {});
     const result = {
       nodes,
       lastRead: this.lastRead,
       updatedAt: this.updatedAt,
-    };
-    if (typeof this.value === "undefined") {
-      return result as Graph;
+    } as SerializedNode;
+    if (!this.State) {
+      return result;
     }
-    return { ...result, value: Indexable.serialize(this.value) } as Graph;
+    result.value = Indexable.serialize(this.State.getState());
+    return result;
   }
 }

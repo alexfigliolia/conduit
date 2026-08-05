@@ -38,6 +38,7 @@
     "@figliolia/event-emitter": "^1.2.0",
     "@figliolia/galena": "^4.0.5",
     "@types/node": "^25.9.3",
+    "@vitest/coverage-v8": "4.1.10",
     "chalk": "^4.1.2",
     "mitata": "^1.0.34",
     "oxfmt": "^0.55.0",
