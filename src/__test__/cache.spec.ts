@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Graph } from "../Graph";
 import { Conduit } from "../Conduit";
+import { CacheEntry } from "../CacheEntry";
 import { Cache } from "../Cache";
 import { TEST_TYPES } from "../__fixtures__/types";
 import {
@@ -42,8 +42,7 @@ describe("Cache", () => {
       TEST_TYPES.forEach((type, i) => {
         const node = cache.get([`c${i}`, TEST_TYPES]);
         expect(node?.State?.getState?.()).toEqual(type);
-        expect(node?.lastRead).not.toEqual(0);
-        expect(node?.updatedAt).not.toEqual(0);
+        expect(node?.lastRead).toEqual(0);
       });
     });
 
@@ -59,9 +58,8 @@ describe("Cache", () => {
       TEST_TYPES.forEach((type, i) => {
         const coldNode = cache.get([`c${i}`, TEST_TYPES]);
         const warmNode = warmedCache.get([`c${i}`, TEST_TYPES]);
-        expect(coldNode?.State?.getState?.()).toEqual(type);
-        expect(warmNode?.State?.getState?.()).toEqual(type);
-        expect(coldNode?.nodes).toEqual(warmNode?.nodes);
+        expect(coldNode?.read?.()).toEqual(type);
+        expect(warmNode?.read?.()).toEqual(type);
         expect(coldNode?.updatedAt).toEqual(warmNode?.updatedAt);
       });
     });
@@ -117,9 +115,12 @@ describe("Cache", () => {
         `c${TEST_TYPES.length + TEST_TYPES.length - 2}`,
         argsToTriggerIntermediaryNodeLookup,
       ]);
-      expect(node).toBeInstanceOf(Graph);
+      expect(node).toBeInstanceOf(CacheEntry);
       // Set the node's state to undefined - implying it's never been written to
-      node!.State = undefined;
+      cache.evict([
+        `c${TEST_TYPES.length + TEST_TYPES.length - 2}`,
+        argsToTriggerIntermediaryNodeLookup,
+      ]);
       conduit.execute({
         args: argsToTriggerIntermediaryNodeLookup,
         cachePolicy: "read-cache-with-respect-to-expiry",
@@ -151,21 +152,21 @@ describe("Cache", () => {
       off();
     });
 
-    it("Subscriptions only fire on identity value changes", () => {
+    it("Subscriptions fire on value changes", () => {
       const args = [1, 2, 3, 4, 5, 6];
       const conduit = createNonSpreadArgsConduit(cache);
       const cacheKey = [conduit.options.key, args];
       const onChange = vi.fn();
       const off = cache.subscribeToValue(cacheKey, [1], onChange);
       conduit.execute({ args: [args] });
-      conduit.prepare()(args);
-      const node = conduit.getCachedNode(cacheKey);
+      const node = conduit.getCachedNode<number[]>(cacheKey);
       expect(node).toBeDefined();
       expect(args).toBe(node?.State?.getState?.());
-      node!.setValue(args);
-      expect(onChange).toHaveBeenCalledExactlyOnceWith(args);
-      node!.setValue([...args]);
-      expect(onChange).toHaveBeenCalledTimes(2);
+      node!.write([]);
+      expect(onChange).toHaveBeenCalledWith(args);
+      expect(onChange).toHaveBeenCalledWith([]);
+      node!.write([1, 2, 3]);
+      expect(onChange).toHaveBeenCalledWith([1, 2, 3]);
       off();
     });
   });

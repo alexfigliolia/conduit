@@ -1,4 +1,5 @@
-import type { SerializedNode } from "./types";
+import type { ConduitStatus, SerializedNode } from "./types";
+import { NodeParent } from "./NodeParent";
 import { Graph } from "./Graph";
 
 export class Cache {
@@ -6,7 +7,10 @@ export class Cache {
   constructor(initialState: Record<string, SerializedNode> = {}) {
     for (const key in initialState) {
       if (initialState[key]) {
-        this.storage.set(key, Graph.from(initialState[key]));
+        this.storage.set(
+          key,
+          Graph.from(initialState[key], new NodeParent(this.storage, key)),
+        );
       }
     }
   }
@@ -24,17 +28,25 @@ export class Cache {
     defaultValue: T,
     onChange: (value: T) => void,
   ) {
-    return this.storage.subscribeToValue(key, defaultValue, onChange);
+    const entry = this.storage.createCacheEntryIfNotExists(key, defaultValue);
+    return entry.subscribeToValue(onChange);
   }
 
-  public subscribeToStatus(
-    ...args: Parameters<Cache["storage"]["subscribeToStatus"]>
+  public subscribeToStatus<T>(
+    key: any,
+    defaultValue: T,
+    onChange: (value: ConduitStatus) => void,
   ) {
-    return this.storage.subscribeToStatus(...args);
+    const entry = this.storage.createCacheEntryIfNotExists(key, defaultValue);
+    return entry.subscribeToStatus(onChange);
   }
 
-  public get<T>(args: any) {
-    return this.storage.lookup<T>(args);
+  public get<T>(key: any) {
+    return this.storage.lookup<T>(key);
+  }
+
+  public evict(key: any) {
+    return this.storage.evict(key);
   }
 
   public reset() {

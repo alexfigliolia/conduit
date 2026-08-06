@@ -1,5 +1,6 @@
 import { ConduitStatus, type IConduit, type IOperation } from "./types";
 import type { IExecuteOptions, IValueType } from "./types";
+import type { CacheEntry } from "./CacheEntry";
 import { Cache } from "./Cache";
 
 export class Conduit<O extends IOperation> {
@@ -51,7 +52,7 @@ export class Conduit<O extends IOperation> {
     ...args: Parameters<O>
   ) {
     const node = this.getCachedNode(cacheKey);
-    if (!node?.State || Date.now() - node.updatedAt >= expiry) {
+    if (!node || Date.now() - node.updatedAt >= expiry) {
       return this.executeAndCache(cacheKey, ...args);
     }
     // TODO - maybe a cache refresh on an interval in the background
@@ -67,9 +68,9 @@ export class Conduit<O extends IOperation> {
     }
   }
 
-  public getCachedNode(cacheKey: any[]) {
+  public getCachedNode<T>(cacheKey: any[]) {
     const cache = this.getCache();
-    return cache?.get?.(cacheKey);
+    return cache?.get?.(cacheKey) as CacheEntry<T> | undefined;
   }
 
   private getCachedValue(cacheKey: any[]) {

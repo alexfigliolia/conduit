@@ -2,8 +2,8 @@ import { beforeEach, describe, expect, it, vi } from "vitest";
 
 import { ConduitStatus } from "../types";
 import type { CachePolicy } from "../types";
-import { Graph } from "../Graph";
 import { Conduit } from "../Conduit";
+import { CacheEntry } from "../CacheEntry";
 import { Cache } from "../Cache";
 import {
   createAsyncConduit,
@@ -25,7 +25,7 @@ describe("Conduits", () => {
           const onStatus = vi.fn();
           const off = conduit
             .getCache()
-            ?.subscribeToStatus?.([conduit.options.key, args], onStatus);
+            ?.subscribeToStatus?.([conduit.options.key, args], [], onStatus);
           await conduit.execute({ args });
           expect(onStatus).toHaveBeenCalledWith(ConduitStatus.IN_FLIGHT);
           expect(onStatus).toHaveBeenCalledWith(ConduitStatus.IDOL);
@@ -44,7 +44,11 @@ describe("Conduits", () => {
               const onStatus = vi.fn();
               const off = conduit
                 .getCache()
-                ?.subscribeToStatus?.([conduit.options.key, args], onStatus);
+                ?.subscribeToStatus?.(
+                  [conduit.options.key, args],
+                  [],
+                  onStatus,
+                );
               // prepopulate the cache
               cache.set([conduit.options.key, args], args);
               await conduit.execute({
@@ -152,9 +156,9 @@ describe("Conduits", () => {
           const now = Date.now();
           // Get a reference to the cache node
           const cacheNode = conduit.getCachedNode([conduit.options.key, args]);
-          expect(cacheNode).toBeInstanceOf(Graph);
+          expect(cacheNode).toBeInstanceOf(CacheEntry);
           // Update the cache value to something that will not match the result of the execution
-          cacheNode?.setValue?.([1, 2, 3]);
+          cacheNode?.write?.([1, 2, 3]);
           expect(cacheNode?.State?.getState?.()).toEqual([1, 2, 3]);
           // expire the cache entry
           cacheNode!.updatedAt = now - Conduit.DEFAULT_LIFE_TIME - 1;

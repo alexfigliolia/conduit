@@ -1,3 +1,4 @@
+import type { NodeParent } from "./NodeParent";
 import type { Cache } from "./Cache";
 
 export type IToken = string | number;
@@ -36,9 +37,16 @@ export type Primative = string | number | symbol | undefined | null;
 
 export type IValueType<O extends IOperation> = Awaited<ReturnType<O>>;
 
-export interface SerializedNode<T = unknown> {
+export interface SerializedCacheEntry<T = unknown> {
+  value: T;
   lastRead: number;
   updatedAt: number;
-  nodes: Record<string, SerializedNode>;
-  value?: T;
+  status: ConduitStatus;
 }
+
+export interface SerializedNode<T = unknown> {
+  entry?: SerializedCacheEntry<T>;
+  nodes: Record<string, SerializedNode>;
+}
+
+export type ParentPointer = null | NodeParent;
