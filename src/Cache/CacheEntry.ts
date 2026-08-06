@@ -1,5 +1,5 @@
-import type { NonFunction } from "@figliolia/galena";
 import { State } from "@figliolia/galena";
+import type { NonFunction } from "@figliolia/galena";
 
 import { ConduitStatus } from "../Conduits/types";
 
@@ -19,7 +19,7 @@ export class CacheEntry<T> {
     const cacheNode = new CacheEntry(Serializer.deserialize(entry.value));
     cacheNode.lastRead = entry.lastRead;
     cacheNode.updatedAt = entry.updatedAt;
-    cacheNode.Status.set(entry.status);
+    cacheNode.setStatus(entry.status);
     return cacheNode;
   }
 
@@ -31,12 +31,20 @@ export class CacheEntry<T> {
     return this.Status.subscribe(onChange);
   }
 
-  public read() {
+  public getStatus() {
+    return this.Status.getState();
+  }
+
+  public setStatus(...args: Parameters<State<ConduitStatus>["update"]>) {
+    this.Status.update(...args);
+  }
+
+  public readValue() {
     this.lastRead = Date.now();
     return this.State.getState();
   }
 
-  public write(...args: Parameters<State<T>["update"]>) {
+  public writeValue(...args: Parameters<State<T>["update"]>) {
     this.updatedAt = Date.now();
     this.State.update(...args);
   }

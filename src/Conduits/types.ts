@@ -1,3 +1,5 @@
+import type { Setter } from "@figliolia/galena";
+
 import type { Cache, CacheEntry } from "../Cache";
 
 export type IToken = string | number;
@@ -53,4 +55,9 @@ export enum ConduitStatus {
   UNINITIALIZED,
   IN_FLIGHT,
   IDOL,
+}
+
+export interface ConduitCacheWrite<O extends IOperation, D = IValueType<O>> {
+  args: Parameters<O>;
+  value: Setter<ConduitValue<O, D>>;
 }
