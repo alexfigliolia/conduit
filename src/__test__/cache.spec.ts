@@ -60,8 +60,8 @@ describe("Cache", () => {
       TEST_TYPES.forEach((type, i) => {
         const coldNode = cache.get([`c${i}`, TEST_TYPES]);
         const warmNode = warmedCache.get([`c${i}`, TEST_TYPES]);
-        expect(coldNode?.read?.()).toEqual(type);
-        expect(warmNode?.read?.()).toEqual(type);
+        expect(coldNode?.readValue?.()).toEqual(type);
+        expect(warmNode?.readValue?.()).toEqual(type);
         expect(coldNode?.updatedAt).toEqual(warmNode?.updatedAt);
       });
     });
@@ -145,7 +145,7 @@ describe("Cache", () => {
 
     it("Subscriptions can initialize cache entries", () => {
       const args = [1, 2, 3, 4, 5, 6];
-      const conduit = createSyncConduit(cache);
+      const conduit = createSyncConduit({ cache });
       const cacheKey = [conduit.options.key, args];
       expect(cache.get(cacheKey)).not.toBeDefined();
       const onChange = vi.fn();
@@ -168,10 +168,10 @@ describe("Cache", () => {
       const node = cache.get<number[]>(cacheKey);
       expect(node).toBeDefined();
       expect(args).toBe(node?.State?.getState?.());
-      node!.write([]);
+      node!.writeValue([]);
       expect(onChange).toHaveBeenCalledWith(args);
       expect(onChange).toHaveBeenCalledWith([]);
-      node!.write([1, 2, 3]);
+      node!.writeValue([1, 2, 3]);
       expect(onChange).toHaveBeenCalledWith([1, 2, 3]);
       off();
     });

@@ -6,18 +6,28 @@ import {
   type IConduit,
   type IConduitWithPolicy,
   type IExecuteOptions,
-  type IKey,
   type IOperation,
   type MaybeCacheEntry,
   type IValueType,
   ConduitStatus,
 } from "./types";
+import type { ConduitCacheWrite } from "./types";
 
 export class Conduit<O extends IOperation, D = IValueType<O>> {
   public readonly options: IConduitWithPolicy<O, D>;
   public static readonly DEFAULT_LIFE_TIME = 1000 * 60 * 5;
   constructor(options: IConduit<O, D>) {
-    this.options = Object.freeze(this.validateOptions(options));
+    const cache = this.getCache(options);
+    if (!cache) {
+      if (!options.cachePolicy) {
+        options.cachePolicy = "no-cache";
+      } else if (options.cachePolicy !== "no-cache") {
+        throw this.cachePolicyError(options.cachePolicy);
+      }
+    }
+    options.cachePolicy =
+      options.cachePolicy ?? "read-cache-with-respect-to-expiry";
+    this.options = Object.freeze(options as IConduitWithPolicy<O, D>);
   }
 
   public getCache(options: IConduit<O, D> = this.options) {
@@ -35,22 +45,19 @@ export class Conduit<O extends IOperation, D = IValueType<O>> {
 
   public execute({ args, expires, cachePolicy }: IExecuteOptions<O>) {
     const cache = this.getCache();
+    if (!cache && cachePolicy && cachePolicy !== "no-cache") {
+      throw this.cachePolicyError(cachePolicy);
+    }
     const cacheEntry = cache?.createEntryIfNotExists?.<ConduitValue<O, D>>(
       [this.options.key, args],
       this.options.defaultValue,
     );
-    const resolvedPolicy = this.validateCachePolicy(
-      this.options.key,
-      cache,
-      this.options.cachePolicy,
-      cachePolicy,
-    );
-    switch (resolvedPolicy) {
+    switch (cachePolicy) {
       case "cache-only":
         if (!cacheEntry) {
           throw this.cachePolicyError("cache-only");
         }
-        return cacheEntry.read();
+        return cacheEntry.readValue();
       case "no-cache":
         return this.executeAndCache(cacheEntry, ...args);
       case "read-cache-with-respect-to-expiry":
@@ -63,11 +70,19 @@ export class Conduit<O extends IOperation, D = IValueType<O>> {
     }
   }
 
+  public write({ args, value }: ConduitCacheWrite<O, D>) {
+    return this.getCacheEntryStrict(...args).writeValue(value);
+  }
+
+  public read(...args: Parameters<O>) {
+    return this.getCacheEntryStrict(...args).readValue();
+  }
+
   private executeAndCache(
     cacheEntry: MaybeCacheEntry<O, D>,
     ...args: Parameters<O>
   ) {
-    cacheEntry?.Status?.set?.(ConduitStatus.IN_FLIGHT);
+    cacheEntry?.setStatus?.(ConduitStatus.IN_FLIGHT);
     const result = this.options.operation(...args);
     if (result instanceof Promise) {
       void result.then(v => this.onExecutionResult(cacheEntry, v));
@@ -89,45 +104,35 @@ export class Conduit<O extends IOperation, D = IValueType<O>> {
       return this.executeAndCache(cacheEntry, ...args);
     }
     // TODO - maybe a cache refresh on an interval in the background
-    return cacheEntry.read();
+    return cacheEntry.readValue();
+  }
+
+  private getCacheEntryStrict(...args: Parameters<O>) {
+    const cache = this.getCache();
+    if (!cache) {
+      throw new Error(
+        "Attempted to write to the cache without specifying the Conduit's 'cache' option",
+        { cause: this },
+      );
+    }
+    return cache.createEntryIfNotExists<ConduitValue<O, D>>(
+      [this.options.key, args],
+      this.options.defaultValue,
+    );
   }
 
   private onExecutionResult(
     cacheEntry: MaybeCacheEntry<O, D>,
     value: IValueType<O>,
   ) {
-    cacheEntry?.write?.(value);
-    cacheEntry?.Status?.set?.(ConduitStatus.IDOL);
-  }
-
-  private validateOptions(options: IConduit<O, D>) {
-    options.cachePolicy = this.validateCachePolicy(
-      options.key,
-      this.getCache(options),
-      "read-cache-with-respect-to-expiry",
-      options.cachePolicy,
-    );
-    return options as IConduitWithPolicy<O, D>;
-  }
-
-  private validateCachePolicy(
-    key: IKey,
-    cache: Cache | undefined,
-    fallback: CachePolicy = "read-cache-with-respect-to-expiry",
-    policy?: CachePolicy,
-  ): CachePolicy {
-    if (!cache && policy && policy !== "no-cache") {
-      console.warn(
-        `A conduit with the key "${key as any}" is using a cachePolicy of "${policy}", but no cache is specified. Switching to the "no-cache" policy`,
-      );
-      return "no-cache";
-    }
-    return !cache ? "no-cache" : (policy ?? fallback);
+    cacheEntry?.writeValue?.(value);
+    cacheEntry?.setStatus?.(ConduitStatus.IDOL);
   }
 
   private cachePolicyError(policy: CachePolicy) {
     return new Error(
-      `Internal Error: Use of "${policy}" policy without specifying the 'cache' option`,
+      `Cache Policy Error: Use of "${policy}" policy without specifying the 'cache' option`,
+      { cause: this },
     );
   }
 }

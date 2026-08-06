@@ -1,5 +1,5 @@
-import { type Primitive, type SerializedNode } from "./types";
 import type { ParentPointer } from "./types";
+import { type Primitive, type SerializedNode } from "./types";
 import { NodePathGenerator } from "./NodePathGenerator";
 import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";
@@ -29,7 +29,7 @@ export class Graph<T = any> {
       node.entry = new CacheEntry(value);
       node.entry.updatedAt = Date.now();
     } else {
-      node.entry.write(value);
+      node.entry.writeValue(value);
     }
     return node.entry as CacheEntry<T>;
   }
