@@ -17,3 +17,8 @@ export interface SerializedNode<T = unknown> {
 }
 
 export type ParentPointer = null | NodeParent;
+
+export interface ConduitSerializedValue<T> {
+  ___CONDUIT___: string;
+  value?: T;
+}

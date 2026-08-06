@@ -79,11 +79,15 @@ describe("Cache", () => {
         cache,
         defaultValue: new Set(),
         key: ["non-json-serializeable"],
-        operation: (_: Map<string, string>) => new Set(),
+        operation: (_: RegExp | Function) => true,
       });
       expect(() => {
-        conduit.execute({ args: [new Map()] });
+        conduit.execute({ args: [new RegExp("adsfasdf")] });
       }).toThrow();
+      // TODO come back to me
+      // expect(() => {
+      //   conduit.execute({ args: [function () {}] });
+      // }).toThrow();
     });
 
     it("Collisions with intermediary cache node edges", () => {
