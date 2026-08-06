@@ -27,19 +27,24 @@ export class TypeChecker {
 
   public static nonImplementedError(value: unknown) {
     return new Error(
-      `Not Implemented Error: unhandled data type ${value as any}. The cache can only support JavaScript primitives, objects, maps, sets, and arrays`,
+      `Not Implemented Error: Unhandled data type. The cache can only support JavaScript primitives, objects, maps, sets, and arrays`,
+      { cause: value },
     );
   }
 
   public static serializationError(value: unknown) {
     return new Error(
-      `Serialization Error: Failed to serialize the value ${value as any}`,
+      `Serialization Error: Failed to serialize a value in the cache. This error's cause contains the value`,
+      { cause: value },
     );
   }
 
   public static deserializationError(value: unknown) {
     return new Error(
-      `Deserialization Error: Failed to deserialize the value ${value as any}`,
+      `Deserialization Error: Failed to deserialize a value in the cache. This error's cause contains the value`,
+      {
+        cause: value,
+      },
     );
   }
 }
