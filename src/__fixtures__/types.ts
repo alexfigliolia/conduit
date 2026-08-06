@@ -6,8 +6,9 @@ export const PRIMITIVES = [
   BigInt("123123123123"),
 ];
 
-export const SERIALIZABLE_PRIMITIVES = [...PRIMITIVES];
-SERIALIZABLE_PRIMITIVES.pop();
+export const SERIALIZABLE_PRIMITIVES = [...PRIMITIVES].filter(
+  v => !["bigint", "undefined"].includes(typeof v),
+);
 
 export const NON_PRIMITIVES = [
   ...buildObjectTypes(PRIMITIVES),

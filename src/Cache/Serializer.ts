@@ -3,8 +3,8 @@ import { TypeChecker } from "./TypeChecker";
 
 export class Serializer {
   public static readonly SERIALIZATION_MARKER = "___CONDUIT___";
-  public static readonly SERIALIZED_CONSTRUCTORS = [Map, Set];
-  public static readonly SERIALIZED_TYPES = ["undefined", "bigint"];
+  public static readonly SERIALIZED_CONSTRUCTORS = [Map, Set] as const;
+  public static readonly SERIALIZED_TYPES = ["undefined", "bigint"] as const;
 
   public static serialize(value: unknown): any {
     if (Serializer.shouldUseInternalSerializer(value)) {
@@ -56,7 +56,7 @@ export class Serializer {
 
   public static shouldUseInternalSerializer(value: any) {
     return (
-      this.SERIALIZED_TYPES.includes(typeof value) ||
+      this.SERIALIZED_TYPES.includes(typeof value as any) ||
       this.SERIALIZED_CONSTRUCTORS.some(C => value instanceof C)
     );
   }
@@ -124,7 +124,7 @@ export class Serializer {
     creator: F,
     validator: (value: unknown) => boolean,
   ) {
-    if (!("value" in value) && validator(value.value)) {
+    if (!("value" in value) || !validator(value.value)) {
       throw TypeChecker.deserializationError(value);
     }
     return creator(this.deserialize(value.value));
