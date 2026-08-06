@@ -1,5 +1,5 @@
-import type { ParentPointer } from "./types";
 import { type Primative, type SerializedNode } from "./types";
+import type { ParentPointer } from "./types";
 import { NodeParent } from "./NodeParent";
 import { Indexable } from "./Indexable";
 import { CacheEntry } from "./CacheEntry";

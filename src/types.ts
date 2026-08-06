@@ -1,4 +1,5 @@
 import type { NodeParent } from "./NodeParent";
+import type { CacheEntry } from "./CacheEntry";
 import type { Cache } from "./Cache";
 
 export type IToken = string | number;
@@ -58,3 +59,16 @@ export interface SerializedNode<T = unknown> {
 }
 
 export type ParentPointer = null | NodeParent;
+
+export type ConduitCacheEntry<
+  O extends IOperation,
+  D = IValueType<O>,
+> = CacheEntry<ConduitValue<O, D>>;
+
+export type MaybeCacheEntry<O extends IOperation, D = IValueType<O>> =
+  | ConduitCacheEntry<O, D>
+  | undefined;
+
+export type ConduitValue<O extends IOperation, D = IValueType<O>> =
+  | IValueType<O>
+  | D;
