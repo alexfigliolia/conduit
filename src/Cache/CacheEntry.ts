@@ -1,10 +1,10 @@
-import { State } from "@figliolia/galena";
 import type { NonFunction } from "@figliolia/galena";
+import { State } from "@figliolia/galena";
 
 import { ConduitStatus } from "../Conduits/types";
 
 import type { SerializedCacheEntry } from "./types";
-import { Indexable } from "./Indexable";
+import { Serializer } from "./Serializer";
 
 export class CacheEntry<T> {
   public lastRead = 0;
@@ -16,7 +16,7 @@ export class CacheEntry<T> {
   }
 
   public static from(entry: SerializedCacheEntry) {
-    const cacheNode = new CacheEntry(Indexable.deserialize(entry.value));
+    const cacheNode = new CacheEntry(Serializer.deserialize(entry.value));
     cacheNode.lastRead = entry.lastRead;
     cacheNode.updatedAt = entry.updatedAt;
     cacheNode.Status.set(entry.status);
@@ -46,7 +46,7 @@ export class CacheEntry<T> {
       lastRead: this.lastRead,
       updatedAt: this.updatedAt,
       status: this.Status.getState(),
-      value: Indexable.serialize(this.State.getState()),
+      value: Serializer.serialize(this.State.getState()),
     };
   }
 }

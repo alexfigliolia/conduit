@@ -1,6 +1,6 @@
 import { TypeChecker } from "./TypeChecker";
 
-export class Serialized extends TypeChecker {
+export class SerializedValues extends TypeChecker {
   public static readonly SERIALIZATION_MARKER = "___CONDUIT___";
   public static readonly SERIALIZED_TYPES = ["undefined", "bigint"];
 

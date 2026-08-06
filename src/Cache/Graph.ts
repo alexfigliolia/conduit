@@ -1,7 +1,7 @@
-import type { ParentPointer } from "./types";
 import { type Primitive, type SerializedNode } from "./types";
+import type { ParentPointer } from "./types";
+import { NodePathGenerator } from "./NodePathGenerator";
 import { NodeParent } from "./NodeParent";
-import { Indexable } from "./Indexable";
 import { CacheEntry } from "./CacheEntry";
 
 export class Graph<T = any> {
@@ -36,10 +36,12 @@ export class Graph<T = any> {
 
   public createNodeIfNotExists(key: any) {
     let current = this as Graph;
-    Indexable.traverse(key, primative => {
-      const next =
-        current.get(primative) ?? new Graph(new NodeParent(current, primative));
-      current.set(primative, next);
+    NodePathGenerator.traverse(key, primative => {
+      let next = current.get(primative);
+      if (!next) {
+        next = new Graph(new NodeParent(current, primative));
+        current.set(primative, next);
+      }
       current = next;
       return true;
     });
@@ -103,7 +105,7 @@ export class Graph<T = any> {
 
   private find<T>(key: any) {
     let current = this as Graph;
-    const found = Indexable.traverse(key, primative => {
+    const found = NodePathGenerator.traverse(key, primative => {
       const next = current.get(primative);
       if (!next) {
         return false;

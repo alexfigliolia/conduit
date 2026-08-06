@@ -5,12 +5,6 @@ export class TypeChecker {
     RegExp,
     Function,
   ] as const;
-  public static readonly NON_SERIALIZEABLE_PRIMITIVES = ["symbol"] as const;
-  public static readonly NON_SERIALIZEABLE_NUMBERS = [
-    Infinity,
-    -Infinity,
-    NaN,
-  ] as const;
 
   public static isObjectType(
     arg: any,
