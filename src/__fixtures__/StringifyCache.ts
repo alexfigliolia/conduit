@@ -1,4 +1,4 @@
-import { Serializer } from "../Cache/Serializer";
+import { TypeChecker } from "../Cache/TypeChecker";
 
 export class StringifyCache {
   private storage: Record<any, any>;
@@ -24,7 +24,7 @@ export class StringifyCache {
 
   protected hash(args: any) {
     return JSON.stringify(args, (_, val) => {
-      if (Serializer.isHashTable(val)) {
+      if (TypeChecker.isHashTable(val)) {
         return Object.keys(val)
           .sort()
           .reduce((result, key) => {

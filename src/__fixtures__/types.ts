@@ -9,7 +9,11 @@ export const PRIMITIVES = [
 export const SERIALIZABLE_PRIMITIVES = [...PRIMITIVES];
 SERIALIZABLE_PRIMITIVES.pop();
 
-export const NON_PRIMITIVES = buildObjectTypes(PRIMITIVES);
+export const NON_PRIMITIVES = [
+  ...buildObjectTypes(PRIMITIVES),
+  new Set(PRIMITIVES),
+  new Map(PRIMITIVES.map(item => [item, item])),
+];
 export const SERIALIZABLE_NON_PRIMITIVES = buildObjectTypes(
   SERIALIZABLE_PRIMITIVES,
 );

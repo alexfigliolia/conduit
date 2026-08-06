@@ -1,7 +1,7 @@
 import type { Primitive } from "./types";
 import { TypeChecker } from "./TypeChecker";
 
-export class NodePathGenerator extends TypeChecker {
+export class NodePathGenerator {
   public static readonly COLLATOR = new Intl.Collator("en-us", {
     numeric: true,
     sensitivity: "base",
@@ -11,7 +11,7 @@ export class NodePathGenerator extends TypeChecker {
     value: unknown,
     onValue: (current: Primitive) => boolean,
   ) {
-    if (!this.isObjectType(value)) {
+    if (!TypeChecker.isObjectType(value)) {
       return onValue(value as Primitive);
     }
     if (Array.isArray(value)) {
@@ -21,18 +21,22 @@ export class NodePathGenerator extends TypeChecker {
         }
       }
     } else {
-      if (
-        // TODO allow maps and sets
-        NodePathGenerator.NON_SERIALIZEABLE_OBJECTS.some(
-          c => value instanceof c,
-        )
-      ) {
-        this.nonImplementedError(value);
+      if (TypeChecker.NON_SERIALIZEABLE_OBJECTS.some(c => value instanceof c)) {
+        throw TypeChecker.nonImplementedError(value);
       }
-      const keys = this.sortObjectKeys(value);
-      for (const key of keys) {
-        if (!onValue(key) || !this.onValue(value[key], onValue)) {
-          return false;
+      const orderedIterator = TypeChecker.parseOrderedHashTableIterator(value);
+      if (orderedIterator) {
+        for (const entry of orderedIterator) {
+          if (!this.onValue(entry, onValue)) {
+            return false;
+          }
+        }
+      } else {
+        const keys = this.sortObjectKeys(value);
+        for (const key of keys) {
+          if (!onValue(key) || !this.onValue(value[key], onValue)) {
+            return false;
+          }
         }
       }
     }
@@ -40,7 +44,7 @@ export class NodePathGenerator extends TypeChecker {
   }
 
   private static onValue(value: any, onValue: (value: Primitive) => boolean) {
-    if (!this.isObjectType(value)) {
+    if (!TypeChecker.isObjectType(value)) {
       if (!onValue(value as Primitive)) {
         return false;
       }
