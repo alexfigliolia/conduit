@@ -1,5 +1,5 @@
-import { type Primative, type SerializedNode } from "./types";
 import type { ParentPointer } from "./types";
+import { type Primitive, type SerializedNode } from "./types";
 import { NodeParent } from "./NodeParent";
 import { Indexable } from "./Indexable";
 import { CacheEntry } from "./CacheEntry";
@@ -71,11 +71,11 @@ export class Graph<T = any> {
     return node;
   }
 
-  public get(key: Primative) {
+  public get(key: Primitive) {
     return this.nodes[key as any];
   }
 
-  public set(key: Primative, node: Graph) {
+  public set(key: Primitive, node: Graph) {
     this.nodes[key as any] = node;
   }
 

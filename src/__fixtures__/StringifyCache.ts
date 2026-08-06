@@ -1,4 +1,4 @@
-import { Indexable } from "../Indexable";
+import { Indexable } from "../Cache/Indexable";
 
 export class StringifyCache {
   private storage: Record<any, any>;
@@ -6,7 +6,7 @@ export class StringifyCache {
     this.storage = initialState;
   }
 
-  public toSerialized() {
+  public serialize() {
     return this.storage;
   }
 

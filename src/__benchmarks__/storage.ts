@@ -1,7 +1,7 @@
-import { run, bench, group, lineplot, summary } from "mitata";
+import { run, bench, group, summary, barplot } from "mitata";
 
-import { Cache } from "../Cache";
-import { TEST_TYPES } from "../__fixtures__/types";
+import { Cache } from "../Cache/Cache";
+import { TEST_TYPES, SERIALIZABLE_TEST_TYPES } from "../__fixtures__/types";
 import { StringifyCache } from "../__fixtures__/StringifyCache";
 import { OptimizedStringifyCache } from "../__fixtures__/OptimizedStringifyCache";
 
@@ -10,58 +10,112 @@ const stringifyCacheWithFlatStorage = new StringifyCache();
 const optimizedStringifyCacheWithFlatStorage = new OptimizedStringifyCache();
 
 group("Storage Comparison - Insertion", () => {
-  lineplot(() => {
+  barplot(() => {
     summary(() => {
-      bench("Flat Storage with JSON.stringify", () => {
-        TEST_TYPES.forEach(type => {
-          stringifyCacheWithFlatStorage.set(type, type);
-        });
-        return stringifyCacheWithFlatStorage.get(
-          TEST_TYPES[TEST_TYPES.length - 1],
-        );
+      bench("Flat Storage with JSON.stringify", function* () {
+        stringifyCacheWithFlatStorage.reset();
+        yield () => {
+          TEST_TYPES.forEach(type => {
+            stringifyCacheWithFlatStorage.set(type, type);
+          });
+        };
       });
-      bench("Flat Storage with optimized Stringify", () => {
-        TEST_TYPES.forEach(type => {
-          optimizedStringifyCacheWithFlatStorage.set(type, type);
-        });
-        return optimizedStringifyCacheWithFlatStorage.get(
-          TEST_TYPES[TEST_TYPES.length - 1],
-        );
+      bench("Flat Storage with optimized Stringify", function* () {
+        optimizedStringifyCacheWithFlatStorage.reset();
+        yield () => {
+          TEST_TYPES.forEach(type => {
+            optimizedStringifyCacheWithFlatStorage.set(type, type);
+          });
+        };
       });
-      bench("Tree Storage", () => {
-        TEST_TYPES.forEach(type => {
-          graphCache.set(type, type);
-        });
-        return graphCache.get(TEST_TYPES[TEST_TYPES.length - 1]);
+      bench("Tree Storage", function* () {
+        graphCache.reset();
+        yield () => {
+          TEST_TYPES.forEach(type => {
+            graphCache.set(type, type);
+          });
+        };
       });
     });
   });
 });
 
 group("Storage Comparison - Retrieval", () => {
-  lineplot(() => {
+  barplot(() => {
     summary(() => {
-      bench("Flat Storage with JSON.stringify", () => {
+      bench("Flat Storage with JSON.stringify", function* () {
+        stringifyCacheWithFlatStorage.reset();
         TEST_TYPES.forEach(type => {
-          stringifyCacheWithFlatStorage.get(type);
+          stringifyCacheWithFlatStorage.set(type, type);
         });
-        return stringifyCacheWithFlatStorage.get(
-          TEST_TYPES[TEST_TYPES.length - 1],
-        );
+        yield () => {
+          TEST_TYPES.forEach(type => {
+            stringifyCacheWithFlatStorage.get(type);
+          });
+        };
       });
-      bench("Flat Storage with optimized Stringify", () => {
+      bench("Flat Storage with optimized Stringify", function* () {
+        optimizedStringifyCacheWithFlatStorage.reset();
         TEST_TYPES.forEach(type => {
-          optimizedStringifyCacheWithFlatStorage.get(type);
+          optimizedStringifyCacheWithFlatStorage.set(type, type);
         });
-        return optimizedStringifyCacheWithFlatStorage.get(
-          TEST_TYPES[TEST_TYPES.length - 1],
-        );
+        yield () => {
+          TEST_TYPES.forEach(type => {
+            optimizedStringifyCacheWithFlatStorage.get(type);
+          });
+        };
       });
-      bench("Tree Storage", () => {
+      bench("Tree Storage", function* () {
+        graphCache.reset();
         TEST_TYPES.forEach(type => {
-          graphCache.get(type);
+          graphCache.set(type, type);
         });
-        return graphCache.get(TEST_TYPES[TEST_TYPES.length - 1]);
+        yield () => {
+          TEST_TYPES.forEach(type => {
+            graphCache.get(type);
+          });
+        };
+      });
+    });
+  });
+});
+
+group("Cache Building", () => {
+  barplot(() => {
+    summary(() => {
+      bench("Flat Storage with JSON.stringify", function* () {
+        stringifyCacheWithFlatStorage.reset();
+        SERIALIZABLE_TEST_TYPES.forEach(type => {
+          stringifyCacheWithFlatStorage.set(type, type);
+        });
+        const payload = JSON.stringify(
+          stringifyCacheWithFlatStorage.serialize(),
+        );
+        yield () => {
+          new StringifyCache(JSON.parse(payload));
+        };
+      });
+      bench("Flat Storage with optimized Stringify", function* () {
+        optimizedStringifyCacheWithFlatStorage.reset();
+        SERIALIZABLE_TEST_TYPES.forEach(type => {
+          optimizedStringifyCacheWithFlatStorage.set(type, type);
+        });
+        const payload = JSON.stringify(
+          optimizedStringifyCacheWithFlatStorage.serialize(),
+        );
+        yield () => {
+          new OptimizedStringifyCache(JSON.parse(payload));
+        };
+      });
+      bench("Tree Storage", function* () {
+        graphCache.reset();
+        TEST_TYPES.forEach(type => {
+          graphCache.set(type, type);
+        });
+        const payload = JSON.stringify(graphCache.serialize());
+        yield () => {
+          new Cache(JSON.parse(payload));
+        };
       });
     });
   });

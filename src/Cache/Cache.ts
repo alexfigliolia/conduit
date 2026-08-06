@@ -1,4 +1,6 @@
-import type { ConduitStatus, SerializedNode } from "./types";
+import type { ConduitStatus } from "../Conduits";
+
+import type { SerializedNode } from "./types";
 import { NodeParent } from "./NodeParent";
 import { Graph } from "./Graph";
 

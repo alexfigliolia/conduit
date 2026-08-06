@@ -1,8 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Conduit } from "../Conduit";
-import { CacheEntry } from "../CacheEntry";
-import { Cache } from "../Cache";
+import { Conduit } from "../Conduits/Conduit";
+import { CacheEntry } from "../Cache/CacheEntry";
+import { Cache } from "../Cache/Cache";
 import { TEST_TYPES } from "../__fixtures__/types";
 import {
   createNonSpreadArgsConduit,

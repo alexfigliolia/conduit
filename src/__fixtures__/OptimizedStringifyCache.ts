@@ -1,4 +1,4 @@
-import { Indexable } from "../Indexable";
+import { Indexable } from "../Cache/Indexable";
 
 import { StringifyCache } from "./StringifyCache";
 

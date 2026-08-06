@@ -1,10 +1,10 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import type { CachePolicy } from "../types";
-import { ConduitStatus } from "../types";
-import { Conduit } from "../Conduit";
-import { CacheEntry } from "../CacheEntry";
-import { Cache } from "../Cache";
+import { Conduit } from "../Conduits/Conduit";
+import { ConduitStatus } from "../Conduits";
+import type { CachePolicy } from "../Conduits";
+import { CacheEntry } from "../Cache/CacheEntry";
+import { Cache } from "../Cache/Cache";
 import {
   createAsyncConduit,
   createSyncConduit,

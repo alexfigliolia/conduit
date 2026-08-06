@@ -1,7 +1,8 @@
 import { State } from "@figliolia/galena";
 import type { NonFunction } from "@figliolia/galena";
 
-import { ConduitStatus } from "./types";
+import { ConduitStatus } from "../Conduits/types";
+
 import type { SerializedCacheEntry } from "./types";
 import { Indexable } from "./Indexable";
 

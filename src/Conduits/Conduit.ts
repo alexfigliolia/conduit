@@ -1,14 +1,17 @@
-import type {
-  CachePolicy,
-  ConduitValue,
-  IConduitWithPolicy,
-  IExecuteOptions,
-  IKey,
-  IValueType,
-  MaybeCacheEntry,
+import { Cache } from "../Cache/Cache";
+
+import {
+  type CachePolicy,
+  type ConduitValue,
+  type IConduit,
+  type IConduitWithPolicy,
+  type IExecuteOptions,
+  type IKey,
+  type IOperation,
+  type MaybeCacheEntry,
+  type IValueType,
+  ConduitStatus,
 } from "./types";
-import { ConduitStatus, type IConduit, type IOperation } from "./types";
-import { Cache } from "./Cache";
 
 export class Conduit<O extends IOperation, D = IValueType<O>> {
   public readonly options: IConduitWithPolicy<O, D>;

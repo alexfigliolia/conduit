@@ -1,5 +1,5 @@
-import { Conduit } from "../Conduit";
-import { Cache } from "../Cache";
+import { Conduit } from "../Conduits/Conduit";
+import { Cache } from "../Cache/Cache";
 import { TEST_TYPES } from "../__fixtures__/types";
 
 import { Logger } from "./Logger";

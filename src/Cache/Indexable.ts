@@ -1,4 +1,4 @@
-import type { Primative } from "./types";
+import type { Primitive } from "./types";
 import { TypeChecker } from "./TypeChecker";
 import { Serialized } from "./Serialized";
 
@@ -10,7 +10,7 @@ export class Indexable extends TypeChecker {
 
   public static traverse(
     value: unknown,
-    onValue: (current: Primative) => boolean,
+    onValue: (current: Primitive) => boolean,
   ) {
     if (!this.isObjectType(value)) {
       if (
@@ -22,7 +22,7 @@ export class Indexable extends TypeChecker {
       if (typeof value === "bigint") {
         return onValue(value.toString());
       }
-      return onValue(value as Primative);
+      return onValue(value as Primitive);
     }
     if (Array.isArray(value)) {
       for (const item of value) {

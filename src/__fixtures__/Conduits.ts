@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
-import { Conduit } from "../Conduit";
-import type { Cache } from "../Cache";
+import { Conduit } from "../Conduits/Conduit";
+import type { Cache } from "../Cache/Cache";
 
 export const createSyncConduit = (cache?: Cache, key = "sync") => {
   return new Conduit({
