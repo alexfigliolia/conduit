@@ -36,10 +36,7 @@ export class Indexable extends TypeChecker {
       }
       const keys = this.sortObjectKeys(value);
       for (const key of keys) {
-        if (
-          !this.traverse(key, onValue) ||
-          !this.traverse(value[key], onValue)
-        ) {
+        if (!onValue(key) || !this.traverse(value[key], onValue)) {
           return false;
         }
       }

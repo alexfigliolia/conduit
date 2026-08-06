@@ -14,6 +14,7 @@ TEST_TYPES.map((p, i) => {
     cache,
     key: [`c${i}`],
     operation: (_: typeof p) => p,
+    defaultValue: structuredClone(p),
   }).execute({ args: [p] });
 });
 

@@ -8,12 +8,20 @@ export type CacheGetter = Cache | (() => Cache);
 
 export type IOperation = (...args: any[]) => any;
 
-export interface IConduit<O extends IOperation> {
+export interface IConduit<O extends IOperation, D = IValueType<O>> {
   key: IKey;
   operation: O;
   cache?: CacheGetter;
   expires?: number;
   cachePolicy?: CachePolicy;
+  defaultValue: D;
+}
+
+export interface IConduitWithPolicy<
+  O extends IOperation,
+  D = IValueType<O>,
+> extends Omit<IConduit<O, D>, "cachePolicy"> {
+  cachePolicy: CachePolicy;
 }
 
 export type CachePolicy =

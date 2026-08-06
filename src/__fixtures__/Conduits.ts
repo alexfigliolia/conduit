@@ -7,6 +7,7 @@ export const createSyncConduit = (cache?: Cache, key = "sync") => {
   return new Conduit({
     cache,
     key,
+    defaultValue: undefined,
     operation: vi
       .fn<(...args: number[]) => number[]>()
       .mockImplementation((...args: number[]) => args),
@@ -17,6 +18,7 @@ export const createAsyncConduit = (cache?: Cache, key = "async") => {
   return new Conduit({
     cache,
     key,
+    defaultValue: undefined,
     operation: vi
       .fn<(...args: number[]) => Promise<number[]>>()
       .mockImplementation((...args: number[]) => {
@@ -33,6 +35,7 @@ export const createNonSpreadArgsConduit = (cache?: Cache, key = "sync") => {
   return new Conduit({
     cache,
     key,
+    defaultValue: undefined,
     operation: vi
       .fn<(args: number[]) => number[]>()
       .mockImplementation((args: number[]) => args),

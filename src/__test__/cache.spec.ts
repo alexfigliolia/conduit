@@ -17,6 +17,7 @@ const CONDUITS = [
       new Conduit({
         cache,
         key: [`c${i}`],
+        defaultValue: structuredClone(p),
         operation: (..._args: typeof TEST_TYPES) => p,
       }),
   ),
@@ -24,6 +25,7 @@ const CONDUITS = [
     (p, i) =>
       new Conduit({
         cache,
+        defaultValue: structuredClone(p),
         key: [`c${TEST_TYPES.length + i}`],
         operation: (..._args: typeof TEST_TYPES) => Promise.resolve(p),
       }),
@@ -75,6 +77,7 @@ describe("Cache", () => {
     it("Errors on Non-Serializeable Values", () => {
       const conduit = new Conduit({
         cache,
+        defaultValue: new Set(),
         key: ["non-json-serializeable"],
         operation: (_: Map<string, string>) => new Set(),
       });
@@ -94,6 +97,7 @@ describe("Cache", () => {
       const conduit = new Conduit({
         cache,
         operation,
+        defaultValue: [],
         // force a lookup to an inactive, but intermediary Trie node along the path of an existent cache entry
         key: [`c${TEST_TYPES.length + TEST_TYPES.length - 2}`],
       });
@@ -139,15 +143,13 @@ describe("Cache", () => {
       const args = [1, 2, 3, 4, 5, 6];
       const conduit = createSyncConduit(cache);
       const cacheKey = [conduit.options.key, args];
-      expect(conduit.getCachedNode(cacheKey)).not.toBeDefined();
+      expect(cache.get(cacheKey)).not.toBeDefined();
       const onChange = vi.fn();
       const off = cache.subscribeToValue(cacheKey, [1], onChange);
-      expect(conduit.getCachedNode(cacheKey)?.State?.getState?.()).toEqual([1]);
+      expect(cache.get(cacheKey)?.State?.getState?.()).toEqual([1]);
       const result = conduit.execute({ args });
       expect(result).toEqual(args);
-      expect(conduit.getCachedNode(cacheKey)?.State?.getState?.()).toEqual(
-        result,
-      );
+      expect(cache.get(cacheKey)?.State?.getState?.()).toEqual(result);
       expect(onChange).toHaveBeenCalledWith(result);
       off();
     });
@@ -159,7 +161,7 @@ describe("Cache", () => {
       const onChange = vi.fn();
       const off = cache.subscribeToValue(cacheKey, [1], onChange);
       conduit.execute({ args: [args] });
-      const node = conduit.getCachedNode<number[]>(cacheKey);
+      const node = cache.get<number[]>(cacheKey);
       expect(node).toBeDefined();
       expect(args).toBe(node?.State?.getState?.());
       node!.write([]);

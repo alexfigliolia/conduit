@@ -1,28 +1,50 @@
 import { ConduitStatus, type IConduit, type IOperation } from "./types";
-import type { IExecuteOptions, IValueType } from "./types";
-import type { CacheEntry } from "./CacheEntry";
+import type {
+  CachePolicy,
+  IConduitWithPolicy,
+  IExecuteOptions,
+  IKey,
+  IValueType,
+} from "./types";
 import { Cache } from "./Cache";
 
-export class Conduit<O extends IOperation> {
-  public readonly options: IConduit<O>;
+export class Conduit<O extends IOperation, D = IValueType<O>> {
+  public readonly options: IConduitWithPolicy<O, D>;
   public static readonly DEFAULT_LIFE_TIME = 1000 * 60 * 5;
-  constructor(options: IConduit<O>) {
-    this.options = Object.freeze(options);
+  constructor(options: IConduit<O, D>) {
+    this.options = Object.freeze(this.validateOptions(options));
+  }
+
+  public getCache(options: IConduit<O, D> = this.options) {
+    if (typeof options.cache === "function") {
+      return options.cache();
+    }
+    if (options.cache instanceof Cache) {
+      return options.cache;
+    }
   }
 
   public prepare(options: Omit<IExecuteOptions<O>, "args"> = {}) {
     return (...args: Parameters<O>) => this.execute({ ...options, args });
   }
 
-  public execute({
-    args,
-    expires,
-    cachePolicy = this.options.cachePolicy,
-  }: IExecuteOptions<O>) {
+  public execute({ args, expires, cachePolicy }: IExecuteOptions<O>) {
+    const cache = this.getCache();
     const cacheKey = [this.options.key, args];
-    switch (cachePolicy) {
+    cache?.createEntryIfNotExists?.(cacheKey, this.options.defaultValue);
+    const resolvedPolicy = this.validateCachePolicy(
+      this.options.key,
+      cache,
+      this.options.cachePolicy,
+      cachePolicy,
+    );
+    switch (resolvedPolicy) {
       case "cache-only":
-        return this.getCachedValue(cacheKey);
+        if (!cache) {
+          throw this.cachePolicyError("cache-only");
+        }
+        const entry = cache.get<IValueType<O> | D>(cacheKey)!;
+        return entry.read();
       case "no-cache":
         return this.executeAndCache(cacheKey, ...args);
       case "read-cache-with-respect-to-expiry":
@@ -35,8 +57,8 @@ export class Conduit<O extends IOperation> {
     }
   }
 
-  public executeAndCache(cacheKey: any[], ...args: Parameters<O>) {
-    this.getCache()?.get?.(cacheKey)?.Status?.set(ConduitStatus.IN_FLIGHT);
+  private executeAndCache(cacheKey: any[], ...args: Parameters<O>) {
+    this.getCache()?.get?.(cacheKey)?.Status?.set?.(ConduitStatus.IN_FLIGHT);
     const result = this.options.operation(...args);
     if (result instanceof Promise) {
       void result.then(v => this.onExecutionResult(cacheKey, v));
@@ -51,38 +73,51 @@ export class Conduit<O extends IOperation> {
     expiry: number,
     ...args: Parameters<O>
   ) {
-    const node = this.getCachedNode(cacheKey);
+    const cache = this.getCache();
+    if (!cache) {
+      throw this.cachePolicyError("read-cache-with-respect-to-expiry");
+    }
+    const node = cache.get<IValueType<O>>(cacheKey);
     if (!node || Date.now() - node.updatedAt >= expiry) {
       return this.executeAndCache(cacheKey, ...args);
     }
     // TODO - maybe a cache refresh on an interval in the background
-    return node.State.getState() as unknown as IValueType<O>;
-  }
-
-  public getCache() {
-    if (typeof this.options.cache === "function") {
-      return this.options.cache();
-    }
-    if (this.options.cache instanceof Cache) {
-      return this.options.cache;
-    }
-  }
-
-  public getCachedNode<T>(cacheKey: any[]) {
-    const cache = this.getCache();
-    return cache?.get?.(cacheKey) as CacheEntry<T> | undefined;
-  }
-
-  private getCachedValue(cacheKey: any[]) {
-    const cacheState = this.getCachedNode(cacheKey)?.State;
-    if (!cacheState) {
-      return;
-    }
-    return cacheState.getState() as IValueType<O>;
+    return node.read();
   }
 
   private onExecutionResult(key: any[], value: IValueType<O>) {
     const node = this.getCache()?.set?.(key, value);
     node?.Status?.set?.(ConduitStatus.IDOL);
+  }
+
+  private validateOptions(options: IConduit<O, D>) {
+    options.cachePolicy = this.validateCachePolicy(
+      options.key,
+      this.getCache(options),
+      "read-cache-with-respect-to-expiry",
+      options.cachePolicy,
+    );
+    return options as IConduitWithPolicy<O, D>;
+  }
+
+  private validateCachePolicy(
+    key: IKey,
+    cache: Cache | undefined,
+    fallback: CachePolicy = "read-cache-with-respect-to-expiry",
+    policy?: CachePolicy,
+  ): CachePolicy {
+    if (!cache && policy && policy !== "no-cache") {
+      console.warn(
+        `A conduit with the key "${key as any}" is using a cachePolicy of "${policy}", but no cache is specified. Switching to the "no-cache" policy`,
+      );
+      return "no-cache";
+    }
+    return !cache ? "no-cache" : (policy ?? fallback);
+  }
+
+  private cachePolicyError(policy: CachePolicy) {
+    return new Error(
+      `Internal Error: Use of "${policy}" policy without specifying the 'cache' option`,
+    );
   }
 }

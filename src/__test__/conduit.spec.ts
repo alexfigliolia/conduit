@@ -1,7 +1,7 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 
-import { ConduitStatus } from "../types";
 import type { CachePolicy } from "../types";
+import { ConduitStatus } from "../types";
 import { Conduit } from "../Conduit";
 import { CacheEntry } from "../CacheEntry";
 import { Cache } from "../Cache";
@@ -78,9 +78,7 @@ describe("Conduits", () => {
           expect(conduit.options.operation).toHaveBeenCalledTimes(1);
           // assert that results then populate the cache entry
           expect(
-            conduit
-              .getCachedNode([conduit.options.key, args])
-              ?.State?.getState?.(),
+            cache.get([conduit.options.key, args])?.State?.getState?.(),
           ).toEqual(args);
         },
       );
@@ -98,9 +96,7 @@ describe("Conduits", () => {
           expect(conduit.options.operation).toHaveBeenCalledTimes(0);
           // assert that cached value remains
           expect(
-            conduit
-              .getCachedNode([conduit.options.key, args])
-              ?.State?.getState?.(),
+            cache.get([conduit.options.key, args])?.State?.getState?.(),
           ).toEqual(args);
         },
       );
@@ -116,9 +112,7 @@ describe("Conduits", () => {
           expect(conduit.options.operation).toHaveBeenCalledTimes(0);
           // assert that cached value remains
           expect(
-            conduit
-              .getCachedNode([conduit.options.key, args])
-              ?.State?.getState?.(),
+            cache.get([conduit.options.key, args])?.State?.getState?.(),
           ).toEqual(undefined);
         },
       );
@@ -139,9 +133,7 @@ describe("Conduits", () => {
           expect(conduit.options.operation).toHaveBeenCalledTimes(0);
           // assert that cached value remains
           expect(
-            conduit
-              .getCachedNode([conduit.options.key, args])
-              ?.State?.getState?.(),
+            cache.get([conduit.options.key, args])?.State?.getState?.(),
           ).toEqual(args);
         },
       );
@@ -155,7 +147,7 @@ describe("Conduits", () => {
           cache.set([conduit.options.key, args], args);
           const now = Date.now();
           // Get a reference to the cache node
-          const cacheNode = conduit.getCachedNode([conduit.options.key, args]);
+          const cacheNode = cache.get([conduit.options.key, args]);
           expect(cacheNode).toBeInstanceOf(CacheEntry);
           // Update the cache value to something that will not match the result of the execution
           cacheNode?.write?.([1, 2, 3]);
@@ -180,9 +172,7 @@ describe("Conduits", () => {
       [createAsyncConduit(cache), createSyncConduit(cache)].forEach(
         async conduit => {
           // Assert the cache is empty
-          expect(
-            conduit.getCachedNode([conduit.options.key, args]),
-          ).not.toBeDefined();
+          expect(cache.get([conduit.options.key, args])).not.toBeDefined();
           // execute with "read-cache-with-respect-to-expiry"
           await conduit.execute({
             args: args,
@@ -192,9 +182,7 @@ describe("Conduits", () => {
           expect(conduit.options.operation).toHaveBeenCalledTimes(1);
           // assert that cached value is updated
           expect(
-            conduit
-              .getCachedNode([conduit.options.key, args])
-              ?.State?.getState?.(),
+            cache.get([conduit.options.key, args])?.State?.getState?.(),
           ).toEqual(args);
         },
       );
@@ -202,34 +190,28 @@ describe("Conduits", () => {
   });
 
   describe("No Cache In Conduit Scope", () => {
-    const configs: [policy: CachePolicy, operationCalls: number][] = [
-      ["read-cache-with-respect-to-expiry", 1],
-      ["cache-only", 0],
-      ["no-cache", 1],
-    ] as const;
-
-    configs.forEach(([cachePolicy, operationCalls]) => {
-      it(`Behaves as if the cache were empty - ${cachePolicy}`, () => {
-        const args = [1, 2, 3, 4];
-        [createAsyncConduit(), createSyncConduit()].forEach(async conduit => {
-          // Assert the cache is empty
-          expect(
-            conduit.getCachedNode([conduit.options.key, args]),
-          ).not.toBeDefined();
-          // run execution with the cache policy in scope
-          await conduit.execute({
-            args: args,
-            cachePolicy,
-          });
-          // assert the corresponding number of operation calls
-          expect(conduit.options.operation).toHaveBeenCalledTimes(
-            operationCalls,
-          );
-          // assert that cached value is not updated
-          expect(
-            conduit.getCachedNode([conduit.options.key, args]),
-          ).not.toBeDefined();
+    const configs: CachePolicy[] = [
+      "read-cache-with-respect-to-expiry",
+      "cache-only",
+    ];
+    configs.forEach(cachePolicy => {
+      it(`It switches to the "no-cache" policy - ${cachePolicy}`, () => {
+        const spy = vi.spyOn(console, "warn");
+        const result = [1, 2, 3, 4];
+        const conduit = new Conduit({
+          key: "test",
+          cachePolicy,
+          operation: vi.fn().mockImplementation(() => result),
+          defaultValue: [],
         });
+        expect(spy).toHaveBeenCalledTimes(1);
+        expect(conduit.options.cachePolicy).toEqual("no-cache");
+        conduit.execute({
+          args: [],
+          cachePolicy,
+        });
+        expect(spy).toHaveBeenCalledTimes(2);
+        expect(conduit.options.operation).toHaveBeenCalled();
       });
     });
   });

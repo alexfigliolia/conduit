@@ -28,7 +28,7 @@ export class Cache {
     defaultValue: T,
     onChange: (value: T) => void,
   ) {
-    const entry = this.storage.createCacheEntryIfNotExists(key, defaultValue);
+    const entry = this.createEntryIfNotExists(key, defaultValue);
     return entry.subscribeToValue(onChange);
   }
 
@@ -37,8 +37,12 @@ export class Cache {
     defaultValue: T,
     onChange: (value: ConduitStatus) => void,
   ) {
-    const entry = this.storage.createCacheEntryIfNotExists(key, defaultValue);
+    const entry = this.createEntryIfNotExists(key, defaultValue);
     return entry.subscribeToStatus(onChange);
+  }
+
+  public createEntryIfNotExists<T>(key: any, defaultValue: T) {
+    return this.storage.createCacheEntryIfNotExists(key, defaultValue);
   }
 
   public get<T>(key: any) {
