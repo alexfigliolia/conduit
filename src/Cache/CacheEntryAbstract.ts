@@ -22,7 +22,7 @@ export abstract class CacheEntryAbstract<
     _evict: () => any,
   ): CacheEntryAbstract<any, any, any> {
     throw new Error(
-      "Not implemented Error: Override with this static method in your extension of the CachEntryAbstract to create cache entries from serialized data",
+      "Not implemented Error: Override this static method in your extension of the CachEntryAbstract to create cache entries from serialized data",
     );
   }
 
