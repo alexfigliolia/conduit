@@ -1,12 +1,12 @@
-import type { ConduitStatus } from "../Conduits";
-
 import type { SerializedNode } from "./types";
 import { NodeParent } from "./NodeParent";
 import { Graph } from "./Graph";
+import { CacheAbstract } from "./CacheAbstract";
 
-export class Cache {
-  private readonly storage = new Graph();
+export class Cache extends CacheAbstract<Graph> {
+  protected override readonly storage = new Graph();
   constructor(initialState: Record<string, SerializedNode> = {}) {
+    super();
     for (const key in initialState) {
       if (initialState[key]) {
         this.storage.set(
@@ -21,38 +21,16 @@ export class Cache {
     return this.storage.serialize().nodes;
   }
 
-  public set<T>(args: any, value: T) {
-    return this.storage.index(args, value);
+  public set<T>(key: any[], args: any[], value: T) {
+    return this.storage.index(key, args, value);
   }
 
-  public subscribeToValue<T>(
-    key: any,
-    defaultValue: T,
-    onChange: (value: T) => void,
-  ) {
-    const entry = this.createEntryIfNotExists(key, defaultValue);
-    return entry.subscribeToValue(onChange);
+  public createEntryIfNotExists<T>(key: any[], args: any[], defaultValue: T) {
+    return this.storage.createCacheEntryIfNotExists(key, args, defaultValue);
   }
 
-  public subscribeToStatus<T>(
-    key: any,
-    defaultValue: T,
-    onChange: (value: ConduitStatus) => void,
-  ) {
-    const entry = this.createEntryIfNotExists(key, defaultValue);
-    return entry.subscribeToStatus(onChange);
-  }
-
-  public createEntryIfNotExists<T>(key: any, defaultValue: T) {
-    return this.storage.createCacheEntryIfNotExists(key, defaultValue);
-  }
-
-  public get<T>(key: any) {
-    return this.storage.lookup<T>(key);
-  }
-
-  public evict(key: any) {
-    return this.storage.evict(key);
+  public get<T>(key: any[], args: any[]) {
+    return this.storage.lookup<T>(key, args);
   }
 
   public reset() {

@@ -36,15 +36,14 @@ describe("Cache", () => {
   describe("Cache Building", () => {
     beforeEach(async () => {
       cache.reset();
-      // oxlint-disable-next-line typescript/await-thenable
       await Promise.all(CONDUITS.map(c => c.execute({ args: TEST_TYPES })));
     });
 
     it("Cache Building - Cold", () => {
-      TEST_TYPES.forEach((type, i) => {
-        const node = cache.get([`c${i}`, TEST_TYPES]);
-        expect(node?.State?.getState?.()).toEqual(type);
+      [...TEST_TYPES, ...TEST_TYPES].forEach((type, i) => {
+        const node = cache.get([`c${i}`], TEST_TYPES);
         expect(node?.lastRead).toEqual(0);
+        expect(node?.readValue()).toEqual(type);
       });
     });
 
@@ -58,8 +57,8 @@ describe("Cache", () => {
         JSON.parse(JSON.stringify(cache.serialize())),
       );
       TEST_TYPES.forEach((type, i) => {
-        const coldNode = cache.get([`c${i}`, TEST_TYPES]);
-        const warmNode = warmedCache.get([`c${i}`, TEST_TYPES]);
+        const coldNode = cache.get([`c${i}`], TEST_TYPES);
+        const warmNode = warmedCache.get([`c${i}`], TEST_TYPES);
         expect(coldNode?.readValue?.()).toEqual(type);
         expect(warmNode?.readValue?.()).toEqual(type);
         expect(coldNode?.updatedAt).toEqual(warmNode?.updatedAt);
@@ -119,16 +118,12 @@ describe("Cache", () => {
       });
       // Assert a cache hit on a second execution
       expect(operation).toHaveBeenCalledTimes(1);
-      const node = cache.get([
-        `c${TEST_TYPES.length + TEST_TYPES.length - 2}`,
-        argsToTriggerIntermediaryNodeLookup,
-      ]);
+      const node = conduit.getCacheEntry(
+        ...argsToTriggerIntermediaryNodeLookup,
+      );
       expect(node).toBeInstanceOf(CacheEntry);
       // Set the node's state to undefined - implying it's never been written to
-      cache.evict([
-        `c${TEST_TYPES.length + TEST_TYPES.length - 2}`,
-        argsToTriggerIntermediaryNodeLookup,
-      ]);
+      node.evict();
       conduit.execute({
         args: argsToTriggerIntermediaryNodeLookup,
         cachePolicy: "read-cache-with-respect-to-expiry",
@@ -146,14 +141,13 @@ describe("Cache", () => {
     it("Subscriptions can initialize cache entries", () => {
       const args = [1, 2, 3, 4, 5, 6];
       const conduit = createSyncConduit({ cache });
-      const cacheKey = [conduit.options.key, args];
-      expect(cache.get(cacheKey)).not.toBeDefined();
+      expect(cache.get(conduit.options.key, args)).not.toBeDefined();
       const onChange = vi.fn();
-      const off = cache.subscribeToValue(cacheKey, [1], onChange);
-      expect(cache.get(cacheKey)?.State?.getState?.()).toEqual([1]);
+      const off = conduit.subscribeToValue({ args, onChange });
+      expect(conduit.read(...args)).toEqual(undefined);
       const result = conduit.execute({ args });
       expect(result).toEqual(args);
-      expect(cache.get(cacheKey)?.State?.getState?.()).toEqual(result);
+      expect(conduit.read(...args)).toEqual(result);
       expect(onChange).toHaveBeenCalledWith(result);
       off();
     });
@@ -161,17 +155,15 @@ describe("Cache", () => {
     it("Subscriptions fire on value changes", () => {
       const args = [1, 2, 3, 4, 5, 6];
       const conduit = createNonSpreadArgsConduit(cache);
-      const cacheKey = [conduit.options.key, args];
       const onChange = vi.fn();
-      const off = cache.subscribeToValue(cacheKey, [1], onChange);
+      const off = conduit.subscribeToValue({ args: [args], onChange });
       conduit.execute({ args: [args] });
-      const node = cache.get<number[]>(cacheKey);
-      expect(node).toBeDefined();
-      expect(args).toBe(node?.State?.getState?.());
-      node!.writeValue([]);
+      const node = conduit.getCacheEntry(args);
+      expect(args).toBe(node.readValue());
+      node.writeValue([]);
       expect(onChange).toHaveBeenCalledWith(args);
       expect(onChange).toHaveBeenCalledWith([]);
-      node!.writeValue([1, 2, 3]);
+      node.writeValue([1, 2, 3]);
       expect(onChange).toHaveBeenCalledWith([1, 2, 3]);
       off();
     });

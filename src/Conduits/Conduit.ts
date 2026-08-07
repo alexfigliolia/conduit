@@ -1,5 +1,6 @@
 import { Cache } from "../Cache/Cache";
 
+import type { ConduitCacheSubscriber, ConduitCacheWrite } from "./types";
 import {
   type CachePolicy,
   type ConduitValue,
@@ -11,7 +12,6 @@ import {
   type IValueType,
   ConduitStatus,
 } from "./types";
-import type { ConduitCacheWrite } from "./types";
 
 export class Conduit<O extends IOperation, D = IValueType<O>> {
   public readonly options: IConduitWithPolicy<O, D>;
@@ -49,7 +49,8 @@ export class Conduit<O extends IOperation, D = IValueType<O>> {
       throw this.cachePolicyError(cachePolicy);
     }
     const cacheEntry = cache?.createEntryIfNotExists?.<ConduitValue<O, D>>(
-      [this.options.key, args],
+      this.options.key,
+      args,
       this.options.defaultValue,
     );
     switch (cachePolicy) {
@@ -70,12 +71,38 @@ export class Conduit<O extends IOperation, D = IValueType<O>> {
     }
   }
 
+  public subscribeToValue({
+    args,
+    onChange,
+  }: ConduitCacheSubscriber<O, ConduitValue<O, D>>) {
+    return this.getCacheEntryStrict(...args).subscribeToValue(onChange);
+  }
+
+  public subscribeToStatus({
+    args,
+    onChange,
+  }: ConduitCacheSubscriber<O, ConduitStatus>) {
+    return this.getCacheEntryStrict(...args).subscribeToStatus(onChange);
+  }
+
+  public getStatus(...args: Parameters<O>) {
+    return this.getCacheEntryStrict(...args).getStatus();
+  }
+
   public write({ args, value }: ConduitCacheWrite<O, D>) {
     return this.getCacheEntryStrict(...args).writeValue(value);
   }
 
   public read(...args: Parameters<O>) {
     return this.getCacheEntryStrict(...args).readValue();
+  }
+
+  public evict(...args: Parameters<O>) {
+    return this.getCacheEntryStrict(...args).evict();
+  }
+
+  public getCacheEntry(...args: Parameters<O>) {
+    return this.getCacheEntryStrict(...args);
   }
 
   private executeAndCache(
@@ -116,7 +143,8 @@ export class Conduit<O extends IOperation, D = IValueType<O>> {
       );
     }
     return cache.createEntryIfNotExists<ConduitValue<O, D>>(
-      [this.options.key, args],
+      this.options.key,
+      args,
       this.options.defaultValue,
     );
   }

@@ -3,9 +3,9 @@ import { NodePathGenerator } from "../Cache/NodePathGenerator";
 import { StringifyCache } from "./StringifyCache";
 
 export class OptimizedStringifyCache extends StringifyCache {
-  protected override hash(args: any) {
+  protected override hash(key: any[], args: any[]) {
     const result: any[] = [];
-    NodePathGenerator.traverse(args, primitive => {
+    NodePathGenerator.toPath(key, args, primitive => {
       result.push(primitive);
       return true;
     });

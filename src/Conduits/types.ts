@@ -2,15 +2,12 @@ import type { Setter } from "@figliolia/galena";
 
 import type { Cache, CacheEntry } from "../Cache";
 
-export type IToken = string | number;
-export type IKey = IToken | IToken[];
-
 export type CacheGetter = Cache | (() => Cache);
 
 export type IOperation = (...args: any[]) => any;
 
 export interface IConduit<O extends IOperation, D = IValueType<O>> {
-  key: IKey;
+  key: any[];
   operation: O;
   cache?: CacheGetter;
   expires?: number;
@@ -60,4 +57,9 @@ export enum ConduitStatus {
 export interface ConduitCacheWrite<O extends IOperation, D = IValueType<O>> {
   args: Parameters<O>;
   value: Setter<ConduitValue<O, D>>;
+}
+
+export interface ConduitCacheSubscriber<O extends IOperation, T> {
+  args: Parameters<O>;
+  onChange: (value: T) => void;
 }

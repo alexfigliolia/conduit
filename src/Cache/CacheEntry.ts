@@ -1,22 +1,26 @@
-import { State } from "@figliolia/galena";
 import type { NonFunction } from "@figliolia/galena";
+import { State } from "@figliolia/galena";
 
 import { ConduitStatus } from "../Conduits/types";
 
 import type { SerializedCacheEntry } from "./types";
 import { Serializer } from "./Serializer";
+import type { Graph } from "./Graph";
 
 export class CacheEntry<T> {
   public lastRead = 0;
   public updatedAt = 0;
   public readonly State: State<T>;
   public readonly Status = new State(ConduitStatus.UNINITIALIZED);
-  constructor(defaultValue: T) {
+  constructor(
+    defaultValue: T,
+    public readonly cacheNode: Graph<T>,
+  ) {
     this.State = new State(defaultValue as NonFunction<T>);
   }
 
-  public static from(entry: SerializedCacheEntry) {
-    const cacheNode = new CacheEntry(Serializer.deserialize(entry.value));
+  public static from<T>(entry: SerializedCacheEntry<T>, node: Graph<T>) {
+    const cacheNode = new CacheEntry(Serializer.deserialize(entry.value), node);
     cacheNode.lastRead = entry.lastRead;
     cacheNode.updatedAt = entry.updatedAt;
     cacheNode.setStatus(entry.status);
@@ -47,6 +51,10 @@ export class CacheEntry<T> {
   public writeValue(...args: Parameters<State<T>["update"]>) {
     this.updatedAt = Date.now();
     this.State.update(...args);
+  }
+
+  public evict() {
+    return this.cacheNode.evictSelf();
   }
 
   public serialize(): SerializedCacheEntry<T> {
