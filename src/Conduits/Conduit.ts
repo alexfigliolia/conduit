@@ -1,6 +1,5 @@
 import { Cache } from "../Cache/Cache";
 
-import type { ConduitCacheSubscriber, ConduitCacheWrite } from "./types";
 import {
   type CachePolicy,
   type ConduitValue,
@@ -12,6 +11,7 @@ import {
   type IValueType,
   ConduitStatus,
 } from "./types";
+import type { ConduitCacheSubscriber, ConduitCacheWrite } from "./types";
 
 export class Conduit<O extends IOperation, D = IValueType<O>> {
   public readonly options: IConduitWithPolicy<O, D>;

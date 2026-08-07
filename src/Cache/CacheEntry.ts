@@ -1,5 +1,5 @@
-import type { NonFunction } from "@figliolia/galena";
 import { State } from "@figliolia/galena";
+import type { NonFunction } from "@figliolia/galena";
 
 import { ConduitStatus } from "../Conduits/types";
 

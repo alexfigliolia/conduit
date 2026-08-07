@@ -1,5 +1,5 @@
-import type { ParentPointer } from "./types";
 import { type Primitive, type SerializedNode } from "./types";
+import type { ParentPointer } from "./types";
 import { NodePathGenerator } from "./NodePathGenerator";
 import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";

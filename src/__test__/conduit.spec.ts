@@ -109,12 +109,6 @@ describe("Conduits", () => {
         expect(() => {
           void conduit.execute({ args: args, cachePolicy: "cache-only" });
         }).toThrow();
-        // // assert that the execution only routes to the cache
-        // expect(conduit.options.operation).toHaveBeenCalledTimes(0);
-        // // assert that cached value remains
-        // expect(
-        //   cache.get(conduit.options.key, args)?.State?.getState?.(),
-        // ).toEqual(undefined);
       });
     });
 
@@ -273,18 +267,28 @@ describe("Conduits", () => {
       it(`Conduits should throw when attempting to write to an unspecified cache - ${type}`, () => {
         const args = [1, 2, 3, 4];
         expect(() => {
-          expect(conduit.write({ args, value: args })).toEqual(undefined);
+          conduit.write({ args, value: args });
         }).toThrow();
+      });
+    });
+
+    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
+      it(`Conduits can evict their cache entries - ${type}`, async () => {
+        const args = [1, 2, 3, 4];
+        conduit.write({ args, value: args });
+        expect(conduit.read(...args)).toEqual(args);
+        await conduit.evict(...args);
+        expect(conduit.read(...args)).toEqual(conduit.options.defaultValue);
       });
     });
   });
 
   describe("Cache Reads", () => {
     syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
-      it(`Conduits can write to their cache - ${type}`, () => {
+      it(`Conduits can read from their cache - ${type}`, () => {
         const args = [1, 2, 3, 4];
         expect(conduit.read(...args)).toEqual(undefined);
-        expect(conduit.write({ args, value: args })).toEqual(undefined);
+        conduit.write({ args, value: args });
         expect(conduit.read(...args)).toEqual(args);
       });
     });

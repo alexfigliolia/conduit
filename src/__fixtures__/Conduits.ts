@@ -6,12 +6,13 @@ import { Cache } from "../Cache/Cache";
 
 export const createSyncConduit = <
   O extends (...args: any[]) => any = (...args: number[]) => number[],
+  D = undefined,
 >({
   cache,
   operation,
   key = ["sync"],
   ...rest
-}: Partial<IConduit<O, undefined>> = {}) => {
+}: Partial<IConduit<O, D>> = {}) => {
   return new Conduit({
     cache: cache && cache instanceof Cache ? () => cache : cache,
     key,
@@ -27,12 +28,13 @@ export const createSyncConduit = <
 
 export const createAsyncConduit = <
   O extends (...args: any[]) => any = (...args: number[]) => Promise<number[]>,
+  D = undefined,
 >({
   cache,
   operation,
   key = ["async"],
   ...rest
-}: Partial<IConduit<O, undefined>> = {}) => {
+}: Partial<IConduit<O, D>> = {}) => {
   return new Conduit({
     cache,
     key,
