@@ -1,13 +1,17 @@
-import type { CacheEntry } from "./CacheEntry";
+import type { CacheEntryAbstract } from "./CacheEntryAbstract";
 
-export abstract class CacheAbstract<T> {
-  protected abstract readonly storage: T;
+export abstract class CacheAbstract<
+  T extends Record<any, any>,
+  R extends CacheEntryAbstract<any, any, any>,
+  I extends Record<any, any> = T,
+> {
+  constructor(public storage: T) {}
 
-  public abstract serialize(): Record<any, any>;
+  public abstract serialize(): I;
 
-  public abstract set<T>(key: any[], args: any[], value: T): CacheEntry<T>;
+  public abstract set<T>(key: any[], args: any[], value: T): R;
 
-  public abstract get(key: any[], args: any[]): CacheEntry<T> | undefined;
+  public abstract get(key: any[], args: any[]): R | undefined;
 
   public abstract reset(): any;
 
@@ -15,5 +19,5 @@ export abstract class CacheAbstract<T> {
     key: any[],
     args: any[],
     defaultValue: T,
-  ): CacheEntry<T>;
+  ): R;
 }

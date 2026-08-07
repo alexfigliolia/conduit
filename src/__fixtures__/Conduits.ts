@@ -3,16 +3,18 @@ import { vi } from "vitest";
 import { Conduit } from "../Conduits/Conduit";
 import type { IConduit } from "../Conduits";
 import { Cache } from "../Cache/Cache";
+import type { CacheAbstract } from "../Cache";
 
 export const createSyncConduit = <
   O extends (...args: any[]) => any = (...args: number[]) => number[],
   D = undefined,
+  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
 >({
   cache,
   operation,
   key = ["sync"],
   ...rest
-}: Partial<IConduit<O, D>> = {}) => {
+}: Partial<IConduit<O, D, C>> = {}) => {
   return new Conduit({
     cache: cache && cache instanceof Cache ? () => cache : cache,
     key,
@@ -29,12 +31,13 @@ export const createSyncConduit = <
 export const createAsyncConduit = <
   O extends (...args: any[]) => any = (...args: number[]) => Promise<number[]>,
   D = undefined,
+  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
 >({
   cache,
   operation,
   key = ["async"],
   ...rest
-}: Partial<IConduit<O, D>> = {}) => {
+}: Partial<IConduit<O, D, C>> = {}) => {
   return new Conduit({
     cache,
     key,
@@ -54,7 +57,12 @@ export const createAsyncConduit = <
   });
 };
 
-export const createNonSpreadArgsConduit = (cache?: Cache, key = ["sync"]) => {
+export const createNonSpreadArgsConduit = <
+  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+>(
+  cache?: C,
+  key = ["sync"],
+) => {
   return new Conduit({
     cache,
     key,
@@ -67,8 +75,12 @@ export const createNonSpreadArgsConduit = (cache?: Cache, key = ["sync"]) => {
 
 export const syncAndAsyncConduits = <
   O extends (...args: any[]) => any = (...args: number[]) => number[],
+  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
 >(
-  options: Pick<Partial<IConduit<O, undefined>>, "cache" | "cachePolicy"> = {},
+  options: Pick<
+    Partial<IConduit<O, undefined, C>>,
+    "cache" | "cachePolicy"
+  > = {},
 ) => {
   return [
     [createAsyncConduit(options), "async"],

@@ -1,15 +1,19 @@
 import type { Setter } from "@figliolia/galena";
 
-import type { Cache, CacheEntry } from "../Cache";
+import type { CacheAbstract, CacheEntry } from "../Cache";
 
-export type CacheGetter = Cache | (() => Cache);
+export type CacheGetter<C extends CacheAbstract<any, any>> = C | (() => C);
 
 export type IOperation = (...args: any[]) => any;
 
-export interface IConduit<O extends IOperation, D = IValueType<O>> {
+export interface IConduit<
+  O extends IOperation,
+  D = IValueType<O>,
+  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+> {
   key: any[];
   operation: O;
-  cache?: CacheGetter;
+  cache?: CacheGetter<C>;
   expires?: number;
   cachePolicy?: CachePolicy;
   defaultValue: D;
@@ -18,7 +22,8 @@ export interface IConduit<O extends IOperation, D = IValueType<O>> {
 export interface IConduitWithPolicy<
   O extends IOperation,
   D = IValueType<O>,
-> extends Omit<IConduit<O, D>, "cachePolicy"> {
+  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+> extends Omit<IConduit<O, D, C>, "cachePolicy"> {
   cachePolicy: CachePolicy;
 }
 

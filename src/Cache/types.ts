@@ -22,3 +22,8 @@ export interface ConduitSerializedValue<T> {
   ___CONDUIT___: string;
   value?: T;
 }
+
+export interface ICacheEntry<T, R> {
+  defaultValue: T;
+  evict: () => R;
+}

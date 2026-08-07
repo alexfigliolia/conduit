@@ -1,14 +1,13 @@
 import { TypeChecker } from "../Cache/TypeChecker";
 import { CacheAbstract } from "../Cache/CacheAbstract";
-import { Graph, CacheEntry } from "../Cache";
+import { CacheEntry } from "../Cache";
 
 export class StringifyCache extends CacheAbstract<
-  Record<string, CacheEntry<any>>
+  Record<string, CacheEntry<any, void>>,
+  CacheEntry<any, void>
 > {
-  protected override storage: Record<any, CacheEntry<any>>;
-  constructor(initialState: Record<any, any> = {}) {
-    super();
-    this.storage = initialState;
+  constructor(initialState: Record<string, CacheEntry<any, void>> = {}) {
+    super(initialState);
   }
 
   public serialize() {
@@ -16,7 +15,10 @@ export class StringifyCache extends CacheAbstract<
   }
 
   public set<T>(key: any[], args: any[], value: T) {
-    const entry = new CacheEntry(value, new Graph());
+    const entry = new CacheEntry({
+      defaultValue: value,
+      evict: () => this.evict(key, args),
+    });
     this.storage[this.hash(key, args)] = entry;
     return entry;
   }
@@ -32,7 +34,10 @@ export class StringifyCache extends CacheAbstract<
   public createEntryIfNotExists<T>(key: any[], args: any[], defaultValue: T) {
     const hash = this.hash(key, args);
     if (!(hash in this.storage)) {
-      this.storage[hash] = new CacheEntry(defaultValue, new Graph());
+      this.storage[hash] = new CacheEntry({
+        defaultValue,
+        evict: () => this.evict(key, args),
+      });
     }
     return this.storage[hash]!;
   }

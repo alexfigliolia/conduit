@@ -1,4 +1,4 @@
-import { Cache } from "../Cache/Cache";
+import { Cache, type CacheAbstract } from "../Cache";
 
 import {
   type CachePolicy,
@@ -9,14 +9,19 @@ import {
   type IOperation,
   type MaybeCacheEntry,
   type IValueType,
+  type ConduitCacheSubscriber,
+  type ConduitCacheWrite,
   ConduitStatus,
 } from "./types";
-import type { ConduitCacheSubscriber, ConduitCacheWrite } from "./types";
 
-export class Conduit<O extends IOperation, D = IValueType<O>> {
-  public readonly options: IConduitWithPolicy<O, D>;
+export class Conduit<
+  O extends IOperation,
+  D = IValueType<O>,
+  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+> {
+  public readonly options: IConduitWithPolicy<O, D, C>;
   public static readonly DEFAULT_LIFE_TIME = 1000 * 60 * 5;
-  constructor(options: IConduit<O, D>) {
+  constructor(options: IConduit<O, D, C>) {
     const cache = this.getCache(options);
     if (!cache) {
       if (!options.cachePolicy) {
@@ -27,10 +32,10 @@ export class Conduit<O extends IOperation, D = IValueType<O>> {
     }
     options.cachePolicy =
       options.cachePolicy ?? "read-cache-with-respect-to-expiry";
-    this.options = Object.freeze(options as IConduitWithPolicy<O, D>);
+    this.options = Object.freeze(options as IConduitWithPolicy<O, D, C>);
   }
 
-  public getCache(options: IConduit<O, D> = this.options) {
+  public getCache(options: IConduit<O, D, C> = this.options) {
     if (typeof options.cache === "function") {
       return options.cache();
     }

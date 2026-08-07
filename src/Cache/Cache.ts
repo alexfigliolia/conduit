@@ -1,20 +1,15 @@
 import type { SerializedNode } from "./types";
-import { NodeParent } from "./NodeParent";
 import { Graph } from "./Graph";
+import type { CacheEntry } from "./CacheEntry";
 import { CacheAbstract } from "./CacheAbstract";
 
-export class Cache extends CacheAbstract<Graph> {
-  protected override readonly storage = new Graph();
-  constructor(initialState: Record<string, SerializedNode> = {}) {
-    super();
-    for (const key in initialState) {
-      if (initialState[key]) {
-        this.storage.set(
-          key,
-          Graph.from(initialState[key], new NodeParent(this.storage, key)),
-        );
-      }
-    }
+export class Cache extends CacheAbstract<
+  Graph,
+  CacheEntry<any>,
+  Record<string, SerializedNode>
+> {
+  constructor(initialState?: Record<string, SerializedNode>) {
+    super(Graph.fromSerialized(initialState));
   }
 
   public serialize() {
