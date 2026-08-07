@@ -56,7 +56,7 @@ describe("Cache", () => {
       const warmedCache = new Cache(
         JSON.parse(JSON.stringify(cache.serialize())),
       );
-      TEST_TYPES.forEach((type, i) => {
+      [...TEST_TYPES, ...TEST_TYPES].forEach((type, i) => {
         const coldNode = cache.get([`c${i}`], TEST_TYPES);
         const warmNode = warmedCache.get([`c${i}`], TEST_TYPES);
         expect(coldNode?.readValue?.()).toEqual(type);
@@ -69,7 +69,6 @@ describe("Cache", () => {
   describe("Race Conditions", () => {
     beforeEach(async () => {
       cache.reset();
-      // oxlint-disable-next-line typescript/await-thenable
       await Promise.all(CONDUITS.map(c => c.execute({ args: TEST_TYPES })));
     });
 
@@ -83,7 +82,7 @@ describe("Cache", () => {
       expect(() => {
         conduit.execute({ args: [new RegExp("adsfasdf")] });
       }).toThrow();
-      // TODO come back to me
+      // TODO - come back to me
       // expect(() => {
       //   conduit.execute({ args: [function () {}] });
       // }).toThrow();
@@ -123,7 +122,7 @@ describe("Cache", () => {
       );
       expect(node).toBeInstanceOf(CacheEntry);
       // Set the node's state to undefined - implying it's never been written to
-      node.evict();
+      void node.evict();
       conduit.execute({
         args: argsToTriggerIntermediaryNodeLookup,
         cachePolicy: "read-cache-with-respect-to-expiry",
@@ -166,6 +165,41 @@ describe("Cache", () => {
       node.writeValue([1, 2, 3]);
       expect(onChange).toHaveBeenCalledWith([1, 2, 3]);
       off();
+    });
+  });
+
+  describe("Tree Trimming", () => {
+    const args = [1, 2, 3, 4];
+    const conduit = new Conduit({
+      key: ["c"],
+      cache,
+      defaultValue: 1,
+      operation: (..._: number[]) => 1,
+    });
+
+    beforeEach(async () => {
+      cache.reset();
+      args.forEach((_, i) => conduit.execute({ args: args.slice(0, i + 1) }));
+    });
+
+    it("Cache should tree trim asynchronously", async () => {
+      await Promise.all(
+        args.map((_, i) => conduit.evict(...args.slice(0, i + 1))),
+      );
+      expect(cache.serialize()).toEqual({
+        c: {
+          nodes: {},
+        },
+      });
+    });
+
+    it("Cache should not tree trim if there are cache entries beneath an evicted node", async () => {
+      await conduit.evict(...args.slice(0, 1 + 1));
+      args.slice(2).forEach((_, i) => {
+        expect(conduit.read(...args.slice(0, i + 3))).toEqual(
+          conduit.options.defaultValue,
+        );
+      });
     });
   });
 });

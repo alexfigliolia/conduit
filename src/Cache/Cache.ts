@@ -33,6 +33,10 @@ export class Cache extends CacheAbstract<Graph> {
     return this.storage.lookup<T>(key, args);
   }
 
+  public evict(key: any[], args: any[]) {
+    return this.get(key, args)?.evict();
+  }
+
   public reset() {
     return this.storage.reset();
   }

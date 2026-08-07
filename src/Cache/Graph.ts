@@ -1,12 +1,12 @@
-import { type Primitive, type SerializedNode } from "./types";
 import type { ParentPointer } from "./types";
+import { type Primitive, type SerializedNode } from "./types";
 import { NodePathGenerator } from "./NodePathGenerator";
 import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";
 
 export class Graph<T = any> {
   public entry?: CacheEntry<T>;
-  public readonly nodes: Record<any, Graph> = {};
+  public nodes: Record<any, Graph> = {};
   constructor(public parent: ParentPointer = null) {}
 
   public static from(node: SerializedNode, parent: ParentPointer = null) {
@@ -74,9 +74,13 @@ export class Graph<T = any> {
   }
 
   public evictSelf() {
-    // TODO tree-trim downward. If no cache entry is found below,
-    // delete the entire path. Repeat upward until a cache entry is found
     this.entry = undefined;
+    return Promise.resolve().then(async () => {
+      if (await this.recurseDownward(node => !node.entry)) {
+        this.nodes = {};
+        await this.treeTrimUpwards();
+      }
+    });
   }
 
   public reset() {
@@ -115,5 +119,46 @@ export class Graph<T = any> {
       return;
     }
     return current as Graph<T>;
+  }
+
+  private async recurseDownward(
+    onNode: (graph: Graph) => boolean,
+    depth: number = 0,
+    nodes: Record<any, Graph> = this.nodes,
+  ) {
+    for (const key in nodes) {
+      if (nodes[key]) {
+        const children = nodes[key].nodes;
+        if (!Object.keys(children).length) {
+          continue;
+        }
+        const nextDepth = depth + 1;
+        if (nextDepth % 4 === 0) {
+          await Promise.resolve();
+        }
+        if (
+          !this.recurseDownward(onNode, nextDepth, nodes[key].nodes) ||
+          !onNode(nodes[key])
+        ) {
+          return false;
+        }
+      }
+    }
+    return true;
+  }
+
+  private async treeTrimUpwards() {
+    let depth = 0;
+    let current = this as Graph | null;
+    while (current?.parent) {
+      if (!current.entry && Object.keys(current.nodes).length === 1) {
+        current.nodes = {};
+      }
+      current = current.parent.parent;
+      if (depth % 20 === 0) {
+        await Promise.resolve();
+      }
+      depth++;
+    }
   }
 }
