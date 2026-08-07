@@ -29,7 +29,7 @@ group("Storage Comparison - Insertion", () => {
           });
         };
       });
-      bench("Tree Storage", function* () {
+      bench("Graph/Trie Storage", function* () {
         graphCache.reset();
         yield () => {
           SERIALIZABLE_TEST_TYPES.forEach(type => {
@@ -66,7 +66,7 @@ group("Storage Comparison - Retrieval", () => {
           });
         };
       });
-      bench("Tree Storage", function* () {
+      bench("Graph/Trie Storage", function* () {
         graphCache.reset();
         SERIALIZABLE_TEST_TYPES.forEach(type => {
           graphCache.set(rootKey, [type], type);
@@ -108,7 +108,7 @@ group("Cache Building", () => {
           new OptimizedStringifyCache(JSON.parse(payload));
         };
       });
-      bench("Tree Storage", function* () {
+      bench("Graph/Trie Storage", function* () {
         graphCache.reset();
         SERIALIZABLE_TEST_TYPES.forEach(type => {
           graphCache.set(rootKey, [type], type);
