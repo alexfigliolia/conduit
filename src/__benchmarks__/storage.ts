@@ -81,6 +81,48 @@ group("Storage Comparison - Retrieval", () => {
   });
 });
 
+group("Cache Entry Eviction", () => {
+  barplot(() => {
+    summary(() => {
+      bench("Flat Storage with JSON.stringify", function* () {
+        stringifyCacheWithFlatStorage.reset();
+        SERIALIZABLE_TEST_TYPES.forEach(type => {
+          stringifyCacheWithFlatStorage.set(rootKey, [type], type);
+        });
+        yield () => {
+          SERIALIZABLE_TEST_TYPES.forEach(type => {
+            stringifyCacheWithFlatStorage.evict(rootKey, [type]);
+          });
+        };
+      });
+      bench("Flat Storage with optimized Stringify", function* () {
+        optimizedStringifyCacheWithFlatStorage.reset();
+        SERIALIZABLE_TEST_TYPES.forEach(type => {
+          optimizedStringifyCacheWithFlatStorage.set(rootKey, [type], type);
+        });
+        yield () => {
+          SERIALIZABLE_TEST_TYPES.forEach(type => {
+            optimizedStringifyCacheWithFlatStorage.evict(rootKey, [type]);
+          });
+        };
+      });
+      bench("Graph/Trie Storage", function* () {
+        graphCache.reset();
+        SERIALIZABLE_TEST_TYPES.forEach(type => {
+          graphCache.set(rootKey, [type], type);
+        });
+        yield async () => {
+          await Promise.all(
+            SERIALIZABLE_TEST_TYPES.map(async type => {
+              return await graphCache.evict(rootKey, [type]);
+            }),
+          );
+        };
+      });
+    });
+  });
+});
+
 group("Cache Building", () => {
   barplot(() => {
     summary(() => {

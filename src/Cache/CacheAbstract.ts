@@ -5,9 +5,9 @@ export abstract class CacheAbstract<T> {
 
   public abstract serialize(): Record<any, any>;
 
-  public abstract set<T>(key: any[], args: any[], value: T): void;
+  public abstract set<T>(key: any[], args: any[], value: T): CacheEntry<T>;
 
-  public abstract get(key: any[], args: any[]): any;
+  public abstract get(key: any[], args: any[]): CacheEntry<T> | undefined;
 
   public abstract reset(): any;
 

@@ -16,11 +16,17 @@ export class StringifyCache extends CacheAbstract<
   }
 
   public set<T>(key: any[], args: any[], value: T) {
-    this.storage[this.hash(key, args)] = new CacheEntry(value, new Graph());
+    const entry = new CacheEntry(value, new Graph());
+    this.storage[this.hash(key, args)] = entry;
+    return entry;
   }
 
   public get<T>(key: any[], args: any[]) {
     return this.storage[this.hash(key, args)] as CacheEntry<T> | undefined;
+  }
+
+  public evict(key: any[], args: any[]) {
+    delete this.storage[this.hash(key, args)];
   }
 
   public createEntryIfNotExists<T>(key: any[], args: any[], defaultValue: T) {
