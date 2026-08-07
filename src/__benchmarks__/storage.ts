@@ -5,6 +5,7 @@ import { SERIALIZABLE_TEST_TYPES } from "../__fixtures__/types";
 import { StringifyCache } from "../__fixtures__/StringifyCache";
 import { OptimizedStringifyCache } from "../__fixtures__/OptimizedStringifyCache";
 
+const rootKey = ["test-key"];
 const graphCache = new Cache();
 const stringifyCacheWithFlatStorage = new StringifyCache();
 const optimizedStringifyCacheWithFlatStorage = new OptimizedStringifyCache();
@@ -16,7 +17,7 @@ group("Storage Comparison - Insertion", () => {
         stringifyCacheWithFlatStorage.reset();
         yield () => {
           SERIALIZABLE_TEST_TYPES.forEach(type => {
-            stringifyCacheWithFlatStorage.set(type, type);
+            stringifyCacheWithFlatStorage.set(rootKey, [type], type);
           });
         };
       });
@@ -24,7 +25,7 @@ group("Storage Comparison - Insertion", () => {
         optimizedStringifyCacheWithFlatStorage.reset();
         yield () => {
           SERIALIZABLE_TEST_TYPES.forEach(type => {
-            optimizedStringifyCacheWithFlatStorage.set(type, type);
+            optimizedStringifyCacheWithFlatStorage.set(rootKey, [type], type);
           });
         };
       });
@@ -32,7 +33,7 @@ group("Storage Comparison - Insertion", () => {
         graphCache.reset();
         yield () => {
           SERIALIZABLE_TEST_TYPES.forEach(type => {
-            graphCache.set(type, type);
+            graphCache.set(rootKey, [type], type);
           });
         };
       });
@@ -46,33 +47,33 @@ group("Storage Comparison - Retrieval", () => {
       bench("Flat Storage with JSON.stringify", function* () {
         stringifyCacheWithFlatStorage.reset();
         SERIALIZABLE_TEST_TYPES.forEach(type => {
-          stringifyCacheWithFlatStorage.set(type, type);
+          stringifyCacheWithFlatStorage.set(rootKey, [type], type);
         });
         yield () => {
           SERIALIZABLE_TEST_TYPES.forEach(type => {
-            stringifyCacheWithFlatStorage.get(type);
+            stringifyCacheWithFlatStorage.get(rootKey, [type]);
           });
         };
       });
       bench("Flat Storage with optimized Stringify", function* () {
         optimizedStringifyCacheWithFlatStorage.reset();
         SERIALIZABLE_TEST_TYPES.forEach(type => {
-          optimizedStringifyCacheWithFlatStorage.set(type, type);
+          optimizedStringifyCacheWithFlatStorage.set(rootKey, [type], type);
         });
         yield () => {
           SERIALIZABLE_TEST_TYPES.forEach(type => {
-            optimizedStringifyCacheWithFlatStorage.get(type);
+            optimizedStringifyCacheWithFlatStorage.get(rootKey, [type]);
           });
         };
       });
       bench("Tree Storage", function* () {
         graphCache.reset();
         SERIALIZABLE_TEST_TYPES.forEach(type => {
-          graphCache.set(type, type);
+          graphCache.set(rootKey, [type], type);
         });
         yield () => {
           SERIALIZABLE_TEST_TYPES.forEach(type => {
-            graphCache.get(type);
+            graphCache.get(rootKey, [type]);
           });
         };
       });
@@ -86,7 +87,7 @@ group("Cache Building", () => {
       bench("Flat Storage with JSON.stringify", function* () {
         stringifyCacheWithFlatStorage.reset();
         SERIALIZABLE_TEST_TYPES.forEach(type => {
-          stringifyCacheWithFlatStorage.set(type, type);
+          stringifyCacheWithFlatStorage.set(rootKey, [type], type);
         });
         const payload = JSON.stringify(
           stringifyCacheWithFlatStorage.serialize(),
@@ -98,7 +99,7 @@ group("Cache Building", () => {
       bench("Flat Storage with optimized Stringify", function* () {
         optimizedStringifyCacheWithFlatStorage.reset();
         SERIALIZABLE_TEST_TYPES.forEach(type => {
-          optimizedStringifyCacheWithFlatStorage.set(type, type);
+          optimizedStringifyCacheWithFlatStorage.set(rootKey, [type], type);
         });
         const payload = JSON.stringify(
           optimizedStringifyCacheWithFlatStorage.serialize(),
@@ -110,7 +111,7 @@ group("Cache Building", () => {
       bench("Tree Storage", function* () {
         graphCache.reset();
         SERIALIZABLE_TEST_TYPES.forEach(type => {
-          graphCache.set(type, type);
+          graphCache.set(rootKey, [type], type);
         });
         const payload = JSON.stringify(graphCache.serialize());
         yield () => {

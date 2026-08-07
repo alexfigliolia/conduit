@@ -1,5 +1,5 @@
-import type { ParentPointer } from "./types";
 import { type Primitive, type SerializedNode } from "./types";
+import type { ParentPointer } from "./types";
 import { NodePathGenerator } from "./NodePathGenerator";
 import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";
@@ -12,7 +12,7 @@ export class Graph<T = any> {
   public static from(node: SerializedNode, parent: ParentPointer = null) {
     const graph = new Graph(parent);
     if (node.entry) {
-      graph.entry = CacheEntry.from(node.entry);
+      graph.entry = CacheEntry.from(node.entry, graph);
     }
     for (const key in node.nodes) {
       const childNode = node.nodes[key];
@@ -23,10 +23,10 @@ export class Graph<T = any> {
     return graph;
   }
 
-  public index<T>(args: any, value: T) {
-    const node = this.createNodeIfNotExists(args);
+  public index<T>(key: any[], args: any[], value: T) {
+    const node = this.createNodeIfNotExists(key, args);
     if (!node.entry) {
-      node.entry = new CacheEntry(value);
+      node.entry = new CacheEntry(value, node);
       node.entry.updatedAt = Date.now();
     } else {
       node.entry.writeValue(value);
@@ -34,9 +34,9 @@ export class Graph<T = any> {
     return node.entry as CacheEntry<T>;
   }
 
-  public createNodeIfNotExists(key: any) {
+  public createNodeIfNotExists(key: any[], args: any[]) {
     let current = this as Graph;
-    NodePathGenerator.traverse(key, primative => {
+    NodePathGenerator.toPath(key, args, primative => {
       let next = current.get(primative);
       if (!next) {
         next = new Graph(new NodeParent(current, primative));
@@ -48,29 +48,21 @@ export class Graph<T = any> {
     return current;
   }
 
-  public createCacheEntryIfNotExists<T>(key: any, defaultValue: T) {
-    const node = this.createNodeIfNotExists(key);
+  public createCacheEntryIfNotExists<T>(
+    key: any[],
+    args: any[],
+    defaultValue: T,
+  ) {
+    const node = this.createNodeIfNotExists(key, args);
     if (!node.entry) {
-      node.entry = new CacheEntry(defaultValue);
+      node.entry = new CacheEntry(defaultValue, node);
     }
     return node.entry as CacheEntry<T>;
   }
 
-  public lookup<T>(key: any) {
-    const node = this.find(key);
+  public lookup<T>(key: any[], args: any[]) {
+    const node = this.find(key, args);
     return node?.entry as CacheEntry<T> | undefined;
-  }
-
-  public evict(key: any) {
-    const node = this.find(key);
-    if (
-      !node?.parent ||
-      !((node.parent.key as any) in node.parent.parent.nodes)
-    ) {
-      return;
-    }
-    delete node.parent.parent.nodes[node.parent.key as any];
-    return node;
   }
 
   public get(key: Primitive) {
@@ -79,6 +71,12 @@ export class Graph<T = any> {
 
   public set(key: Primitive, node: Graph) {
     this.nodes[key as any] = node;
+  }
+
+  public evictSelf() {
+    // TODO tree-trim downward. If no cache entry is found below,
+    // delete the entire path. Repeat upward until a cache entry is found
+    this.entry = undefined;
   }
 
   public reset() {
@@ -103,9 +101,9 @@ export class Graph<T = any> {
     return result;
   }
 
-  private find<T>(key: any) {
+  private find<T>(key: any[], args: any[]) {
     let current = this as Graph;
-    const found = NodePathGenerator.traverse(key, primative => {
+    const found = NodePathGenerator.toPath(key, args, primative => {
       const next = current.get(primative);
       if (!next) {
         return false;

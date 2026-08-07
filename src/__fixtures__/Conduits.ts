@@ -9,7 +9,7 @@ export const createSyncConduit = <
 >({
   cache,
   operation,
-  key = "sync",
+  key = ["sync"],
   ...rest
 }: Partial<IConduit<O, undefined>> = {}) => {
   return new Conduit({
@@ -30,7 +30,7 @@ export const createAsyncConduit = <
 >({
   cache,
   operation,
-  key = "async",
+  key = ["async"],
   ...rest
 }: Partial<IConduit<O, undefined>> = {}) => {
   return new Conduit({
@@ -52,7 +52,7 @@ export const createAsyncConduit = <
   });
 };
 
-export const createNonSpreadArgsConduit = (cache?: Cache, key = "sync") => {
+export const createNonSpreadArgsConduit = (cache?: Cache, key = ["sync"]) => {
   return new Conduit({
     cache,
     key,
