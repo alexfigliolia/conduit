@@ -1,5 +1,10 @@
-import { type Primitive, type SerializedNode } from "./types";
-import type { ParentPointer } from "./types";
+import type { Setter } from "@figliolia/galena";
+
+import {
+  type Primitive,
+  type SerializedNode,
+  type ParentPointer,
+} from "./types";
 import { NodePathGenerator } from "./NodePathGenerator";
 import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";
@@ -12,7 +17,7 @@ export class Graph<T = any> {
   public static from(node: SerializedNode, parent: ParentPointer = null) {
     const graph = new Graph(parent);
     if (node.entry) {
-      graph.entry = CacheEntry.from(node.entry, graph);
+      graph.entry = CacheEntry.from(node.entry, graph.evict);
     }
     for (const key in node.nodes) {
       const childNode = node.nodes[key];
@@ -23,18 +28,29 @@ export class Graph<T = any> {
     return graph;
   }
 
-  public index<T>(key: any[], args: any[], value: T) {
-    const node = this.createNodeIfNotExists(key, args);
-    if (!node.entry) {
-      node.entry = new CacheEntry(value, node);
-      node.entry.updatedAt = Date.now();
-    } else {
-      node.entry.writeValue(value);
+  public static fromSerialized(
+    serialized: Record<string, SerializedNode> = {},
+  ) {
+    const graph = new Graph();
+    for (const key in serialized) {
+      if (serialized[key]) {
+        graph.set(key, Graph.from(serialized[key], new NodeParent(graph, key)));
+      }
     }
-    return node.entry as CacheEntry<T>;
+    return graph;
   }
 
-  public createNodeIfNotExists(key: any[], args: any[]) {
+  public index<T>(key: any[], args: any[], value: T) {
+    const { node, created } = this.maybeIndex(key, args, value);
+    if (created) {
+      node.entry!.updatedAt = Date.now();
+    } else {
+      node.entry!.writeValue(value as Setter<T>);
+    }
+    return node.entry!;
+  }
+
+  public createNodeIfNotExists<T>(key: any[], args: any[]) {
     let current = this as Graph;
     NodePathGenerator.toPath(key, args, primative => {
       let next = current.get(primative);
@@ -45,7 +61,7 @@ export class Graph<T = any> {
       current = next;
       return true;
     });
-    return current;
+    return current as Graph<T>;
   }
 
   public createCacheEntryIfNotExists<T>(
@@ -53,11 +69,8 @@ export class Graph<T = any> {
     args: any[],
     defaultValue: T,
   ) {
-    const node = this.createNodeIfNotExists(key, args);
-    if (!node.entry) {
-      node.entry = new CacheEntry(defaultValue, node);
-    }
-    return node.entry as CacheEntry<T>;
+    const { node } = this.maybeIndex(key, args, defaultValue);
+    return node.entry!;
   }
 
   public lookup<T>(key: any[], args: any[]) {
@@ -73,7 +86,7 @@ export class Graph<T = any> {
     this.nodes[key as any] = node;
   }
 
-  public evictSelf() {
+  public readonly evict = () => {
     this.entry = undefined;
     return Promise.resolve().then(async () => {
       if (await this.recurseDownward(node => !node.entry)) {
@@ -81,7 +94,7 @@ export class Graph<T = any> {
         await this.treeTrimUpwards();
       }
     });
-  }
+  };
 
   public reset() {
     for (const key in this.nodes) {
@@ -160,5 +173,18 @@ export class Graph<T = any> {
       }
       depth++;
     }
+  }
+
+  public maybeIndex<T>(key: any[], args: any[], defaultValue: T) {
+    let created = false;
+    const node = this.createNodeIfNotExists<T>(key, args);
+    if (!node.entry) {
+      node.entry = new CacheEntry<T>({
+        defaultValue,
+        evict: node.evict,
+      });
+      created = true;
+    }
+    return { node, created };
   }
 }
