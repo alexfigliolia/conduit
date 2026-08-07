@@ -129,7 +129,7 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
         { [Serializer.SERIALIZATION_MARKER]: "bigint", value: [] },
       ].forEach(entry => {
         expect(() => {
-          const thing = Serializer.deserialize(entry);
+          Serializer.deserialize(entry);
         }).toThrow();
       });
     });
