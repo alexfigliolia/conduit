@@ -1,10 +1,8 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 import type { Setter } from "@figliolia/galena";
 
-import { Conduit } from "../Conduits/Conduit";
-import { ConduitStatus } from "../Conduits";
-import { CacheEntry } from "../Cache/CacheEntry";
-import { Cache } from "../Cache/Cache";
+import { Conduit } from "../Conduits";
+import { Cache, CacheEntry, ConduitStatus } from "../Cache";
 import {
   createAsyncConduit,
   createSyncConduit,
@@ -236,7 +234,7 @@ describe("Conduits", () => {
           ? async (prev: unknown) => [prev, ...args]
           : (prev: unknown) => [prev, ...args];
       it(`Conduits can directly populate the cache - ${type} with function setter`, async () => {
-        conduit.write({
+        conduit.writeCache({
           args,
           value: writer,
         });
@@ -253,7 +251,7 @@ describe("Conduits", () => {
     syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
       const args = [1, 2, 3, 4];
       it(`Conduits can directly populate the cache - ${type} with value setter`, async () => {
-        conduit.write({
+        conduit.writeCache({
           args,
           value: [1, 2, 3, 4],
         });
@@ -267,7 +265,7 @@ describe("Conduits", () => {
       it(`Conduits should throw when attempting to write to an unspecified cache - ${type}`, () => {
         const args = [1, 2, 3, 4];
         expect(() => {
-          conduit.write({ args, value: args });
+          conduit.writeCache({ args, value: args });
         }).toThrow();
       });
     });
@@ -275,10 +273,12 @@ describe("Conduits", () => {
     syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
       it(`Conduits can evict their cache entries - ${type}`, async () => {
         const args = [1, 2, 3, 4];
-        conduit.write({ args, value: args });
-        expect(conduit.read(...args)).toEqual(args);
+        conduit.writeCache({ args, value: args });
+        expect(conduit.readCache(...args)).toEqual(args);
         await conduit.evict(...args);
-        expect(conduit.read(...args)).toEqual(conduit.options.defaultValue);
+        expect(conduit.readCache(...args)).toEqual(
+          conduit.options.defaultValue,
+        );
       });
     });
   });
@@ -287,9 +287,9 @@ describe("Conduits", () => {
     syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
       it(`Conduits can read from their cache - ${type}`, () => {
         const args = [1, 2, 3, 4];
-        expect(conduit.read(...args)).toEqual(undefined);
-        conduit.write({ args, value: args });
-        expect(conduit.read(...args)).toEqual(args);
+        expect(conduit.readCache(...args)).toEqual(undefined);
+        conduit.writeCache({ args, value: args });
+        expect(conduit.readCache(...args)).toEqual(args);
       });
     });
 
@@ -297,7 +297,7 @@ describe("Conduits", () => {
       it(`Conduits should throw when attempting to read to an unspecified cache - ${type}`, () => {
         const args = [1, 2, 3, 4];
         expect(() => {
-          expect(conduit.read(...args)).toEqual(undefined);
+          expect(conduit.readCache(...args)).toEqual(undefined);
         }).toThrow();
       });
     });

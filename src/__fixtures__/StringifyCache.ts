@@ -1,10 +1,8 @@
-import { TypeChecker } from "../Cache/TypeChecker";
-import { CacheAbstract } from "../Cache/CacheAbstract";
-import { CacheEntry } from "../Cache";
+import { TypeChecker } from "../Cache/TriePaths";
+import { CacheAbstract, CacheEntry } from "../Cache";
 
 export class StringifyCache extends CacheAbstract<
-  Record<string, CacheEntry<any, void>>,
-  CacheEntry<any, void>
+  Record<string, CacheEntry<any, void>>
 > {
   constructor(initialState: Record<string, CacheEntry<any, void>> = {}) {
     super(initialState);
@@ -24,7 +22,9 @@ export class StringifyCache extends CacheAbstract<
   }
 
   public get<T>(key: any[], args: any[]) {
-    return this.storage[this.hash(key, args)] as CacheEntry<T> | undefined;
+    return this.storage[this.hash(key, args)] as
+      | CacheEntry<T, void>
+      | undefined;
   }
 
   public evict(key: any[], args: any[]) {

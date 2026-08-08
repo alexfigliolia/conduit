@@ -1,17 +1,14 @@
 import type { Setter } from "@figliolia/galena";
 
-import {
-  type Primitive,
-  type SerializedNode,
-  type ParentPointer,
-} from "./types";
-import { NodePathGenerator } from "./NodePathGenerator";
+import { NodePathGenerator, type Primitive } from "../TriePaths";
+
+import { type SerializedNode, type ParentPointer } from "./types";
 import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";
 
 export class Graph<T = any> {
-  public entry?: CacheEntry<T>;
   public nodes: Record<any, Graph> = {};
+  public entry?: CacheEntry<T, Promise<void>>;
   constructor(public parent: ParentPointer = null) {}
 
   public static from(node: SerializedNode, parent: ParentPointer = null) {
@@ -75,7 +72,7 @@ export class Graph<T = any> {
 
   public lookup<T>(key: any[], args: any[]) {
     const node = this.find(key, args);
-    return node?.entry as CacheEntry<T> | undefined;
+    return node?.entry as CacheEntry<T, Promise<void>> | undefined;
   }
 
   public get(key: Primitive) {
@@ -162,12 +159,12 @@ export class Graph<T = any> {
 
   private async treeTrimUpwards() {
     let depth = 0;
-    let current = this as Graph | null;
-    while (current?.parent) {
+    let current = this as Graph | undefined;
+    while (current) {
       if (!current.entry && Object.keys(current.nodes).length === 1) {
         current.nodes = {};
       }
-      current = current.parent.parent;
+      current = current?.parent?.parent;
       if (depth % 20 === 0) {
         await Promise.resolve();
       }
@@ -179,7 +176,7 @@ export class Graph<T = any> {
     let created = false;
     const node = this.createNodeIfNotExists<T>(key, args);
     if (!node.entry) {
-      node.entry = new CacheEntry<T>({
+      node.entry = new CacheEntry<T, Promise<void>>({
         defaultValue,
         evict: node.evict,
       });

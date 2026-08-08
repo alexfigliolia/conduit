@@ -1,8 +1,7 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Conduit } from "../Conduits/Conduit";
-import { CacheEntry } from "../Cache/CacheEntry";
-import { Cache } from "../Cache/Cache";
+import { Conduit } from "../Conduits";
+import { Cache, CacheEntry } from "../Cache";
 import { TEST_TYPES } from "../__fixtures__/types";
 import {
   createNonSpreadArgsConduit,
@@ -88,7 +87,7 @@ describe("Cache", () => {
       // }).toThrow();
     });
 
-    it("Collisions with intermediary cache node edges", () => {
+    it("Collisions with intermediary cache node edges", async () => {
       const operation = vi
         .fn()
         .mockImplementation(
@@ -122,7 +121,7 @@ describe("Cache", () => {
       );
       expect(node).toBeInstanceOf(CacheEntry);
       // Set the node's state to undefined - implying it's never been written to
-      void node.evict();
+      await node.evict();
       conduit.execute({
         args: argsToTriggerIntermediaryNodeLookup,
         cachePolicy: "read-cache-with-respect-to-expiry",
@@ -143,10 +142,10 @@ describe("Cache", () => {
       expect(cache.get(conduit.options.key, args)).not.toBeDefined();
       const onChange = vi.fn();
       const off = conduit.subscribeToValue({ args, onChange });
-      expect(conduit.read(...args)).toEqual(undefined);
+      expect(conduit.readCache(...args)).toEqual(undefined);
       const result = conduit.execute({ args });
       expect(result).toEqual(args);
-      expect(conduit.read(...args)).toEqual(result);
+      expect(conduit.readCache(...args)).toEqual(result);
       expect(onChange).toHaveBeenCalledWith(result);
       off();
     });
@@ -186,17 +185,13 @@ describe("Cache", () => {
       await Promise.all(
         args.map((_, i) => conduit.evict(...args.slice(0, i + 1))),
       );
-      expect(cache.serialize()).toEqual({
-        c: {
-          nodes: {},
-        },
-      });
+      expect(cache.serialize()).toEqual({});
     });
 
     it("Cache should not tree trim if there are cache entries beneath an evicted node", async () => {
       await conduit.evict(...args.slice(0, 1 + 1));
       args.slice(2).forEach((_, i) => {
-        expect(conduit.read(...args.slice(0, i + 3))).toEqual(
+        expect(conduit.readCache(...args.slice(0, i + 3))).toEqual(
           conduit.options.defaultValue,
         );
       });

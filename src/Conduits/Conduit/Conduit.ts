@@ -1,4 +1,9 @@
-import { Cache, type CacheAbstract } from "../Cache";
+import {
+  type CacheEntry,
+  type UnknownCacheAbstract,
+  CacheAbstract,
+  ConduitStatus,
+} from "../../Cache";
 
 import {
   type CachePolicy,
@@ -7,17 +12,17 @@ import {
   type IConduitWithPolicy,
   type IExecuteOptions,
   type IOperation,
-  type MaybeCacheEntry,
   type IValueType,
   type ConduitCacheSubscriber,
   type ConduitCacheWrite,
-  ConduitStatus,
+  type EvictReturnType,
+  type MaybeCacheEntry,
 } from "./types";
 
 export class Conduit<
   O extends IOperation,
   D = IValueType<O>,
-  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+  C extends UnknownCacheAbstract = UnknownCacheAbstract,
 > {
   public readonly options: IConduitWithPolicy<O, D, C>;
   public static readonly DEFAULT_LIFE_TIME = 1000 * 60 * 5;
@@ -39,7 +44,7 @@ export class Conduit<
     if (typeof options.cache === "function") {
       return options.cache();
     }
-    if (options.cache instanceof Cache) {
+    if (options.cache instanceof CacheAbstract) {
       return options.cache;
     }
   }
@@ -48,16 +53,20 @@ export class Conduit<
     return (...args: Parameters<O>) => this.execute({ ...options, args });
   }
 
-  public execute({ args, expires, cachePolicy }: IExecuteOptions<O>) {
+  public execute({
+    args,
+    expires = this.options.expires,
+    cachePolicy = this.options.cachePolicy,
+  }: IExecuteOptions<O>) {
     const cache = this.getCache();
     if (!cache && cachePolicy && cachePolicy !== "no-cache") {
       throw this.cachePolicyError(cachePolicy);
     }
-    const cacheEntry = cache?.createEntryIfNotExists?.<ConduitValue<O, D>>(
+    const cacheEntry = cache?.createEntryIfNotExists?.(
       this.options.key,
       args,
       this.options.defaultValue,
-    );
+    ) as MaybeCacheEntry<O, D>;
     switch (cachePolicy) {
       case "cache-only":
         if (!cacheEntry) {
@@ -80,37 +89,48 @@ export class Conduit<
     args,
     onChange,
   }: ConduitCacheSubscriber<O, ConduitValue<O, D>>) {
-    return this.getCacheEntryStrict(...args).subscribeToValue(onChange);
+    return this.getCacheEntry(...args).subscribeToValue(onChange);
   }
 
   public subscribeToStatus({
     args,
     onChange,
   }: ConduitCacheSubscriber<O, ConduitStatus>) {
-    return this.getCacheEntryStrict(...args).subscribeToStatus(onChange);
+    return this.getCacheEntry(...args).subscribeToStatus(onChange);
   }
 
   public getStatus(...args: Parameters<O>) {
-    return this.getCacheEntryStrict(...args).getStatus();
+    return this.getCacheEntry(...args).getStatus();
   }
 
-  public write({ args, value }: ConduitCacheWrite<O, D>) {
-    return this.getCacheEntryStrict(...args).writeValue(value);
+  public writeCache({ args, value }: ConduitCacheWrite<O, D>) {
+    return this.getCacheEntry(...args).writeValue(value);
   }
 
-  public read(...args: Parameters<O>) {
-    return this.getCacheEntryStrict(...args).readValue();
+  public readCache(...args: Parameters<O>) {
+    return this.getCacheEntry(...args).readValue();
   }
 
   public evict(...args: Parameters<O>) {
-    return this.getCacheEntryStrict(...args).evict();
+    return this.getCacheEntry(...args).evict();
   }
 
   public getCacheEntry(...args: Parameters<O>) {
-    return this.getCacheEntryStrict(...args);
+    const cache = this.getCache();
+    if (!cache) {
+      throw new Error(
+        "Attempted to write to the cache without specifying the Conduit's 'cache' option",
+        { cause: this },
+      );
+    }
+    return cache.createEntryIfNotExists(
+      this.options.key,
+      args,
+      this.options.defaultValue,
+    ) as CacheEntry<ConduitValue<O, D>, EvictReturnType<C>>;
   }
 
-  private executeAndCache(
+  protected executeAndCache(
     cacheEntry: MaybeCacheEntry<O, D>,
     ...args: Parameters<O>
   ) {
@@ -124,7 +144,7 @@ export class Conduit<
     return result as ReturnType<O>;
   }
 
-  private runCacheFirst(
+  protected runCacheFirst(
     cacheEntry: MaybeCacheEntry<O, D>,
     expiry: number,
     ...args: Parameters<O>
@@ -136,25 +156,10 @@ export class Conduit<
       return this.executeAndCache(cacheEntry, ...args);
     }
     // TODO - maybe a cache refresh on an interval in the background
-    return cacheEntry.readValue();
+    return cacheEntry.readValue() as ConduitValue<O, D>;
   }
 
-  private getCacheEntryStrict(...args: Parameters<O>) {
-    const cache = this.getCache();
-    if (!cache) {
-      throw new Error(
-        "Attempted to write to the cache without specifying the Conduit's 'cache' option",
-        { cause: this },
-      );
-    }
-    return cache.createEntryIfNotExists<ConduitValue<O, D>>(
-      this.options.key,
-      args,
-      this.options.defaultValue,
-    );
-  }
-
-  private onExecutionResult(
+  protected onExecutionResult(
     cacheEntry: MaybeCacheEntry<O, D>,
     value: IValueType<O>,
   ) {
@@ -162,7 +167,7 @@ export class Conduit<
     cacheEntry?.setStatus?.(ConduitStatus.IDOL);
   }
 
-  private cachePolicyError(policy: CachePolicy) {
+  protected cachePolicyError(policy: CachePolicy) {
     return new Error(
       `Cache Policy Error: Use of "${policy}" policy without specifying the 'cache' option`,
       { cause: this },

@@ -1,2 +1,2 @@
 export * from "./Conduit";
-export * from "./types";
+export * from "./NetworkConduit";
