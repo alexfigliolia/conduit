@@ -183,7 +183,9 @@ describe("Cache", () => {
 
     it("Cache should tree trim asynchronously", async () => {
       await Promise.all(
-        args.map((_, i) => conduit.evict(...args.slice(0, i + 1))),
+        args.map((_, i) =>
+          Promise.resolve(conduit.evict(...args.slice(0, i + 1))),
+        ),
       );
       expect(cache.serialize()).toEqual({});
     });

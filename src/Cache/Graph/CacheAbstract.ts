@@ -21,6 +21,8 @@ export abstract class CacheAbstract<
 
   public abstract reset(): void;
 
+  public abstract evict(key: any[], args: any[]): unknown;
+
   public abstract createEntryIfNotExists<T>(
     key: any[],
     args: any[],

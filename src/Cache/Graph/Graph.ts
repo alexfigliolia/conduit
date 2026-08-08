@@ -71,8 +71,8 @@ export class Graph<T = any> {
   }
 
   public lookup<T>(key: any[], args: any[]) {
-    const node = this.find(key, args);
-    return node?.entry as CacheEntry<T, Promise<void>> | undefined;
+    const node = this.find<T>(key, args);
+    return node?.entry;
   }
 
   public get(key: Primitive) {
