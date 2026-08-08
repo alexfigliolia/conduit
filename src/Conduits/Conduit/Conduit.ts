@@ -25,7 +25,7 @@ export class Conduit<
   C extends UnknownCacheAbstract = UnknownCacheAbstract,
 > {
   public readonly options: IConduitWithPolicy<O, D, C>;
-  public static readonly DEFAULT_LIFE_TIME = 1000 * 60 * 5;
+  public static DEFAULT_LIFE_TIME = 1000 * 60 * 5;
   constructor(options: IConduit<O, D, C>) {
     const cache = this.getCache(options);
     if (!cache) {

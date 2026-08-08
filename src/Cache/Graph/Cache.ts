@@ -19,7 +19,7 @@ export class Cache extends CacheAbstract<
   }
 
   public createEntryIfNotExists<T>(key: any[], args: any[], defaultValue: T) {
-    return this.storage.createCacheEntryIfNotExists(key, args, defaultValue);
+    return this.storage.createCacheEntryIfNotExists<T>(key, args, defaultValue);
   }
 
   public get<T>(key: any[], args: any[]) {
@@ -27,7 +27,7 @@ export class Cache extends CacheAbstract<
   }
 
   public evict(key: any[], args: any[]) {
-    return this.get(key, args)?.evict();
+    return this.get(key, args)?.evict?.();
   }
 
   public reset() {

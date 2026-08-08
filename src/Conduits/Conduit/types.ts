@@ -73,5 +73,5 @@ export type MaybeCacheEntry<O extends IOperation, D = IValueType<O>> =
   | undefined;
 
 export type EvictReturnType<C extends UnknownCacheAbstract> = ReturnType<
-  ReturnType<C["createEntryIfNotExists"]>["evict"]
+  C["evict"]
 >;
