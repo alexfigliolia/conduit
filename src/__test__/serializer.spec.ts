@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { Serializer } from "../Cache/Serializer";
+import { Serializer } from "../Cache/TriePaths";
 import { SERIALIZABLE_TEST_TYPES } from "../__fixtures__/types";
 import {
   MapInit,

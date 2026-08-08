@@ -1,4 +1,4 @@
-import { NodePathGenerator } from "../Cache/NodePathGenerator";
+import { NodePathGenerator } from "../Cache/TriePaths";
 
 import { StringifyCache } from "./StringifyCache";
 

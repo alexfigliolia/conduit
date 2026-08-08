@@ -1,11 +1,9 @@
 import type { SerializedNode } from "./types";
 import { Graph } from "./Graph";
-import type { CacheEntry } from "./CacheEntry";
 import { CacheAbstract } from "./CacheAbstract";
 
 export class Cache extends CacheAbstract<
   Graph,
-  CacheEntry<any>,
   Record<string, SerializedNode>
 > {
   constructor(initialState?: Record<string, SerializedNode>) {

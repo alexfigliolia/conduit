@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { NodePathGenerator } from "../Cache/NodePathGenerator";
+import { NodePathGenerator } from "../Cache/TriePaths";
 
 describe("Node Path Generation", () => {
   it("It generates primitive paths from any javascript value", () => {

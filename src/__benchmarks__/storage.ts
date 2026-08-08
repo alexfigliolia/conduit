@@ -1,6 +1,6 @@
 import { run, bench, group, summary, barplot } from "mitata";
 
-import { Cache } from "../Cache/Cache";
+import { Cache } from "../Cache";
 import { SERIALIZABLE_TEST_TYPES } from "../__fixtures__/types";
 import { StringifyCache } from "../__fixtures__/StringifyCache";
 import { OptimizedStringifyCache } from "../__fixtures__/OptimizedStringifyCache";

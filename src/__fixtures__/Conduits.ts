@@ -1,14 +1,13 @@
 import { vi } from "vitest";
 
 import { Conduit } from "../Conduits/Conduit";
-import type { IConduit } from "../Conduits";
-import { Cache } from "../Cache/Cache";
-import type { CacheAbstract } from "../Cache";
+import type { IConduit, IOperation } from "../Conduits";
+import { Cache, type UnknownCacheAbstract } from "../Cache";
 
 export const createSyncConduit = <
-  O extends (...args: any[]) => any = (...args: number[]) => number[],
+  O extends IOperation = (...args: number[]) => number[],
   D = undefined,
-  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+  C extends UnknownCacheAbstract = UnknownCacheAbstract,
 >({
   cache,
   operation,
@@ -29,9 +28,9 @@ export const createSyncConduit = <
 };
 
 export const createAsyncConduit = <
-  O extends (...args: any[]) => any = (...args: number[]) => Promise<number[]>,
+  O extends IOperation = (...args: number[]) => Promise<number[]>,
   D = undefined,
-  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+  C extends UnknownCacheAbstract = UnknownCacheAbstract,
 >({
   cache,
   operation,
@@ -58,7 +57,7 @@ export const createAsyncConduit = <
 };
 
 export const createNonSpreadArgsConduit = <
-  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+  C extends UnknownCacheAbstract = UnknownCacheAbstract,
 >(
   cache?: C,
   key = ["sync"],
@@ -74,8 +73,8 @@ export const createNonSpreadArgsConduit = <
 };
 
 export const syncAndAsyncConduits = <
-  O extends (...args: any[]) => any = (...args: number[]) => number[],
-  C extends CacheAbstract<any, any> = CacheAbstract<any, any>,
+  O extends IOperation = (...args: number[]) => number[],
+  C extends UnknownCacheAbstract = UnknownCacheAbstract,
 >(
   options: Pick<
     Partial<IConduit<O, undefined, C>>,

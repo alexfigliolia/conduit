@@ -1,4 +1,5 @@
-import type { Primitive } from "./types";
+import type { Primitive } from "../TriePaths";
+
 import type { Graph } from "./Graph";
 
 export class NodeParent {

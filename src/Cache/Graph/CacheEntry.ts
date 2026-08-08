@@ -1,14 +1,11 @@
 import { State, type NonFunction } from "@figliolia/galena";
 
-import { ConduitStatus } from "../Conduits/types";
+import { Serializer } from "../TriePaths";
 
+import { ConduitStatus } from "./types";
 import type { ICacheEntry, SerializedCacheEntry } from "./types";
 
-export abstract class CacheEntryAbstract<
-  T,
-  S extends SerializedCacheEntry<T>,
-  R,
-> {
+export class CacheEntry<T, R> {
   public lastRead = 0;
   public updatedAt = 0;
   public readonly State: State<T>;
@@ -17,13 +14,18 @@ export abstract class CacheEntryAbstract<
     this.State = new State(options.defaultValue as NonFunction<T>);
   }
 
-  public static from<S extends SerializedCacheEntry<any>>(
-    _entry: S,
-    _evict: () => any,
-  ): CacheEntryAbstract<any, any, any> {
-    throw new Error(
-      "Not implemented Error: Override this static method in your extension of the CachEntryAbstract to create cache entries from serialized data",
-    );
+  public static from<T, R>(
+    entry: SerializedCacheEntry<T>,
+    evict: () => R,
+  ): CacheEntry<T, R> {
+    const cacheNode = new CacheEntry<T, R>({
+      evict,
+      defaultValue: Serializer.deserialize(entry.value),
+    });
+    cacheNode.lastRead = entry.lastRead;
+    cacheNode.updatedAt = entry.updatedAt;
+    cacheNode.setStatus(entry.status);
+    return cacheNode;
   }
 
   public subscribeToValue(onChange: (value: T) => void) {
@@ -56,5 +58,12 @@ export abstract class CacheEntryAbstract<
     return this.options.evict();
   }
 
-  public abstract serialize(): S;
+  public serialize(): SerializedCacheEntry<T> {
+    return {
+      lastRead: this.lastRead,
+      updatedAt: this.updatedAt,
+      status: this.Status.getState(),
+      value: Serializer.serialize(this.State.getState()),
+    };
+  }
 }
