@@ -1,7 +1,7 @@
 import { vi } from "vitest";
 
 import { Conduit } from "../Conduits/Conduit";
-import type { IConduit, IOperation } from "../Conduits";
+import { NetworkConduit, type IConduit, type IOperation } from "../Conduits";
 import { Cache, type UnknownCacheAbstract } from "../Cache";
 
 export const createSyncConduit = <
@@ -86,3 +86,56 @@ export const syncAndAsyncConduits = <
     [createSyncConduit(options), "sync"],
   ] as const;
 };
+
+export const createAsyncNetworkConduit = (cache: Cache) => {
+  return new NetworkConduit({
+    cache,
+    key: ["async"],
+    operation: vi
+      .fn<(...args: number[]) => Promise<number[]>>()
+      .mockImplementation(async (...args: number[]) => {
+        return args;
+      }),
+  });
+};
+
+export const createSyncNetworkConduit = (cache: Cache) => {
+  return new NetworkConduit({
+    cache,
+    key: ["sync"],
+    operation: vi
+      .fn<(...args: number[]) => number[]>()
+      .mockImplementation((...args: number[]) => {
+        return args;
+      }),
+  });
+};
+
+export const createThrowingSyncNetworkConduit = (cache: Cache) => {
+  return new NetworkConduit({
+    cache,
+    key: ["sync"],
+    operation: vi.fn<() => never>().mockImplementation(() => {
+      throw new Error("Thrown Error");
+    }),
+  });
+};
+
+export const createThrowingAsyncNetworkConduit = (cache: Cache) => {
+  return new NetworkConduit({
+    cache,
+    key: ["async"],
+    operation: vi.fn<() => never>().mockImplementation(() => {
+      throw new Error("Thrown Error");
+    }),
+  });
+};
+
+export const syncAndAsyncNetworkConduits = (cache: Cache) =>
+  [createSyncNetworkConduit(cache), createAsyncNetworkConduit(cache)] as const;
+
+export const throwingSyncAndAsyncNetworkConduits = (cache: Cache) =>
+  [
+    createThrowingSyncNetworkConduit(cache),
+    createThrowingAsyncNetworkConduit(cache),
+  ] as const;

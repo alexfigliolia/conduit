@@ -51,6 +51,17 @@ describe("Conduits", () => {
         },
       );
     });
+
+    it("The 'in flight' status is used to denote pending promises", async () => {
+      const args = [1, 2, 3];
+      const conduit = createAsyncConduit({ cache });
+      expect(conduit.getStatus(...args)).toEqual(ConduitStatus.UNINITIALIZED);
+      const promise = conduit.execute({ args });
+      expect(conduit.options.operation).toHaveBeenCalled();
+      expect(conduit.getStatus(...args)).toEqual(ConduitStatus.IN_FLIGHT);
+      await promise;
+      expect(conduit.getStatus(...args)).toEqual(ConduitStatus.IDOL);
+    });
   });
 
   describe("Cache Policies", () => {
