@@ -2,8 +2,11 @@ import { State, type NonFunction } from "@figliolia/galena";
 
 import { Serializer } from "../TriePaths";
 
-import { ConduitStatus } from "./types";
-import type { ICacheEntry, SerializedCacheEntry } from "./types";
+import {
+  type ICacheEntry,
+  type SerializedCacheEntry,
+  ConduitStatus,
+} from "./types";
 
 export class CacheEntry<T, R> {
   public lastRead = 0;
