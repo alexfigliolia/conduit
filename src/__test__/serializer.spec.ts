@@ -27,6 +27,25 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
             expect(serialized.value).toEqual(SetInitSerialized);
           });
         }
+        case RegExp: {
+          return it(`It serializes RegExps to special objects`, () => {
+            const regexp = new RegExp(/test-pattern/gm);
+            const serialized = Serializer.serialize(regexp);
+            expect(serialized[Serializer.SERIALIZATION_MARKER]).toEqual(
+              "regexp",
+            );
+            expect(serialized.value).toEqual(regexp.toString());
+          });
+        }
+        case Date: {
+          return it(`It serializes Date to special objects`, () => {
+            const date = new Date();
+            const ISO = date.toISOString();
+            const serialized = Serializer.serialize(date);
+            expect(serialized[Serializer.SERIALIZATION_MARKER]).toEqual("date");
+            expect(serialized.value).toEqual(ISO);
+          });
+        }
         default:
           throw new Error("Test not implemented");
       }
@@ -82,6 +101,20 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
             expect(Serializer.deserialize(serialized)).toEqual(sourceValue);
           });
         }
+        case RegExp: {
+          return it(`It deserializes conduit RegExp into JavaScript RegExps`, () => {
+            const sourceValue = new RegExp(/test-pattern(\d{4})/);
+            const serialized = Serializer.serialize(sourceValue);
+            expect(Serializer.deserialize(serialized)).toEqual(sourceValue);
+          });
+        }
+        case Date: {
+          return it(`It deserializes conduit Date into JavaScript Dates`, () => {
+            const sourceValue = new Date();
+            const serialized = Serializer.serialize(sourceValue);
+            expect(Serializer.deserialize(serialized)).toEqual(sourceValue);
+          });
+        }
         default:
           throw new Error("Test not implemented");
       }
@@ -103,7 +136,7 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
           });
         }
         default:
-          throw new Error("Test not implemented");
+        // throw new Error("Test not implemented");
       }
     });
 

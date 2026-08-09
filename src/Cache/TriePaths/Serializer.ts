@@ -3,7 +3,12 @@ import { TypeChecker } from "./TypeChecker";
 
 export class Serializer {
   public static readonly SERIALIZATION_MARKER = "___CONDUIT___";
-  public static readonly SERIALIZED_CONSTRUCTORS = [Map, Set] as const;
+  public static readonly SERIALIZED_CONSTRUCTORS = [
+    Map,
+    Set,
+    RegExp,
+    Date,
+  ] as const;
   public static readonly SERIALIZED_TYPES = ["undefined", "bigint"] as const;
 
   public static serialize(value: unknown): any {
@@ -84,6 +89,47 @@ export class Serializer {
           i => new Set(i),
           v => Array.isArray(v),
         );
+      case "date":
+        return this.constructFromSerialized(
+          value,
+          i => new Date(i),
+          v =>
+            typeof v === "string" &&
+            /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}.\d{3,9}Z$/.test(v),
+        );
+      case "regexp":
+        return this.constructFromSerialized(
+          value,
+          i => {
+            if (typeof i !== "string") {
+              throw new Error(`Cannot reconstruct a regexp from ${typeof i}`, {
+                cause: i,
+              });
+            }
+            const match = i.match(/^\/((?:\\\/|[^/])+)\/([a-z]*)$/) ?? [];
+            const [, pattern, flags] = match;
+            if (!pattern) {
+              throw new Error(
+                `Cannot construct regex from falsy pattern ${pattern}`,
+                {
+                  cause: pattern,
+                },
+              );
+            }
+            const args: [string] | [string, string] = [pattern];
+            if (flags) {
+              args.push(flags);
+            }
+            return new RegExp(...args);
+          },
+          v => {
+            if (typeof v !== "string") {
+              return false;
+            }
+            const match = v.match(/^\/((?:\\\/|[^/])+)\/([a-z]*)$/)?.[1];
+            return !!match?.length;
+          },
+        );
       default:
         throw TypeChecker.nonImplementedError(value);
     }
@@ -103,6 +149,18 @@ export class Serializer {
         };
       }
       default:
+        if (value instanceof Date) {
+          return {
+            [this.SERIALIZATION_MARKER]: "date",
+            value: value.toISOString(),
+          };
+        }
+        if (value instanceof RegExp) {
+          return {
+            [this.SERIALIZATION_MARKER]: "regexp",
+            value: value.toString(),
+          };
+        }
         if (value instanceof Map) {
           return {
             [this.SERIALIZATION_MARKER]: "map",
