@@ -2,6 +2,9 @@ import { describe, expect, it } from "vitest";
 
 import { NodePathGenerator } from "../Cache/TriePaths";
 
+const now = new Date();
+const ISO = now.toISOString();
+
 describe("Node Path Generation", () => {
   it("It generates primitive paths from any javascript value", () => {
     const testObject = [
@@ -13,6 +16,8 @@ describe("Node Path Generation", () => {
         nesting: { deeper: { deeper: { deeper: {} } } },
         map: new Map([["hello", "goodbye"]]),
         set: new Set([["hello", "goodbye"]]),
+        regexp: /test-pattern(\d{4})/,
+        date: now,
         bigInt: BigInt(123123123123),
       },
     ];
@@ -39,6 +44,9 @@ describe("Node Path Generation", () => {
       "___CONDUIT___:{}",
       "bigInt",
       123123123123n,
+      "date",
+      "___CONDUIT___:Date",
+      ISO,
       "key",
       "value",
       "map",
@@ -60,6 +68,9 @@ describe("Node Path Generation", () => {
       "___CONDUIT___:{}",
       "___CONDUIT___:{}",
       "___CONDUIT___:{}",
+      "regexp",
+      "___CONDUIT___:RegExp",
+      "/test-pattern(\\d{4})/",
       "set",
       "___CONDUIT___:Set{}",
       "___CONDUIT___:[]",

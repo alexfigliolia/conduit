@@ -1,8 +1,5 @@
 export class TypeChecker {
-  public static readonly NON_SERIALIZEABLE_OBJECTS = [
-    RegExp,
-    Function,
-  ] as const;
+  public static readonly NON_SERIALIZEABLE_OBJECTS = [Function] as const;
 
   public static isObjectType(
     arg: any,

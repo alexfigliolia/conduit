@@ -12,6 +12,8 @@ export class NodePathGenerator {
   public static readonly MAP_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:Map{}`;
   public static readonly OBJECT_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:{}`;
   public static readonly UNKNOWN_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:?`;
+  public static readonly DATE_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:Date`;
+  public static readonly REGEX_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:RegExp`;
 
   public static toPath(
     key: any[],
@@ -55,32 +57,41 @@ export class NodePathGenerator {
       if (TypeChecker.NON_SERIALIZEABLE_OBJECTS.some(c => value instanceof c)) {
         throw TypeChecker.nonImplementedError(value);
       }
-      const orderedIterator = TypeChecker.parseOrderedHashTableIterator(value);
-      if (orderedIterator) {
-        let indicator: string;
-        if (value instanceof Map) {
-          indicator = this.MAP_SERIALIZATION_INDICATOR;
-        } else if (value instanceof Set) {
-          indicator = this.SET_SERIALIZATION_INDICATOR;
-        } else {
-          indicator = this.UNKNOWN_SERIALIZATION_INDICATOR;
-        }
-        onValue(indicator);
-        for (const entry of orderedIterator) {
-          if (!this.onValue(entry, onValue)) {
-            return false;
-          }
-        }
-        onValue(indicator);
+      if (value instanceof Date) {
+        onValue(this.DATE_SERIALIZATION_INDICATOR);
+        onValue(value.toISOString());
+      } else if (value instanceof RegExp) {
+        onValue(this.REGEX_SERIALIZATION_INDICATOR);
+        onValue(value.toString());
       } else {
-        onValue(this.OBJECT_SERIALIZATION_INDICATOR);
-        const keys = this.sortObjectKeys(value);
-        for (const key of keys) {
-          if (!onValue(key) || !this.onValue(value[key], onValue)) {
-            return false;
+        const orderedIterator =
+          TypeChecker.parseOrderedHashTableIterator(value);
+        if (orderedIterator) {
+          let indicator: string;
+          if (value instanceof Map) {
+            indicator = this.MAP_SERIALIZATION_INDICATOR;
+          } else if (value instanceof Set) {
+            indicator = this.SET_SERIALIZATION_INDICATOR;
+          } else {
+            indicator = this.UNKNOWN_SERIALIZATION_INDICATOR;
           }
+          onValue(indicator);
+          for (const entry of orderedIterator) {
+            if (!this.onValue(entry, onValue)) {
+              return false;
+            }
+          }
+          onValue(indicator);
+        } else {
+          onValue(this.OBJECT_SERIALIZATION_INDICATOR);
+          const keys = this.sortObjectKeys(value);
+          for (const key of keys) {
+            if (!onValue(key) || !this.onValue(value[key], onValue)) {
+              return false;
+            }
+          }
+          onValue(this.OBJECT_SERIALIZATION_INDICATOR);
         }
-        onValue(this.OBJECT_SERIALIZATION_INDICATOR);
       }
     }
     return true;
