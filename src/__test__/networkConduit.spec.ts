@@ -17,7 +17,7 @@ describe("Network Conduits", () => {
   syncAndAsyncNetworkConduits(cache).forEach(conduit => {
     it(`Operations are wrapped in ConduitNetworkResults - ${conduit.options.key.join("")}`, async () => {
       const args = [1, 2, 3, 4];
-      expect(conduit.readCache()).toEqual(
+      expect(conduit.readCache(...args)).toEqual(
         ConduitNetworkResult.fromResponse(null),
       );
       const result = await conduit.execute({ args });
