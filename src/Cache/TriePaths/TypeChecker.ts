@@ -13,15 +13,6 @@ export class TypeChecker {
     return this.isObjectType(arg) && !Array.isArray(arg);
   }
 
-  public static parseOrderedHashTableIterator(value: unknown) {
-    if (value instanceof Map) {
-      return value.entries();
-    }
-    if (value instanceof Set) {
-      return value.values();
-    }
-  }
-
   public static nonImplementedError(value: unknown) {
     return new Error(
       `Not Implemented Error: Unhandled data type. The cache can only support JavaScript primitives, objects, maps, sets, and arrays`,

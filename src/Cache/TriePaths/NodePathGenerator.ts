@@ -67,7 +67,7 @@ export class NodePathGenerator {
       onValue(this.REGEX_SERIALIZATION_INDICATOR);
       return onValue(value.toString());
     }
-    const orderedIterator = TypeChecker.parseOrderedHashTableIterator(value);
+    const orderedIterator = this.parseOrderedHashTableIterator(value);
     if (orderedIterator) {
       let indicator: string;
       if (value instanceof Map) {
@@ -107,5 +107,14 @@ export class NodePathGenerator {
     }
     strings.sort(this.COLLATOR.compare);
     return [...digits, ...strings];
+  }
+
+  private static parseOrderedHashTableIterator(value: unknown) {
+    if (value instanceof Map) {
+      return value.entries();
+    }
+    if (value instanceof Set) {
+      return value.values();
+    }
   }
 }
