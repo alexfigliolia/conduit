@@ -14,6 +14,8 @@ export const NON_PRIMITIVES = [
   ...buildObjectTypes(PRIMITIVES),
   new Set(PRIMITIVES),
   new Map(PRIMITIVES.map(item => [item, item])),
+  /test-pattern(\d{4})/,
+  new Date(),
 ];
 export const SERIALIZABLE_NON_PRIMITIVES = buildObjectTypes(
   SERIALIZABLE_PRIMITIVES,
