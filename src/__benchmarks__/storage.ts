@@ -123,7 +123,7 @@ group("Cache Entry Eviction", () => {
   });
 });
 
-group("Cache Building", () => {
+group("Cache Building from serialized data", () => {
   barplot(() => {
     summary(() => {
       bench("Flat Storage with JSON.stringify", function* () {

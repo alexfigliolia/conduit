@@ -7,6 +7,7 @@ export class NodePathGenerator {
     numeric: true,
     sensitivity: "base",
   });
+  public static readonly KEY_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:Key`;
   public static readonly ARRAY_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:[]`;
   public static readonly SET_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:Set{}`;
   public static readonly MAP_SERIALIZATION_INDICATOR = `${Serializer.SERIALIZATION_MARKER}:Map{}`;
@@ -23,6 +24,7 @@ export class NodePathGenerator {
     if (!this.iterateAndTraverse(key, onValue)) {
       return false;
     }
+    onValue(this.KEY_SERIALIZATION_INDICATOR);
     return this.iterateAndTraverse(args, onValue);
   }
 
@@ -48,64 +50,49 @@ export class NodePathGenerator {
     if (Array.isArray(value)) {
       onValue(this.ARRAY_SERIALIZATION_INDICATOR);
       for (const item of value) {
-        if (!this.onValue(item, onValue)) {
+        if (!this.traverse(item, onValue)) {
           return false;
         }
       }
-      onValue(this.ARRAY_SERIALIZATION_INDICATOR);
-    } else {
-      if (TypeChecker.NON_SERIALIZEABLE_OBJECTS.some(c => value instanceof c)) {
-        throw TypeChecker.nonImplementedError(value);
-      }
-      if (value instanceof Date) {
-        onValue(this.DATE_SERIALIZATION_INDICATOR);
-        onValue(value.toISOString());
-      } else if (value instanceof RegExp) {
-        onValue(this.REGEX_SERIALIZATION_INDICATOR);
-        onValue(value.toString());
+      return onValue(this.ARRAY_SERIALIZATION_INDICATOR);
+    }
+    if (TypeChecker.NON_SERIALIZEABLE_OBJECTS.some(c => value instanceof c)) {
+      throw TypeChecker.nonImplementedError(value);
+    }
+    if (value instanceof Date) {
+      onValue(this.DATE_SERIALIZATION_INDICATOR);
+      return onValue(value.toISOString());
+    }
+    if (value instanceof RegExp) {
+      onValue(this.REGEX_SERIALIZATION_INDICATOR);
+      return onValue(value.toString());
+    }
+    const orderedIterator = TypeChecker.parseOrderedHashTableIterator(value);
+    if (orderedIterator) {
+      let indicator: string;
+      if (value instanceof Map) {
+        indicator = this.MAP_SERIALIZATION_INDICATOR;
+      } else if (value instanceof Set) {
+        indicator = this.SET_SERIALIZATION_INDICATOR;
       } else {
-        const orderedIterator =
-          TypeChecker.parseOrderedHashTableIterator(value);
-        if (orderedIterator) {
-          let indicator: string;
-          if (value instanceof Map) {
-            indicator = this.MAP_SERIALIZATION_INDICATOR;
-          } else if (value instanceof Set) {
-            indicator = this.SET_SERIALIZATION_INDICATOR;
-          } else {
-            indicator = this.UNKNOWN_SERIALIZATION_INDICATOR;
-          }
-          onValue(indicator);
-          for (const entry of orderedIterator) {
-            if (!this.onValue(entry, onValue)) {
-              return false;
-            }
-          }
-          onValue(indicator);
-        } else {
-          onValue(this.OBJECT_SERIALIZATION_INDICATOR);
-          const keys = this.sortObjectKeys(value);
-          for (const key of keys) {
-            if (!onValue(key) || !this.onValue(value[key], onValue)) {
-              return false;
-            }
-          }
-          onValue(this.OBJECT_SERIALIZATION_INDICATOR);
+        indicator = this.UNKNOWN_SERIALIZATION_INDICATOR;
+      }
+      onValue(indicator);
+      for (const entry of orderedIterator) {
+        if (!this.traverse(entry, onValue)) {
+          return false;
         }
       }
+      return onValue(indicator);
     }
-    return true;
-  }
-
-  private static onValue(value: any, onValue: (value: Primitive) => boolean) {
-    if (!TypeChecker.isObjectType(value)) {
-      if (!onValue(value as Primitive)) {
+    onValue(this.OBJECT_SERIALIZATION_INDICATOR);
+    const keys = this.sortObjectKeys(value);
+    for (const key of keys) {
+      if (!onValue(key) || !this.traverse(value[key], onValue)) {
         return false;
       }
-    } else if (!this.traverse(value, onValue)) {
-      return false;
     }
-    return true;
+    return onValue(this.OBJECT_SERIALIZATION_INDICATOR);
   }
 
   private static sortObjectKeys(obj: Record<any, any>) {

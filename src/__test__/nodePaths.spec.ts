@@ -27,6 +27,7 @@ describe("Node Path Generation", () => {
     });
     expect(path).toEqual([
       "test-key",
+      "___CONDUIT___:Key",
       "___CONDUIT___:{}",
       "1",
       true,
