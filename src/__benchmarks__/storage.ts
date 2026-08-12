@@ -164,4 +164,38 @@ group("Cache Building from serialized data", () => {
   });
 });
 
+group("Serializing Cached Data", () => {
+  barplot(() => {
+    summary(() => {
+      bench("Flat Storage with JSON.stringify", function* () {
+        stringifyCacheWithFlatStorage.reset();
+        SERIALIZABLE_TEST_TYPES.forEach(type => {
+          stringifyCacheWithFlatStorage.set(rootKey, [type], type);
+        });
+        yield () => {
+          JSON.stringify(stringifyCacheWithFlatStorage.serialize());
+        };
+      });
+      bench("Flat Storage with optimized Stringify", function* () {
+        optimizedStringifyCacheWithFlatStorage.reset();
+        SERIALIZABLE_TEST_TYPES.forEach(type => {
+          optimizedStringifyCacheWithFlatStorage.set(rootKey, [type], type);
+        });
+        yield () => {
+          JSON.stringify(optimizedStringifyCacheWithFlatStorage.serialize());
+        };
+      });
+      bench("Graph/Trie Storage", function* () {
+        graphCache.reset();
+        SERIALIZABLE_TEST_TYPES.forEach(type => {
+          graphCache.set(rootKey, [type], type);
+        });
+        yield () => {
+          JSON.stringify(graphCache.serialize());
+        };
+      });
+    });
+  });
+});
+
 void run();
