@@ -1,6 +1,6 @@
 import { State, type NonFunction } from "@figliolia/galena";
 
-import { Serializer } from "../TriePaths";
+import { Serializer } from "../Serialization";
 
 import {
   type ICacheEntry,
