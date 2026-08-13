@@ -1,4 +1,4 @@
-import { TypeChecker } from "../Cache/TriePaths";
+import { TypeChecker } from "../Cache/Serialization";
 import { CacheAbstract, CacheEntry } from "../Cache";
 
 export class StringifyCache extends CacheAbstract<

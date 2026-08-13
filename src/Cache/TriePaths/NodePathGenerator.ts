@@ -1,6 +1,6 @@
+import { Serializer, TypeChecker } from "../Serialization";
+
 import type { Primitive } from "./types";
-import { TypeChecker } from "./TypeChecker";
-import { Serializer } from "./Serializer";
 
 export class NodePathGenerator {
   public static readonly COLLATOR = new Intl.Collator("en-us", {
