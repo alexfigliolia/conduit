@@ -1,16 +1,29 @@
 import {
   TypeName,
+  type OnPrimitive,
+  type PathKeyIndicator,
   type ConduitSerializedValue,
   type IInterativeSerializer,
 } from "./types";
-import { IterativeSerializer } from "./IterativeSerializer";
+import { AbstractSerializer } from "./AbstractSerializer";
 
-export class MapSerializer extends IterativeSerializer<
+export class MapSerializer extends AbstractSerializer<
   Map<any, any>,
   [any, any][]
 > {
-  constructor(config: Omit<IInterativeSerializer, "name">) {
-    super({ ...config, name: TypeName.MAP });
+  public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:Map`;
+  constructor(public readonly config: IInterativeSerializer) {
+    super(TypeName.MAP);
+  }
+
+  public toPath(value: Map<any, any>, onValue: OnPrimitive): boolean {
+    onValue(this.KEY_INDICATOR);
+    for (const entry of value) {
+      if (!this.config.traverse(entry, onValue)) {
+        return false;
+      }
+    }
+    return onValue(this.KEY_INDICATOR);
   }
 
   public matchPreserializationInput(input: unknown) {

@@ -1,6 +1,7 @@
 import type { Setter } from "@figliolia/galena";
 
-import { NodePathGenerator, type Primitive } from "../TriePaths";
+import type { Primitive } from "../Serialization";
+import { Serializer } from "../Serialization";
 
 import { type SerializedNode, type ParentPointer } from "./types";
 import { NodeParent } from "./NodeParent";
@@ -49,7 +50,7 @@ export class Graph<T = any> {
 
   public createNodeIfNotExists<T>(key: any[], args: any[]) {
     let current = this as Graph;
-    NodePathGenerator.toPath(key, args, primative => {
+    Serializer.toPath(key, args, primative => {
       let next = current.get(primative);
       if (!next) {
         next = new Graph(new NodeParent(current, primative));
@@ -117,7 +118,7 @@ export class Graph<T = any> {
 
   private find<T>(key: any[], args: any[]) {
     let current = this as Graph;
-    const found = NodePathGenerator.toPath(key, args, primative => {
+    const found = Serializer.toPath(key, args, primative => {
       const next = current.get(primative);
       if (!next) {
         return false;

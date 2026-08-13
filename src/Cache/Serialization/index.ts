@@ -8,3 +8,6 @@ export * from "./MapSerializer";
 export * from "./SetSerializer";
 export * from "./AbstractSerializer";
 export * from "./Serializer";
+export * from "./HashTableSerializer";
+export * from "./ArraySerializer";
+export * from "./ConduitSerializer";

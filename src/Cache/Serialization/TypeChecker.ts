@@ -1,6 +1,4 @@
 export class TypeChecker {
-  public static readonly NON_SERIALIZEABLE_OBJECTS = [Function] as const;
-
   public static isObjectType(
     arg: any,
   ): arg is Record<string | number | symbol, any> {

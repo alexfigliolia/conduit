@@ -1,10 +1,20 @@
-import type { ConduitSerializedValue } from "./types";
+import type {
+  ConduitSerializedValue,
+  OnPrimitive,
+  PathKeyIndicator,
+} from "./types";
 import { TypeName } from "./types";
 import { AbstractSerializer } from "./AbstractSerializer";
 
 export class DateSerializer extends AbstractSerializer<Date, string> {
+  public override KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:Date`;
   constructor() {
     super(TypeName.DATE);
+  }
+
+  public override toPath(value: Date, onValue: OnPrimitive) {
+    onValue(this.KEY_INDICATOR);
+    return onValue(value.toISOString());
   }
 
   public override matchPreserializationInput(input: unknown): input is Date {

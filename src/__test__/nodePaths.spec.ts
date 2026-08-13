@@ -1,6 +1,6 @@
 import { describe, expect, it } from "vitest";
 
-import { NodePathGenerator } from "../Cache/TriePaths";
+import { Serializer } from "../Cache/Serialization";
 
 const now = new Date();
 const ISO = now.toISOString();
@@ -19,10 +19,11 @@ describe("Node Path Generation", () => {
         regexp: /test-pattern(\d{4})/,
         date: now,
         bigInt: BigInt(123123123123),
+        undefined: undefined,
       },
     ];
     const path: any[] = [];
-    NodePathGenerator.toPath(["test-key"], testObject, p => {
+    Serializer.toPath(["test-key"], testObject, p => {
       return !!path.push(p);
     });
     expect(path).toEqual([
@@ -51,12 +52,12 @@ describe("Node Path Generation", () => {
       "key",
       "value",
       "map",
-      "___CONDUIT___:Map{}",
+      "___CONDUIT___:Map",
       "___CONDUIT___:[]",
       "hello",
       "goodbye",
       "___CONDUIT___:[]",
-      "___CONDUIT___:Map{}",
+      "___CONDUIT___:Map",
       "nesting",
       "___CONDUIT___:{}",
       "deeper",
@@ -73,12 +74,15 @@ describe("Node Path Generation", () => {
       "___CONDUIT___:RegExp",
       "/test-pattern(\\d{4})/",
       "set",
-      "___CONDUIT___:Set{}",
+      "___CONDUIT___:Set",
       "___CONDUIT___:[]",
       "hello",
       "goodbye",
       "___CONDUIT___:[]",
-      "___CONDUIT___:Set{}",
+      "___CONDUIT___:Set",
+      "undefined",
+      "___CONDUIT___:Undefined",
+      "undefined",
       "___CONDUIT___:{}",
     ]);
   });
