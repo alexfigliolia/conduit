@@ -20,7 +20,7 @@ import {
 
 describe("Serializer - a serializer JavaScript types that for some reason don't serialize to JSON natively", () => {
   describe("Serialization", () => {
-    Serializer.INTERNAL_SERIALIZERS.forEach(serializer => {
+    Serializer.INTERNAL_JSON_SERIALIZERS.forEach(serializer => {
       if (serializer instanceof MapSerializer) {
         return it(`It serializes Maps to special objects`, () => {
           const serialized = Serializer.serialize(new Map(MapInit as any));
@@ -90,7 +90,7 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
   });
 
   describe("Deserialization", () => {
-    Serializer.INTERNAL_SERIALIZERS.forEach(serializer => {
+    Serializer.INTERNAL_JSON_SERIALIZERS.forEach(serializer => {
       if (serializer instanceof MapSerializer) {
         return it(`It deserializes conduit Maps into JavaScript Maps`, () => {
           const sourceValue = new Map(MapInit as any);

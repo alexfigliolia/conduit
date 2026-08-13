@@ -1,10 +1,20 @@
-import type { ConduitSerializedValue } from "./types";
+import type {
+  ConduitSerializedValue,
+  OnPrimitive,
+  PathKeyIndicator,
+} from "./types";
 import { TypeName } from "./types";
 import { AbstractSerializer } from "./AbstractSerializer";
 
 export class RegExpSerializer extends AbstractSerializer<RegExp, string> {
+  public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:RegExp`;
   constructor() {
     super(TypeName.REGEXP);
+  }
+
+  public override toPath(value: RegExp, onValue: OnPrimitive) {
+    onValue(this.KEY_INDICATOR);
+    return onValue(value.toString());
   }
 
   public override matchPreserializationInput(input: unknown): input is RegExp {

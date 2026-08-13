@@ -1,9 +1,14 @@
-import type { ConduitSerializedValue, TypeName } from "./types";
+import type {
+  ConduitSerializedValue,
+  OnPrimitive,
+  PathKeyIndicator,
+} from "./types";
 import { TypeChecker } from "./TypeChecker";
 
 export abstract class AbstractSerializer<T, O> {
+  public abstract readonly KEY_INDICATOR: PathKeyIndicator;
   public static readonly SERIALIZATION_MARKER = "___CONDUIT___";
-  constructor(public readonly typeName: TypeName) {}
+  constructor(public readonly typeName: string) {}
 
   public serialize(value: T): ConduitSerializedValue<O> {
     return {
@@ -26,6 +31,8 @@ export abstract class AbstractSerializer<T, O> {
       AbstractSerializer.SERIALIZATION_MARKER in input
     );
   }
+
+  public abstract toPath(value: T, onValue: OnPrimitive): boolean;
 
   public abstract matchPreserializationInput(input: unknown): input is T;
 
