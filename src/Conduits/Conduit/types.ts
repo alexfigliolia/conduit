@@ -33,6 +33,11 @@ export type OperationArgs<T extends Conduit<any, any, any>> = Parameters<
   T["options"]["operation"]
 >;
 
+export type ConduitResult<T extends Conduit<any, any, any>> = ConduitValue<
+  T["options"]["operation"],
+  T["options"]["defaultValue"]
+>;
+
 export type CachePolicy =
   | "read-cache-with-respect-to-expiry"
   | "no-cache"
