@@ -18,7 +18,6 @@ export class Serializer {
     serialize: this.serialize.bind(this),
     deserialize: this.deserialize.bind(this),
   };
-
   public static readonly ARRAY_SERIALIZER = new ArraySerializer(
     this.BINDINGS.traverse,
   );
@@ -96,7 +95,7 @@ export class Serializer {
     return true;
   }
 
-  private static traverse(value: unknown, onValue: OnPrimitive) {
+  private static traverse(value: unknown, onValue: OnPrimitive): any {
     if (!TypeChecker.isObjectType(value) && typeof value !== "undefined") {
       return onValue(value as Primitive);
     }
