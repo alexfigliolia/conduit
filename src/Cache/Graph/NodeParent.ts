@@ -1,4 +1,4 @@
-import type { Primitive } from "../TriePaths";
+import type { Primitive } from "../Serialization";
 
 import type { Graph } from "./Graph";
 
