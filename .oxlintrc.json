@@ -21,7 +21,13 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["node_modules/**", "./target/**", "fixtures/**", "dist"],
+  "ignorePatterns": [
+    "coverage",
+    "node_modules/**",
+    "./target/**",
+    "fixtures/**",
+    "dist"
+  ],
   "overrides": [
     {
       "files": ["**/*.{ts}"],
