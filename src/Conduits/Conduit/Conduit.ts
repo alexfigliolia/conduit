@@ -119,7 +119,7 @@ export class Conduit<
     const cache = this.getCache();
     if (!cache) {
       throw new Error(
-        "Attempted to write to the cache without specifying the Conduit's 'cache' option",
+        "Attempted to interact with a cache entry without specifying the Conduit's 'cache' option",
         { cause: this },
       );
     }

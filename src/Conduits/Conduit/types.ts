@@ -2,8 +2,6 @@ import type { Setter } from "@figliolia/galena";
 
 import type { CacheEntry, UnknownCacheAbstract } from "../../Cache";
 
-import type { Conduit } from "./Conduit";
-
 export type CacheGetter<C extends UnknownCacheAbstract> = C | (() => C);
 
 export type IOperation = (...args: any[]) => any;
@@ -28,15 +26,6 @@ export interface IConduitWithPolicy<
 > extends Omit<IConduit<O, D, C>, "cachePolicy"> {
   cachePolicy: CachePolicy;
 }
-
-export type OperationArgs<T extends Conduit<any, any, any>> = Parameters<
-  T["options"]["operation"]
->;
-
-export type ConduitResult<T extends Conduit<any, any, any>> = ConduitValue<
-  T["options"]["operation"],
-  T["options"]["defaultValue"]
->;
 
 export type CachePolicy =
   | "read-cache-with-respect-to-expiry"
