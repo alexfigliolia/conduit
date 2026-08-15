@@ -5,7 +5,6 @@ import { Conduit } from "../Conduits";
 import { Cache, CacheEntry, ConduitStatus } from "../Cache";
 import {
   createAsyncConduit,
-  createSyncConduit,
   syncAndAsyncConduits,
 } from "../__fixtures__/Conduits";
 
@@ -111,16 +110,6 @@ describe("Conduits", () => {
       });
     });
 
-    syncAndAsyncConduits().forEach(([conduit, type]) => {
-      it(`Cache Only conduits should throw when a cache is not specified - ${type}`, () => {
-        const args = [1, 2, 3, 4];
-        // execute with the cache-only
-        expect(() => {
-          void conduit.execute({ args: args, cachePolicy: "cache-only" });
-        }).toThrow();
-      });
-    });
-
     syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
       it(`Cache With Respect to Expiry - Unexpired with ${type} executor`, async () => {
         const args = [1, 2, 3, 4];
@@ -186,57 +175,6 @@ describe("Conduits", () => {
     });
   });
 
-  describe("No Cache In Conduit Scope", () => {
-    syncAndAsyncConduits().forEach(([conduit, type]) => {
-      it(`It switches to the 'no-cache' policy when no cachePolicy is specified - ${type}`, () => {
-        expect(conduit.options.cachePolicy).toEqual("no-cache");
-        (["read-cache-with-respect-to-expiry", "cache-only"] as const).forEach(
-          cachePolicy => {
-            expect(() => {
-              void conduit.execute({
-                args: [],
-                cachePolicy,
-              });
-            }).toThrow();
-          },
-        );
-      });
-    });
-
-    syncAndAsyncConduits().forEach(([conduit, type]) => {
-      it(`Conduits throw when execute is called with a cache policy other than no-cache - ${type}`, () => {
-        (["read-cache-with-respect-to-expiry", "cache-only"] as const).forEach(
-          cachePolicy => {
-            expect(() => {
-              void conduit.execute({
-                args: [],
-                cachePolicy,
-              });
-            }).toThrow();
-            expect(conduit.options.operation).not.toHaveBeenCalled();
-          },
-        );
-      });
-    });
-
-    (
-      [
-        [createSyncConduit, "sync"],
-        [createAsyncConduit, "async"],
-      ] as const
-    ).forEach(([conduitCreator, type]) => {
-      it(`Conduits throw when spawning with an explicit cache policy other than no-cache - ${type}`, () => {
-        (["read-cache-with-respect-to-expiry", "cache-only"] as const).forEach(
-          cachePolicy => {
-            expect(() => {
-              conduitCreator({ cachePolicy });
-            }).toThrow();
-          },
-        );
-      });
-    });
-  });
-
   describe("Cache Writes", () => {
     syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
       const args = [1, 2, 3, 4];
@@ -272,15 +210,6 @@ describe("Conduits", () => {
       });
     });
 
-    syncAndAsyncConduits().forEach(([conduit, type]) => {
-      it(`Conduits should throw when attempting to write to an unspecified cache - ${type}`, () => {
-        const args = [1, 2, 3, 4];
-        expect(() => {
-          conduit.writeCache({ args, value: args });
-        }).toThrow();
-      });
-    });
-
     syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
       it(`Conduits can evict their cache entries - ${type}`, async () => {
         const args = [1, 2, 3, 4];
@@ -301,15 +230,6 @@ describe("Conduits", () => {
         expect(conduit.readCache(...args)).toEqual(undefined);
         conduit.writeCache({ args, value: args });
         expect(conduit.readCache(...args)).toEqual(args);
-      });
-    });
-
-    syncAndAsyncConduits({}).forEach(([conduit, type]) => {
-      it(`Conduits should throw when attempting to read to an unspecified cache - ${type}`, () => {
-        const args = [1, 2, 3, 4];
-        expect(() => {
-          expect(conduit.readCache(...args)).toEqual(undefined);
-        }).toThrow();
       });
     });
   });
