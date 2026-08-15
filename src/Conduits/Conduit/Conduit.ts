@@ -1,12 +1,10 @@
 import {
   type CacheEntry,
   type UnknownCacheAbstract,
-  CacheAbstract,
   ConduitStatus,
 } from "../../Cache";
 
 import {
-  type CachePolicy,
   type ConduitValue,
   type IConduit,
   type IConduitWithPolicy,
@@ -16,7 +14,6 @@ import {
   type ConduitCacheSubscriber,
   type ConduitCacheWrite,
   type EvictReturnType,
-  type MaybeCacheEntry,
 } from "./types";
 
 export class Conduit<
@@ -27,14 +24,6 @@ export class Conduit<
   public readonly options: IConduitWithPolicy<O, D, C>;
   public static DEFAULT_LIFE_TIME = 1000 * 60 * 5;
   constructor(options: IConduit<O, D, C>) {
-    const cache = this.getCache(options);
-    if (!cache) {
-      if (!options.cachePolicy) {
-        options.cachePolicy = "no-cache";
-      } else if (options.cachePolicy !== "no-cache") {
-        throw this.cachePolicyError(options.cachePolicy);
-      }
-    }
     options.cachePolicy =
       options.cachePolicy ?? "read-cache-with-respect-to-expiry";
     this.options = Object.freeze(options as IConduitWithPolicy<O, D, C>);
@@ -44,9 +33,7 @@ export class Conduit<
     if (typeof options.cache === "function") {
       return options.cache();
     }
-    if (options.cache instanceof CacheAbstract) {
-      return options.cache;
-    }
+    return options.cache;
   }
 
   public prepare(options: Omit<IExecuteOptions<O>, "args"> = {}) {
@@ -58,29 +45,18 @@ export class Conduit<
     expires = this.options.expires,
     cachePolicy = this.options.cachePolicy,
   }: IExecuteOptions<O>) {
-    const cache = this.getCache();
-    if (!cache && cachePolicy && cachePolicy !== "no-cache") {
-      throw this.cachePolicyError(cachePolicy);
-    }
-    const cacheEntry = cache?.createEntryIfNotExists?.(
-      this.options.key,
-      args,
-      this.options.defaultValue,
-    ) as MaybeCacheEntry<O, D>;
+    const cacheEntry = this.getCacheEntry(...args);
     switch (cachePolicy) {
       case "cache-only":
-        if (!cacheEntry) {
-          throw this.cachePolicyError("cache-only");
-        }
         return cacheEntry.readValue();
       case "no-cache":
-        return this.executeAndCache(cacheEntry, ...args);
+        return this.executeAndCache(cacheEntry, args);
       case "read-cache-with-respect-to-expiry":
       default:
         return this.runCacheFirst(
           cacheEntry,
           expires ?? this.options.expires ?? Conduit.DEFAULT_LIFE_TIME,
-          ...args,
+          args,
         );
     }
   }
@@ -131,10 +107,10 @@ export class Conduit<
   }
 
   protected executeAndCache(
-    cacheEntry: MaybeCacheEntry<O, D>,
-    ...args: Parameters<O>
+    cacheEntry: CacheEntry<ConduitValue<O, D>, any>,
+    args: Parameters<O>,
   ) {
-    cacheEntry?.setStatus?.(ConduitStatus.IN_FLIGHT);
+    cacheEntry.setStatus(ConduitStatus.IN_FLIGHT);
     const result = this.options.operation(...args);
     if (result instanceof Promise) {
       void result.then(v => this.onExecutionResult(cacheEntry, v));
@@ -145,32 +121,22 @@ export class Conduit<
   }
 
   protected runCacheFirst(
-    cacheEntry: MaybeCacheEntry<O, D>,
+    cacheEntry: CacheEntry<ConduitValue<O, D>, any>,
     expiry: number,
-    ...args: Parameters<O>
+    args: Parameters<O>,
   ) {
-    if (!cacheEntry) {
-      throw this.cachePolicyError("read-cache-with-respect-to-expiry");
-    }
     if (Date.now() - cacheEntry.updatedAt >= expiry) {
-      return this.executeAndCache(cacheEntry, ...args);
+      return this.executeAndCache(cacheEntry, args);
     }
     // TODO - maybe a cache refresh on an interval in the background
     return cacheEntry.readValue() as ConduitValue<O, D>;
   }
 
   protected onExecutionResult(
-    cacheEntry: MaybeCacheEntry<O, D>,
+    cacheEntry: CacheEntry<ConduitValue<O, D>, any>,
     value: IValueType<O>,
   ) {
-    cacheEntry?.writeValue?.(value);
-    cacheEntry?.setStatus?.(ConduitStatus.IDOL);
-  }
-
-  protected cachePolicyError(policy: CachePolicy) {
-    return new Error(
-      `Cache Policy Error: Use of "${policy}" policy without specifying the 'cache' option`,
-      { cause: this },
-    );
+    cacheEntry.writeValue(value);
+    cacheEntry.setStatus(ConduitStatus.IDOL);
   }
 }

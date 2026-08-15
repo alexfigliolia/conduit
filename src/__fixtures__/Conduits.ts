@@ -1,7 +1,12 @@
 import { vi } from "vitest";
 
-import { Conduit } from "../Conduits/Conduit";
-import { NetworkConduit, type IConduit, type IOperation } from "../Conduits";
+import {
+  NetworkConduit,
+  type IConduit,
+  type IOperation,
+  type CacheGetter,
+  Conduit,
+} from "../Conduits";
 import { Cache, type UnknownCacheAbstract } from "../Cache";
 
 export const createSyncConduit = <
@@ -12,12 +17,13 @@ export const createSyncConduit = <
   cache,
   operation,
   key = ["sync"],
+  defaultValue,
   ...rest
-}: Partial<IConduit<O, D, C>> = {}) => {
+}: PartialConduitOptions<O, D, C>) => {
   return new Conduit({
-    cache: cache && cache instanceof Cache ? () => cache : cache,
+    cache: cache instanceof Cache ? () => cache : cache,
     key,
-    defaultValue: undefined,
+    defaultValue,
     operation:
       operation ??
       vi
@@ -34,13 +40,14 @@ export const createAsyncConduit = <
 >({
   cache,
   operation,
+  defaultValue,
   key = ["async"],
   ...rest
-}: Partial<IConduit<O, D, C>> = {}) => {
+}: PartialConduitOptions<O, D, C>) => {
   return new Conduit({
     cache,
     key,
-    defaultValue: undefined,
+    defaultValue,
     operation:
       operation ??
       vi
@@ -59,7 +66,7 @@ export const createAsyncConduit = <
 export const createNonSpreadArgsConduit = <
   C extends UnknownCacheAbstract = UnknownCacheAbstract,
 >(
-  cache?: C,
+  cache: C,
   key = ["sync"],
 ) => {
   return new Conduit({
@@ -76,10 +83,7 @@ export const syncAndAsyncConduits = <
   O extends IOperation = (...args: number[]) => number[],
   C extends UnknownCacheAbstract = UnknownCacheAbstract,
 >(
-  options: Pick<
-    Partial<IConduit<O, undefined, C>>,
-    "cache" | "cachePolicy"
-  > = {},
+  options: PartialConduitOptions<O, undefined, C>,
 ) => {
   return [
     [createAsyncConduit(options), "async"],
@@ -139,3 +143,11 @@ export const throwingSyncAndAsyncNetworkConduits = (cache: Cache) =>
     createThrowingSyncNetworkConduit(cache),
     createThrowingAsyncNetworkConduit(cache),
   ] as const;
+
+type PartialConduitOptions<
+  O extends IOperation = (...args: number[]) => number[],
+  D = undefined,
+  C extends UnknownCacheAbstract = UnknownCacheAbstract,
+> = Omit<Partial<IConduit<O, D, C>>, "cache"> & {
+  cache: CacheGetter<C>;
+};
