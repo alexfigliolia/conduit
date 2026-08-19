@@ -1,0 +1,51 @@
+{
+  "name": "@figliolia/conduit-react",
+  "version": "1.0.0",
+  "description": "React bindings for conduit",
+  "keywords": [
+    "conduit",
+    "react",
+    "state"
+  ],
+  "homepage": "https://github.com/alexfigliolia/conduit/blob/main/conduit-react/README.md",
+  "license": "MIT",
+  "author": "Alex Figliolia",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexfigliolia/conduit-react.git"
+  },
+  "files": [
+    "dist",
+    "src/*"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@figliolia/conduit": "link:../conduit-core",
+    "@figliolia/galena": "^4.0.5",
+    "@figliolia/react-galena": "^5.0.3",
+    "@testing-library/react": "^16.3.2",
+    "@types/react": "^19.2.18",
+    "jsdom": "^30.0.1",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "peerDependencies": {
+    "@figliolia/conduit": ">=1.0.0",
+    "@figliolia/galena": ">=4.0.0",
+    "@figliolia/react-galena": ">=5.0.0",
+    "react": ">=19.0.0"
+  },
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
+}

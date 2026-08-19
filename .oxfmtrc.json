@@ -1,6 +1,12 @@
 {
   "$schema": "./node_modules/oxfmt/configuration_schema.json",
-  "ignorePatterns": ["node_modules", "./target/**", "fixtures/**", "dist"],
+  "ignorePatterns": [
+    "coverage",
+    "node_modules",
+    "./target/**",
+    "fixtures/**",
+    "dist"
+  ],
   "tabWidth": 2,
   "printWidth": 80,
   "arrowParens": "avoid",

@@ -21,11 +21,26 @@
     "builtin": true
   },
   "globals": {},
-  "ignorePatterns": ["node_modules/**", "./target/**", "fixtures/**", "dist"],
+  "ignorePatterns": [
+    "coverage",
+    "node_modules/**",
+    "./target/**",
+    "fixtures/**",
+    "dist"
+  ],
   "overrides": [
     {
       "files": ["**/*.{ts}"],
-      "plugins": ["node", "eslint", "import", "promise", "typescript", "oxc"],
+      "plugins": [
+        "node",
+        "eslint",
+        "import",
+        "promise",
+        "typescript",
+        "oxc",
+        "react",
+        "react-perf"
+      ],
       "rules": {
         "typescript/prefer-readonly": "error",
         "typescript/unbound-method": "off",

@@ -1,6 +1,7 @@
 {
-  "name": "@figliolia/conduit",
+  "name": "conduit",
   "version": "1.0.0",
+  "private": true,
   "description": "A framework agnostic state composition library based on Galena",
   "keywords": [],
   "homepage": "https://github.com/alexfigliolia/conduit#readme",
@@ -10,38 +11,22 @@
     "type": "git",
     "url": "git+https://github.com/alexfigliolia/conduit.git"
   },
-  "files": [
-    "dist",
-    "src/*"
+  "workspaces": [
+    "packages/*"
   ],
-  "main": "./dist/index.cjs",
-  "module": "./dist/index.mjs",
-  "types": "./dist/index.d.cts",
-  "exports": {
-    ".": {
-      "import": "./dist/index.mjs",
-      "require": "./dist/index.cjs"
-    },
-    "./package.json": "./package.json"
-  },
-  "publishConfig": {
-    "access": "public"
-  },
   "scripts": {
-    "bench": "npx tsx src/__benchmarks__/storage.ts",
-    "build": "tsdown",
+    "install:repokit": "cargo install repokit",
+    "install:rust": "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh",
     "lint": "pnpm oxlint --type-aware --report-unused-disable-directives --fix && pnpm oxfmt",
-    "test": "vitest",
-    "visualize": "npx tsx src/__examples__/storage.ts"
+    "setup:repo": "pnpm i && pnpm install:rust && pnpm install:repokit",
+    "test": "vitest"
   },
   "devDependencies": {
-    "@figliolia/event-emitter": "^1.2.0",
-    "@figliolia/galena": "^4.0.5",
+    "@repokit/core": "^5.1.5",
     "@types/node": "^26.2.0",
+    "@vitejs/plugin-react": "^6.0.5",
     "@vitest/coverage-v8": "4.1.10",
-    "chalk": "^4.1.2",
-    "mitata": "^1.0.34",
-    "oxfmt": "^0.63.0",
+    "oxfmt": "^0.64.0",
     "oxlint": "^1.14.0",
     "oxlint-tsgolint": "^0.25.0",
     "tsdown": "^0.22.2",
@@ -49,9 +34,5 @@
     "typescript": "^6.0.3",
     "vitest": "^4.1.10"
   },
-  "peerDependencies": {
-    "@figliolia/event-emitter": ">=1.2.0",
-    "@figliolia/galena": ">=4.0.0"
-  },
-  "packageManager": "pnpm@10.33.2+sha512.a90faf6feeab71ad6c6e57f94e0fe1a12f5dcc22cd754db40ae9593eb6a3e0b6b12e3540218bb37ae083404b1f2ce6db2a4121e979829b4aff94b99f49da1cf8"
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
 }

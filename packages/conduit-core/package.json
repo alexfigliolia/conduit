@@ -1,0 +1,44 @@
+{
+  "name": "@figliolia/conduit",
+  "version": "1.0.0",
+  "description": "A framework agnostic state composition library based on Galena",
+  "keywords": [
+    "conduit",
+    "state"
+  ],
+  "homepage": "https://github.com/alexfigliolia/conduit#readme",
+  "license": "MIT",
+  "author": "Alex Figliolia",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/alexfigliolia/conduit.git"
+  },
+  "files": [
+    "dist",
+    "src/*"
+  ],
+  "main": "./dist/index.cjs",
+  "module": "./dist/index.mjs",
+  "types": "./dist/index.d.cts",
+  "exports": {
+    ".": {
+      "import": "./dist/index.mjs",
+      "require": "./dist/index.cjs"
+    },
+    "./package.json": "./package.json"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@figliolia/event-emitter": "^1.2.0",
+    "@figliolia/galena": "^4.0.5",
+    "chalk": "^4.1.2",
+    "mitata": "^1.0.34"
+  },
+  "peerDependencies": {
+    "@figliolia/event-emitter": ">=1.2.0",
+    "@figliolia/galena": ">=4.0.0"
+  },
+  "packageManager": "pnpm@11.22.0+sha512.1ff870c4c6133dfd88fb2afc46dd13d47f09c9794b438c6fdb47ca98caf3bc16381ee0be93a091b8e3824cf01f889f46d7d9e20910fb0be1ab0fb5baa80dd621"
+}
