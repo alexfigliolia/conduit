@@ -43,7 +43,7 @@ export class Graph<T = any> {
     if (created) {
       node.entry!.updatedAt = Date.now();
     } else {
-      node.entry!.writeValue(value as Setter<T>);
+      node.entry!.setValue(value as Setter<T>);
     }
     return node.entry!;
   }
@@ -87,7 +87,7 @@ export class Graph<T = any> {
   public readonly evict = () => {
     this.entry = undefined;
     return Promise.resolve().then(async () => {
-      if (await this.recurseDownward(node => !node.entry)) {
+      if (await this.treeTrimDownwards(node => !node.entry)) {
         this.nodes = {};
         await this.treeTrimUpwards();
       }
@@ -132,7 +132,7 @@ export class Graph<T = any> {
     return current as Graph<T>;
   }
 
-  private async recurseDownward(
+  private async treeTrimDownwards(
     onNode: (graph: Graph) => boolean,
     depth: number = 0,
     nodes: Record<any, Graph> = this.nodes,
@@ -148,7 +148,7 @@ export class Graph<T = any> {
           await Promise.resolve();
         }
         if (
-          !this.recurseDownward(onNode, nextDepth, nodes[key].nodes) ||
+          !this.treeTrimDownwards(onNode, nextDepth, nodes[key].nodes) ||
           !onNode(nodes[key])
         ) {
           return false;

@@ -1,5 +1,7 @@
 import { describe, expect, it } from "vitest";
 
+import { InfiniteConduitValue } from "../Conduits/InfiniteConduit/InfiniteConduitValue";
+import { InfiniteConduitValueSerializer } from "../Cache/Serialization/InfiniteConduitValueSerializer";
 import {
   BigIntSerializer,
   DateSerializer,
@@ -79,6 +81,21 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
           expect(serialized.value).toEqual(bigInt.toString());
         });
       }
+      if (serializer instanceof InfiniteConduitValueSerializer) {
+        return it(`It serializes InfiniteCondiutValues to special objects`, () => {
+          const infiniteValue = [1, 2, 3].map(page => ({
+            data: page % 2 === 0,
+            page,
+          }));
+          const serialized = serializer.serialize(
+            new InfiniteConduitValue(infiniteValue),
+          );
+          expect(serialized[Serializer.SERIALIZATION_MARKER]).toEqual(
+            TypeName.INFINITE_CONDUIT_VALUE,
+          );
+          expect(serialized.value).toEqual(Serializer.serialize(infiniteValue));
+        });
+      }
       throw new Error("Test not implemented");
     });
 
@@ -120,16 +137,30 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
         });
       }
       if (serializer instanceof UndefinedSerializer) {
-        return it(`It deserializes undefined to special objects`, () => {
+        return it(`It deserializes conduit undefined values to JavaScript's undefined`, () => {
           const serialized = Serializer.serialize(undefined);
           expect(Serializer.deserialize(serialized)).toEqual(undefined);
         });
       }
       if (serializer instanceof BigIntSerializer) {
-        return it(`It deserializes BigInts to special objects`, () => {
+        return it(`It deserializes condiut BigInt values to JavaScript's BigInt`, () => {
           const bigInt = 123123123123123123123123123123n;
           const serialized = Serializer.serialize(bigInt);
           expect(Serializer.deserialize(serialized)).toEqual(bigInt);
+        });
+      }
+      if (serializer instanceof InfiniteConduitValueSerializer) {
+        return it(`It deserializes Infinite Condiut Values into InfiniteCondiutValue Instances`, () => {
+          const input = new InfiniteConduitValue(
+            [1, 2, 3].map(page => ({
+              data: page % 2 === 0,
+              page,
+            })),
+          );
+          const serialized = Serializer.serialize(input);
+          expect(Serializer.deserialize(serialized).value.getState()).toEqual(
+            input.value.getState(),
+          );
         });
       }
       throw new Error("Test not implemented");
@@ -143,23 +174,40 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
       });
     });
 
-    // it("Corrupted conduit objects throw", () => {
-    //   [
-    //     { [Serializer.SERIALIZATION_MARKER]: "random" },
-    //     { [Serializer.SERIALIZATION_MARKER]: "map", value: 3 },
-    //     { [Serializer.SERIALIZATION_MARKER]: "map", value: {} },
-    //     { [Serializer.SERIALIZATION_MARKER]: "map", value: "" },
-    //     { [Serializer.SERIALIZATION_MARKER]: "set", value: 3 },
-    //     { [Serializer.SERIALIZATION_MARKER]: "set", value: {} },
-    //     { [Serializer.SERIALIZATION_MARKER]: "set", value: "" },
-    //     { [Serializer.SERIALIZATION_MARKER]: "bigint", value: 3 },
-    //     { [Serializer.SERIALIZATION_MARKER]: "bigint", value: {} },
-    //     { [Serializer.SERIALIZATION_MARKER]: "bigint", value: [] },
-    //   ].forEach(entry => {
-    //     expect(() => {
-    //       Serializer.deserialize(entry);
-    //     }).toThrow();
-    //   });
-    // });
+    it("Corrupted conduit objects throw", () => {
+      [
+        { [Serializer.SERIALIZATION_MARKER]: "random" },
+        { [Serializer.SERIALIZATION_MARKER]: "map", value: 3 },
+        { [Serializer.SERIALIZATION_MARKER]: "map", value: {} },
+        { [Serializer.SERIALIZATION_MARKER]: "map", value: "" },
+        { [Serializer.SERIALIZATION_MARKER]: "set", value: 3 },
+        { [Serializer.SERIALIZATION_MARKER]: "set", value: {} },
+        { [Serializer.SERIALIZATION_MARKER]: "set", value: "" },
+        { [Serializer.SERIALIZATION_MARKER]: "bigint", value: 3 },
+        { [Serializer.SERIALIZATION_MARKER]: "bigint", value: {} },
+        { [Serializer.SERIALIZATION_MARKER]: "bigint", value: [] },
+        { [Serializer.SERIALIZATION_MARKER]: "icv", value: "asdf" },
+        { [Serializer.SERIALIZATION_MARKER]: "icv", value: 3 },
+        { [Serializer.SERIALIZATION_MARKER]: "icv", value: {} },
+        { [Serializer.SERIALIZATION_MARKER]: "regexp", value: "asdf" },
+        { [Serializer.SERIALIZATION_MARKER]: "regexp", value: "asdf/" },
+        { [Serializer.SERIALIZATION_MARKER]: "regexp", value: 3 },
+        { [Serializer.SERIALIZATION_MARKER]: "regexp", value: {} },
+        { [Serializer.SERIALIZATION_MARKER]: "regexp", value: [] },
+        { [Serializer.SERIALIZATION_MARKER]: "date", value: "asdf" },
+        { [Serializer.SERIALIZATION_MARKER]: "date", value: "asdf/" },
+        { [Serializer.SERIALIZATION_MARKER]: "date", value: 3 },
+        { [Serializer.SERIALIZATION_MARKER]: "date", value: {} },
+        { [Serializer.SERIALIZATION_MARKER]: "date", value: [] },
+        {
+          [Serializer.SERIALIZATION_MARKER]: "date",
+          value: new Date().toString(),
+        },
+      ].forEach(entry => {
+        expect(() => {
+          Serializer.deserialize(entry);
+        }).toThrow();
+      });
+    });
   });
 });

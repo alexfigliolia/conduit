@@ -1,11 +1,15 @@
 import { vi } from "vitest";
 
+import type {
+  IOperation,
+  CacheGetter,
+  IConduit,
+} from "../Conduits/BaseConduit";
 import {
   NetworkConduit,
-  type IConduit,
-  type IOperation,
-  type CacheGetter,
   Conduit,
+  InfiniteConduit,
+  InfiniteNetworkConduit,
 } from "../Conduits";
 import { Cache, type UnknownCacheAbstract } from "../Cache";
 
@@ -85,21 +89,16 @@ export const syncAndAsyncConduits = <
 >(
   options: PartialConduitOptions<O, undefined, C>,
 ) => {
-  return [
-    [createAsyncConduit(options), "async"],
-    [createSyncConduit(options), "sync"],
-  ] as const;
+  return [createAsyncConduit(options), createSyncConduit(options)] as const;
 };
 
 export const createAsyncNetworkConduit = (cache: Cache) => {
   return new NetworkConduit({
     cache,
     key: ["async"],
-    operation: vi
-      .fn<(...args: number[]) => Promise<number[]>>()
-      .mockImplementation(async (...args: number[]) => {
-        return args;
-      }),
+    operation: async (...args: number[]) => {
+      return args;
+    },
   });
 };
 
@@ -115,6 +114,9 @@ export const createSyncNetworkConduit = (cache: Cache) => {
   });
 };
 
+export const syncAndAsyncNetworkConduits = (cache: Cache) =>
+  [createSyncNetworkConduit(cache), createAsyncNetworkConduit(cache)] as const;
+
 export const createThrowingSyncNetworkConduit = (cache: Cache) => {
   return new NetworkConduit({
     cache,
@@ -129,19 +131,136 @@ export const createThrowingAsyncNetworkConduit = (cache: Cache) => {
   return new NetworkConduit({
     cache,
     key: ["async"],
-    operation: vi.fn<() => never>().mockImplementation(() => {
+    operation: vi.fn<(...args: number[]) => never>().mockImplementation(() => {
       throw new Error("Thrown Error");
     }),
   });
 };
 
-export const syncAndAsyncNetworkConduits = (cache: Cache) =>
-  [createSyncNetworkConduit(cache), createAsyncNetworkConduit(cache)] as const;
-
 export const throwingSyncAndAsyncNetworkConduits = (cache: Cache) =>
   [
     createThrowingSyncNetworkConduit(cache),
     createThrowingAsyncNetworkConduit(cache),
+  ] as const;
+
+export const createAsyncInfiniteConduit = (cache: Cache) => {
+  return new InfiniteConduit({
+    cache,
+    key: ["async"],
+    operation: async (options: {
+      search?: string;
+      paging: { cursor?: string; pageSize: number };
+    }) => {
+      return options;
+    },
+    pagingArgPaths: ["paging"],
+  });
+};
+
+export const createSyncInfiniteConduit = (cache: Cache) => {
+  return new InfiniteConduit({
+    cache,
+    key: ["sync"],
+    operation: (options: {
+      search?: string;
+      paging: { cursor?: string; pageSize: number };
+    }) => {
+      return options;
+    },
+    pagingArgPaths: ["paging.cursor", "paging.pageSize"],
+  });
+};
+
+export const syncAndAsyncInfiniteConduits = (cache: Cache) =>
+  [
+    createSyncInfiniteConduit(cache),
+    createAsyncInfiniteConduit(cache),
+  ] as const;
+
+export const createAsyncInfiniteNetworkConduit = (cache: Cache) => {
+  return new InfiniteNetworkConduit({
+    cache,
+    key: ["async"],
+    operation: async (options: {
+      search?: string;
+      paging: { cursor?: string; pageSize: number };
+    }) => {
+      return options;
+    },
+    pagingArgPaths: ["paging"],
+  });
+};
+
+export const createSyncInfiniteNetworkConduit = (cache: Cache) => {
+  return new InfiniteNetworkConduit({
+    cache,
+    key: ["sync"],
+    operation: (options: {
+      search?: string;
+      paging: { cursor?: string; pageSize: number };
+    }) => {
+      return options;
+    },
+    pagingArgPaths: ["paging.cursor", "paging.pageSize"],
+  });
+};
+
+export const syncAndAsyncInfiniteNetworkConduits = (cache: Cache) =>
+  [
+    createSyncInfiniteNetworkConduit(cache),
+    createAsyncInfiniteNetworkConduit(cache),
+  ] as const;
+
+export const createThrowingSyncInfiniteNetworkConduit = (cache: Cache) => {
+  return new InfiniteNetworkConduit({
+    cache,
+    key: ["sync"],
+    operation: vi
+      .fn<
+        (data: {
+          search?: string;
+          paging: { cursor?: string; pageSize: number };
+        }) => never
+      >()
+      .mockImplementation(
+        (_: {
+          search?: string;
+          paging: { cursor?: string; pageSize: number };
+        }) => {
+          throw new Error("Thrown Error");
+        },
+      ),
+    pagingArgPaths: ["paging.cursor", "paging.pageSize"],
+  });
+};
+
+export const createThrowingAsyncInfiniteNetworkConduit = (cache: Cache) => {
+  return new InfiniteNetworkConduit({
+    cache,
+    key: ["async"],
+    operation: vi
+      .fn<
+        (data: {
+          search?: string;
+          paging: { cursor?: string; pageSize: number };
+        }) => never
+      >()
+      .mockImplementation(
+        (_: {
+          search?: string;
+          paging: { cursor?: string; pageSize: number };
+        }) => {
+          throw new Error("Thrown Error");
+        },
+      ),
+    pagingArgPaths: ["paging"],
+  });
+};
+
+export const throwingSyncAndAsyncInfiniteNetworkConduits = (cache: Cache) =>
+  [
+    createThrowingSyncInfiniteNetworkConduit(cache),
+    createThrowingAsyncInfiniteNetworkConduit(cache),
   ] as const;
 
 type PartialConduitOptions<

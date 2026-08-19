@@ -27,7 +27,7 @@ export class SetSerializer extends AbstractSerializer<Set<any>, any[]> {
     return input instanceof Set;
   }
 
-  public deserialize(value: ConduitSerializedValue<[any, any]>) {
+  public deserialize(value: ConduitSerializedValue<any[]>) {
     if (!Array.isArray(value.value)) {
       this.sanitationError(value.value);
     }

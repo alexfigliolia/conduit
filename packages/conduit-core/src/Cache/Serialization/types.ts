@@ -12,6 +12,7 @@ export enum TypeName {
   SET = "set",
   DATE = "date",
   REGEXP = "regexp",
+  INFINITE_CONDUIT_VALUE = "icv",
 }
 
 export interface IInterativeSerializer {

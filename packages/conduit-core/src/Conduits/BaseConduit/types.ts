@@ -1,6 +1,6 @@
 import type { Setter } from "@figliolia/galena";
 
-import type { UnknownCacheAbstract } from "../../Cache";
+import type { CacheEntry, UnknownCacheAbstract } from "../../Cache";
 
 export type CacheGetter<C extends UnknownCacheAbstract> = C | (() => C);
 
@@ -35,10 +35,15 @@ export type CachePolicy =
   | "no-cache"
   | "cache-only";
 
-export interface IExecuteOptions<
-  O extends IOperation,
-> extends IOperationOptions {
-  args: Parameters<O>;
+export interface IExecuteOptions<O extends any[]> extends IOperationOptions {
+  args: O;
+}
+
+export interface IExecutionOptionsWithCacheEntry<
+  O extends any[],
+  T,
+> extends IExecuteOptions<O> {
+  cacheEntry: CacheEntry<T, any>;
 }
 
 export type IValueType<O extends IOperation> = Awaited<ReturnType<O>>;
@@ -68,3 +73,7 @@ export interface ConduitCacheSubscriber<
 export type EvictReturnType<C extends UnknownCacheAbstract> = ReturnType<
   C["evict"]
 >;
+
+export type IExecutionResult<O extends IOperation, D = IValueType<O>> =
+  | ConduitValue<O, D>
+  | ReturnType<O>;

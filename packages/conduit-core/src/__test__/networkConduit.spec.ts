@@ -1,6 +1,6 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
-import { ConduitNetworkResult } from "../Conduits";
+import { ConduitNetworkResult } from "../Conduits/NetworkConduit";
 import { Cache } from "../Cache";
 import {
   syncAndAsyncNetworkConduits,
@@ -15,23 +15,27 @@ describe("Network Conduits", () => {
   });
 
   syncAndAsyncNetworkConduits(cache).forEach(conduit => {
-    it(`Operations are wrapped in ConduitNetworkResults - ${conduit.options.key.join("")}`, async () => {
-      const args = [1, 2, 3, 4];
+    it(`It wraps operations in a ConduitNetworkResult - ${conduit.options.key[0]}`, async () => {
+      const args = [1, 2, 3];
       expect(conduit.readCache(...args)).toEqual(
-        ConduitNetworkResult.fromResponse(null),
+        ConduitNetworkResult.from(null),
       );
       const result = await conduit.execute({ args });
-      expect(result).toEqual(ConduitNetworkResult.fromResponse(args));
+      expect(result).toEqual(ConduitNetworkResult.from(args));
+      expect(conduit.readCache(...args)).toEqual(
+        ConduitNetworkResult.from(args),
+      );
     });
   });
 
   throwingSyncAndAsyncNetworkConduits(cache).forEach(conduit => {
-    it(`Thrown errors are caught and wrapped in ConduitNetworkResults  - ${conduit.options.key.join("")}`, async () => {
-      expect(conduit.readCache()).toEqual(
-        ConduitNetworkResult.fromResponse(null),
-      );
+    it(`It wraps caught errors in a ConduitNetworkResult - ${conduit.options.key[0]}`, async () => {
+      expect(conduit.readCache()).toEqual(ConduitNetworkResult.from(null));
       const result = await conduit.execute({ args: [] });
       expect(result).toEqual(
+        ConduitNetworkResult.fromError(new Error("Thrown Error")),
+      );
+      expect(conduit.readCache()).toEqual(
         ConduitNetworkResult.fromError(new Error("Thrown Error")),
       );
     });

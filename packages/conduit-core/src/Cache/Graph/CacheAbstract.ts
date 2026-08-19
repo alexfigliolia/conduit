@@ -23,6 +23,7 @@ export abstract class CacheAbstract<
 
   public abstract evict(key: any[], args: any[]): unknown;
 
+  // TODO - support lazy initialization of default values
   public abstract createEntryIfNotExists<T>(
     key: any[],
     args: any[],

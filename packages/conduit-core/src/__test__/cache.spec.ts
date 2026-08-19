@@ -42,7 +42,7 @@ describe("Cache", () => {
       [...TEST_TYPES, ...TEST_TYPES].forEach((type, i) => {
         const node = cache.get([`c${i}`], TEST_TYPES);
         expect(node?.lastRead).toEqual(0);
-        expect(node?.readValue()).toEqual(type);
+        expect(node?.getValue()).toEqual(type);
       });
     });
 
@@ -58,8 +58,8 @@ describe("Cache", () => {
       [...TEST_TYPES, ...TEST_TYPES].forEach((type, i) => {
         const coldNode = cache.get([`c${i}`], TEST_TYPES);
         const warmNode = warmedCache.get([`c${i}`], TEST_TYPES);
-        expect(coldNode?.readValue?.()).toEqual(type);
-        expect(warmNode?.readValue?.()).toEqual(type);
+        expect(coldNode?.getValue?.()).toEqual(type);
+        expect(warmNode?.getValue?.()).toEqual(type);
         expect(coldNode?.updatedAt).toEqual(warmNode?.updatedAt);
       });
     });
@@ -72,16 +72,16 @@ describe("Cache", () => {
     });
 
     it.skip("Errors on Non-Serializeable Values", () => {
-      // const _ = new Conduit({
-      //   cache,
-      //   defaultValue: new Set(),
-      //   key: ["non-json-serializeable"],
-      //   operation: (_: Function) => true,
-      // });
+      const conduit = new Conduit({
+        cache,
+        defaultValue: new Set(),
+        key: ["non-json-serializeable"],
+        operation: (_: Function) => true,
+      });
       // TODO - come back to me
-      // expect(() => {
-      //   conduit.execute({ args: [function () {}] });
-      // }).toThrow();
+      expect(() => {
+        conduit.execute({ args: [function () {}] });
+      }).toThrow();
     });
 
     it("Collisions with intermediary cache node edges", async () => {
@@ -154,11 +154,11 @@ describe("Cache", () => {
       const off = conduit.subscribeToValue({ args: [args], onChange });
       conduit.execute({ args: [args] });
       const node = conduit.getCacheEntry(args);
-      expect(args).toBe(node.readValue());
-      node.writeValue([]);
+      expect(args).toBe(node.getValue());
+      node.setValue([]);
       expect(onChange).toHaveBeenCalledWith(args);
       expect(onChange).toHaveBeenCalledWith([]);
-      node.writeValue([1, 2, 3]);
+      node.setValue([1, 2, 3]);
       expect(onChange).toHaveBeenCalledWith([1, 2, 3]);
       off();
     });

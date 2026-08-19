@@ -18,9 +18,9 @@ describe("Conduits", () => {
   });
 
   describe("Conduit Status", () => {
-    it("Conduit Status is reactive", async () => {
-      const args = [1, 2, 3, 4];
-      syncAndAsyncConduits({ cache }).forEach(async ([conduit]) => {
+    const args = [1, 2, 3, 4];
+    syncAndAsyncConduits({ cache }).forEach(async conduit => {
+      it(`Conduit Status is reactive - ${conduit.options.key[0]}`, async () => {
         const onChange = vi.fn();
         const off = conduit.subscribeToStatus({ args, onChange });
         await conduit.execute({ args });
@@ -30,10 +30,10 @@ describe("Conduits", () => {
       });
     });
 
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
       (["cache-only", "read-cache-with-respect-to-expiry"] as const).forEach(
         cachePolicy => {
-          it(`Conduit Status does not change during cache lookups - ${cachePolicy} policy with ${type} executor`, async () => {
+          it(`Conduit Status does not change during cache lookups - ${cachePolicy} policy with ${conduit.options.key[0]} executor`, async () => {
             const args = [1, 2, 3, 4];
             const onChange = vi.fn();
             const off = conduit.subscribeToStatus({ args, onChange });
@@ -64,8 +64,8 @@ describe("Conduits", () => {
   });
 
   describe("Cache Policies", () => {
-    syncAndAsyncConduits({ cache }).forEach(async ([conduit, type]) => {
-      it(`No Cache - ${type}`, async () => {
+    syncAndAsyncConduits({ cache }).forEach(async conduit => {
+      it(`No Cache - ${conduit.options.key[0]}`, async () => {
         const args = [1, 2, 3, 4];
         // prepoluate the cache
         cache.set(conduit.options.key, args, [0]);
@@ -80,8 +80,8 @@ describe("Conduits", () => {
       });
     });
 
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
-      it(`Cache Only - Prepopulated with ${type} executor`, async () => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
+      it(`Cache Only - Prepopulated with ${conduit.options.key[0]} executor`, async () => {
         const args = [1, 2, 3, 4];
         // prepoluate the cache
         cache.set(conduit.options.key, args, args);
@@ -96,8 +96,8 @@ describe("Conduits", () => {
       });
     });
 
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
-      it(`Cache Only - Unpopulated with ${type} executor`, async () => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
+      it(`Cache Only - Unpopulated with ${conduit.options.key[0]} executor`, async () => {
         const args = [1, 2, 3, 4];
         // execute with the cache-only
         await conduit.execute({ args: args, cachePolicy: "cache-only" });
@@ -110,8 +110,8 @@ describe("Conduits", () => {
       });
     });
 
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
-      it(`Cache With Respect to Expiry - Unexpired with ${type} executor`, async () => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
+      it(`Cache With Respect to Expiry - Unexpired with ${conduit.options.key[0]} executor`, async () => {
         const args = [1, 2, 3, 4];
         // prepoluate the cache
         cache.set(conduit.options.key, args, args);
@@ -129,8 +129,8 @@ describe("Conduits", () => {
       });
     });
 
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
-      it(`Cache With Respect to Expiry - Expired with ${type} executor`, async () => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
+      it(`Cache With Respect to Expiry - Expired with ${conduit.options.key[0]} executor`, async () => {
         const args = [1, 2, 3, 4];
         // prepoluate the cache
         cache.set(conduit.options.key, args, args);
@@ -139,8 +139,8 @@ describe("Conduits", () => {
         const cacheNode = cache.get(conduit.options.key, args);
         expect(cacheNode).toBeInstanceOf(CacheEntry);
         // Update the cache value to something that will not match the result of the execution
-        cacheNode?.writeValue?.([1, 2, 3]);
-        expect(cacheNode?.readValue()).toEqual([1, 2, 3]);
+        cacheNode?.setValue?.([1, 2, 3]);
+        expect(cacheNode?.getValue()).toEqual([1, 2, 3]);
         // expire the cache entry
         cacheNode!.updatedAt = now - Conduit.DEFAULT_LIFE_TIME - 1;
         // execute with "read-cache-with-respect-to-expiry"
@@ -151,12 +151,12 @@ describe("Conduits", () => {
         // assert that the execution bypasses the cache
         expect(conduit.options.operation).toHaveBeenCalledTimes(1);
         // assert that cached value is updated
-        expect(cacheNode!.readValue()).toEqual(args);
+        expect(cacheNode!.getValue()).toEqual(args);
       });
     });
 
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
-      it(`Cache With Respect to Expiry - Uninitialized with ${type} executor`, async () => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
+      it(`Cache With Respect to Expiry - Uninitialized with ${conduit.options.key[0]} executor`, async () => {
         const args = [1, 2, 3, 4];
         // Assert the cache is empty
         expect(cache.get(conduit.options.key, args)).not.toBeDefined();
@@ -168,7 +168,7 @@ describe("Conduits", () => {
         // assert that the execution bypasses the cache
         expect(conduit.options.operation).toHaveBeenCalledTimes(1);
         // assert that cached value is updated
-        expect(cache.get(conduit.options.key, args)?.readValue?.()).toEqual(
+        expect(cache.get(conduit.options.key, args)?.getValue?.()).toEqual(
           args,
         );
       });
@@ -176,42 +176,42 @@ describe("Conduits", () => {
   });
 
   describe("Cache Writes", () => {
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
       const args = [1, 2, 3, 4];
       const writer: Setter<any> =
-        type === "async"
+        conduit.options.key[0] === "async"
           ? async (prev: unknown) => [prev, ...args]
           : (prev: unknown) => [prev, ...args];
-      it(`Conduits can directly populate the cache - ${type} with function setter`, async () => {
+      it(`Conduits can directly populate the cache - ${conduit.options.key[0]} with function setter`, async () => {
         conduit.writeCache({
           args,
           value: writer,
         });
-        if (type === "async") {
+        if (conduit.options.key[0] === "async") {
           await Promise.resolve();
         }
-        expect(cache.get(conduit.options.key, args)?.readValue()).toEqual([
+        expect(cache.get(conduit.options.key, args)?.getValue()).toEqual([
           undefined,
           ...args,
         ]);
       });
     });
 
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
       const args = [1, 2, 3, 4];
-      it(`Conduits can directly populate the cache - ${type} with value setter`, async () => {
+      it(`Conduits can directly populate the cache - ${conduit.options.key[0]} with value setter`, async () => {
         conduit.writeCache({
           args,
           value: [1, 2, 3, 4],
         });
-        expect(cache.get(conduit.options.key, args)?.readValue()).toEqual([
+        expect(cache.get(conduit.options.key, args)?.getValue()).toEqual([
           ...args,
         ]);
       });
     });
 
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
-      it(`Conduits can evict their cache entries - ${type}`, async () => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
+      it(`Conduits can evict their cache entries - ${conduit.options.key[0]}`, async () => {
         const args = [1, 2, 3, 4];
         conduit.writeCache({ args, value: args });
         expect(conduit.readCache(...args)).toEqual(args);
@@ -224,8 +224,8 @@ describe("Conduits", () => {
   });
 
   describe("Cache Reads", () => {
-    syncAndAsyncConduits({ cache }).forEach(([conduit, type]) => {
-      it(`Conduits can read from their cache - ${type}`, () => {
+    syncAndAsyncConduits({ cache }).forEach(conduit => {
+      it(`Conduits can read from their cache - ${conduit.options.key[0]}`, () => {
         const args = [1, 2, 3, 4];
         expect(conduit.readCache(...args)).toEqual(undefined);
         conduit.writeCache({ args, value: args });

@@ -1,5 +1,6 @@
-import { Conduit, type IValueType, type IOperation } from "../Conduit";
-import type { UnknownCacheAbstract } from "../../Cache";
+import { Conduit } from "../Conduit";
+import { type IOperation, type IValueType } from "../BaseConduit";
+import { type UnknownCacheAbstract } from "../../Cache";
 
 import type { INetworkConduit, INetworkOperation } from "./types";
 import { ConduitNetworkResult } from "./ConduitNetworkResult";
@@ -12,30 +13,28 @@ export class NetworkConduit<
   ConduitNetworkResult<IValueType<O>>,
   C
 > {
-  constructor({ operation, defaultValue, ...rest }: INetworkConduit<O, C>) {
+  constructor({ defaultValue, operation, ...options }: INetworkConduit<O, C>) {
     super({
-      ...rest,
-      operation: NetworkConduit.toNetworkOperator<O>(
+      defaultValue: ConduitNetworkResult.from<IValueType<O>>(defaultValue),
+      operation: NetworkConduit.toNetworkOperation(
         operation,
-      ) as INetworkOperation<O>,
-      defaultValue: { data: defaultValue ?? null, error: undefined },
+      ) as unknown as INetworkOperation<O>,
+      ...options,
     });
   }
 
-  public static toNetworkOperator<O extends IOperation, E = unknown>(
-    operation: O,
-  ) {
+  public static toNetworkOperation<O extends IOperation>(operation: O) {
     return (...args: Parameters<O>) => {
       try {
         const result = operation(...args);
         if (result instanceof Promise) {
           return result
-            .then(ConduitNetworkResult.fromResponse)
-            .catch(e => ConduitNetworkResult.fromError(e as E));
+            .then(v => ConduitNetworkResult.from(v))
+            .catch(e => ConduitNetworkResult.fromError(e));
         }
-        return ConduitNetworkResult.fromResponse(result);
+        return ConduitNetworkResult.from(result);
       } catch (error: unknown) {
-        return ConduitNetworkResult.fromError(error as E);
+        return ConduitNetworkResult.fromError(error);
       }
     };
   }

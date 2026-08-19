@@ -1,4 +1,4 @@
-import { State, type NonFunction } from "@figliolia/galena";
+import { type NonFunction, State } from "@figliolia/galena";
 
 import { Serializer } from "../Serialization";
 
@@ -8,10 +8,13 @@ import {
   ConduitStatus,
 } from "./types";
 
+// TODO - clear subscribers on evictions
 export class CacheEntry<T, R> {
   public lastRead = 0;
   public updatedAt = 0;
   public readonly State: State<T>;
+  private outstandingTask?: unknown;
+  private readonly subscriptions: (() => void)[] = [];
   public readonly Status = new State(ConduitStatus.UNINITIALIZED);
   constructor(public readonly options: ICacheEntry<T, R>) {
     this.State = new State(options.defaultValue as NonFunction<T>);
@@ -31,12 +34,26 @@ export class CacheEntry<T, R> {
     return cacheNode;
   }
 
+  public registerTask<T = unknown>(task: T) {
+    if (task instanceof Promise) {
+      this.outstandingTask = task;
+      void task
+        .then(() => (this.outstandingTask = undefined))
+        .catch(() => (this.outstandingTask = undefined));
+    }
+    return task;
+  }
+
+  public getOutstandingTask<T = unknown>() {
+    return this.outstandingTask as T | undefined;
+  }
+
   public subscribeToValue(onChange: (value: T) => void) {
-    return this.State.subscribe(onChange);
+    return this.cacheNotifier(this.State.subscribe(onChange));
   }
 
   public subscribeToStatus(onChange: (value: ConduitStatus) => void) {
-    return this.Status.subscribe(onChange);
+    return this.cacheNotifier(this.Status.subscribe(onChange));
   }
 
   public getStatus() {
@@ -47,18 +64,24 @@ export class CacheEntry<T, R> {
     this.Status.update(...args);
   }
 
-  public readValue() {
+  public getValue() {
     this.lastRead = Date.now();
     return this.State.getState();
   }
 
-  public writeValue(...args: Parameters<State<T>["update"]>) {
+  public setValue(...args: Parameters<State<T>["update"]>) {
     this.updatedAt = Date.now();
     this.State.update(...args);
   }
 
   public evict() {
-    return this.options.evict();
+    const result = this.options.evict();
+    if (result instanceof Promise) {
+      void result.then(() => this.releaseSubscriptions());
+    } else {
+      this.releaseSubscriptions();
+    }
+    return result;
   }
 
   public serialize(): SerializedCacheEntry<T> {
@@ -68,5 +91,16 @@ export class CacheEntry<T, R> {
       status: this.Status.getState(),
       value: Serializer.serialize(this.State.getState()),
     };
+  }
+
+  private cacheNotifier(unsubscriber: () => void) {
+    this.subscriptions.push(unsubscriber);
+    return unsubscriber;
+  }
+
+  private releaseSubscriptions() {
+    while (this.subscriptions.length) {
+      this.subscriptions.pop()!();
+    }
   }
 }
