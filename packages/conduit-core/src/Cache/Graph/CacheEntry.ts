@@ -1,4 +1,5 @@
 import { type NonFunction, State } from "@figliolia/galena";
+import { AutoIncrementingID } from "@figliolia/event-emitter";
 
 import { Serializer } from "../Serialization";
 
@@ -13,8 +14,9 @@ export class CacheEntry<T, R> {
   public lastRead = 0;
   public updatedAt = 0;
   public readonly State: State<T>;
-  private outstandingTask?: unknown;
-  private readonly subscriptions: (() => void)[] = [];
+  private outstandingTask?: Promise<unknown>;
+  private readonly IDs = new AutoIncrementingID();
+  private readonly subscriptions = new Map<string, () => void>();
   public readonly Status = new State(ConduitStatus.UNINITIALIZED);
   constructor(public readonly options: ICacheEntry<T, R>) {
     this.State = new State(options.defaultValue as NonFunction<T>);
@@ -45,7 +47,7 @@ export class CacheEntry<T, R> {
   }
 
   public getOutstandingTask<T = unknown>() {
-    return this.outstandingTask as T | undefined;
+    return this.outstandingTask as Promise<T> | undefined;
   }
 
   public subscribeToValue(onChange: (value: T) => void) {
@@ -94,13 +96,19 @@ export class CacheEntry<T, R> {
   }
 
   private cacheNotifier(unsubscriber: () => void) {
-    this.subscriptions.push(unsubscriber);
-    return unsubscriber;
+    const ID = this.IDs.get();
+    const cacheSubscriber = () => {
+      this.subscriptions.delete(ID);
+      unsubscriber();
+    };
+    this.subscriptions.set(ID, cacheSubscriber);
+    return cacheSubscriber;
   }
 
   private releaseSubscriptions() {
-    while (this.subscriptions.length) {
-      this.subscriptions.pop()!();
+    for (const [_, subscriber] of this.subscriptions) {
+      subscriber();
     }
+    this.subscriptions.clear();
   }
 }
