@@ -10,7 +10,6 @@ import type {
   IConduitWithPolicy,
   IConduit,
   ConduitValue,
-  IExecutionResult,
   EvictReturnType,
   IExecutionOptionsWithCacheEntry,
 } from "./types";
@@ -69,15 +68,17 @@ export abstract class BaseConduit<
     cacheEntry,
     cachePolicy = this.options.cachePolicy,
     expires = this.options.expires ?? BaseConduit.DEFAULT_LIFE_TIME,
-  }: T): IExecutionResult<O, D> {
+  }: T) {
     switch (cachePolicy) {
       case "cache-only":
-        return cacheEntry.getValue();
+        return cacheEntry.getValue() as ConduitValue<O, D>;
       case "no-cache":
-        return this.executeAndCache(cacheEntry, args);
+        return this.executeAndCache(cacheEntry, args) as ReturnType<O>;
       case "read-cache-with-respect-to-expiry":
       default:
-        return this.runCacheFirst(cacheEntry, expires, args);
+        return this.runCacheFirst(cacheEntry, expires, args) as
+          | ConduitValue<O, D>
+          | ReturnType<O>;
     }
   }
 
@@ -105,7 +106,7 @@ export abstract class BaseConduit<
     args: Parameters<O>,
   ) {
     if (Date.now() - cacheEntry.updatedAt >= expiry) {
-      return this.executeAndCache(cacheEntry, args);
+      return this.executeAndCache(cacheEntry, args) as ReturnType<O>;
     }
     // TODO - maybe a cache refresh on an interval in the background
     return cacheEntry.getValue() as ConduitValue<O, D>;

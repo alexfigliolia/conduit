@@ -15,5 +15,12 @@ export const Commands = new RepoKitCommand({
         "(--development | -D)": "Specifies the dependency as a devDependency",
       },
     },
+    test: {
+      command: "pnpm vitest",
+      description: "Runs this package's test suites",
+      args: {
+        "(--coverage)": "Executes tests and generates a coverage report",
+      },
+    },
   },
 });
