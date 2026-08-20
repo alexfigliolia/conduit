@@ -7,13 +7,15 @@ import {
   type MouseEvent,
 } from "react";
 
-import { LIST_BOX_OPTION_CLASS } from "./Option";
+import { LIST_BOX_OPTION_CLASS, type IOption } from "./Option";
 
-export const useSelection = ({
+export const useSelection = <T extends IOption>({
+  items,
+  onChange,
   id: containerID,
   multiple = false,
   initialSelected = [],
-}: ISelectionConfig) => {
+}: ISelectionConfig<T>) => {
   const currentIndex = useRef(-1);
   const [focusedItems, setFocusedItems] = useState(new Set<string>());
   const [selectedItems, setSelectedItems] = useState(new Set<string>());
@@ -128,6 +130,20 @@ export const useSelection = ({
     }
   }, [initialSelected, selectItem, getChildNodes]);
 
+  useEffect(() => {
+    const indices: number[] = [];
+    for (const itemID of selectedItems) {
+      const index = document
+        .getElementById(itemID)
+        ?.getAttribute?.("aria-posinset");
+      // @ts-expect-error isNaN can accept strings
+      if (typeof index === "string" && !isNaN(index)) {
+        indices.push(parseInt(index));
+      }
+    }
+    onChange?.(indices.map(i => items[i]));
+  }, [selectedItems, onChange, items]);
+
   return useMemo(
     () => ({
       setFocusedItems,
@@ -156,8 +172,12 @@ export const useSelection = ({
   );
 };
 
-export interface ISelectionConfig {
+export interface ISelectionConfig<T extends IOption> {
   id: string;
+  items: T[];
   multiple?: boolean;
   initialSelected?: number[];
+  onChange?: ListBoxChangeEvent<T>;
 }
+
+export type ListBoxChangeEvent<T extends IOption> = (items: T[]) => void;

@@ -16,7 +16,9 @@ export interface Props<T extends IOption> extends ListboxEvents {
 
 export type ListBoxOptionQuery = (id: string) => boolean;
 
-export type IOption = string | { id: string | number; value: string };
+export type IListBoxOption = { value: string };
+
+export type IOption = string | IListBoxOption;
 
 export type ListBoxEventCallback = (id: string, index: number) => void;
 

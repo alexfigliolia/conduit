@@ -11,6 +11,7 @@ import {
 } from "react";
 import {
   Listbox,
+  type IListBoxOption,
   type IOption,
   type ListBoxControls,
   type ListBoxKeyboardEvent,
@@ -46,7 +47,7 @@ export const Combobox = <T extends IOption>({
     setIsOpen(false);
   }, []);
 
-  const onChange = useCallback(
+  const onSearchBoxChange = useCallback(
     (e: ChangeEvent<HTMLInputElement>) => {
       isInteractedWith.current = !!e.target.value.length;
       if (isInteractedWith.current) {
@@ -73,7 +74,7 @@ export const Combobox = <T extends IOption>({
         ref: input,
         type: "search",
         value: inputValue,
-        onChange,
+        onChange: onSearchBoxChange,
         onKeyUp,
         onKeyDown,
         placeholder,
@@ -84,7 +85,15 @@ export const Combobox = <T extends IOption>({
         "aria-controls": listBoxId,
         "aria-autocomplete": "list",
       }) as const,
-    [inputValue, isOpen, onChange, placeholder, listBoxId, onKeyDown, onKeyUp],
+    [
+      inputValue,
+      isOpen,
+      onInputChange,
+      placeholder,
+      listBoxId,
+      onKeyDown,
+      onKeyUp,
+    ],
   );
 
   const onItemClick = useCallback(() => {
@@ -95,6 +104,18 @@ export const Combobox = <T extends IOption>({
     () => renderInput(inputProps),
     [renderInput, inputProps],
   );
+
+  const onChange = useCallback((items: T[]) => {
+    if (input.current) {
+      if (typeof items[0] === "string") {
+        input.current.value = (items as string[]).join(", ");
+      } else {
+        input.current.value = (items as IListBoxOption[])
+          .map(item => item.value)
+          .join(", ");
+      }
+    }
+  }, []);
 
   return (
     <div className={classes}>
@@ -107,6 +128,7 @@ export const Combobox = <T extends IOption>({
         ref={listboxControls}
         onItemClick={onItemClick}
         initialSelected={initialSelected}
+        onChange={onChange}
       />
     </div>
   );

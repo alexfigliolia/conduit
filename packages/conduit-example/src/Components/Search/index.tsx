@@ -43,7 +43,7 @@ export const Search = memo(function Search(_: Propless) {
         <button onClick={onClick}>
           <SearchIcon />
         </button>
-        <input ref={input} name="search" {...props} />
+        <input name="search" {...props} />
       </Fragment>
     );
   }, []);

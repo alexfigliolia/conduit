@@ -1,5 +1,6 @@
 import {
   useCallback,
+  useEffect,
   useImperativeHandle,
   type MouseEvent,
   type RefObject,
@@ -15,6 +16,7 @@ export const Listbox = <T extends IOption>({
   id,
   ref,
   items,
+  onChange,
   onEscape,
   className,
   focusable,
@@ -25,6 +27,8 @@ export const Listbox = <T extends IOption>({
   const classes = useClassNames("list-box", className);
   const controls = useListboxControls({
     id,
+    items,
+    onChange,
     multiple,
     onEscape,
     initialSelected,
@@ -50,6 +54,10 @@ export const Listbox = <T extends IOption>({
     [controls.onItemClick, onItemClick],
   );
 
+  useEffect(() => {
+    return () => onBlur();
+  }, [onBlur]);
+
   return (
     <ul
       id={id}
@@ -73,7 +81,7 @@ export const Listbox = <T extends IOption>({
   );
 };
 
-export interface Props<T extends IOption> extends IControlConfig {
+export interface Props<T extends IOption> extends IControlConfig<T> {
   className?: string;
   ref?: RefObject<ReturnType<typeof useListboxControls> | null>;
   focusable?: boolean;

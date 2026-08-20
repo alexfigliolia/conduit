@@ -6,13 +6,12 @@ import {
 } from "react";
 
 import { useSelection, type ISelectionConfig } from "./useSelection";
+import type { IOption } from "./Option";
 
-export const useListboxControls = ({
+export const useListboxControls = <T extends IOption>({
   onEscape,
-  id,
-  multiple = false,
-  initialSelected = [],
-}: IControlConfig) => {
+  ...options
+}: IControlConfig<T>) => {
   const currentIndex = useRef(-1);
   const shifting = useRef(false);
   const controlling = useRef(false);
@@ -27,11 +26,7 @@ export const useListboxControls = ({
     getChildNodes,
     activeDescendant,
     setFocusedItems,
-  } = useSelection({
-    id,
-    multiple,
-    initialSelected,
-  });
+  } = useSelection(options);
 
   const isItemFocused = useCallback(
     (id: string) => {
@@ -88,7 +83,7 @@ export const useListboxControls = ({
   const onKeyUp = useCallback((e: ReactKeyboardEvent<any> | KeyboardEvent) => {
     if (e.key === "Shift") {
       shifting.current = false;
-    } else if (e.key === "Control") {
+    } else if (e.key === "Control" || e.key === "Meta") {
       controlling.current = false;
     }
   }, []);
@@ -101,9 +96,10 @@ export const useListboxControls = ({
           shifting.current = true;
           return;
         case "Control":
+        case "Meta":
           controlling.current = true;
           return;
-        case "A":
+        case "a":
           if (!controlling.current) {
             return;
           }
@@ -151,8 +147,11 @@ export const useListboxControls = ({
           return selectWithScroll(nodes[currentIndex.current]);
         case "Enter":
           return selectItem(nodes[currentIndex.current].getAttribute("id")!);
-        case "Space":
+        case " ":
           const node = nodes[currentIndex.current];
+          if (!node) {
+            return;
+          }
           const ID = node.getAttribute("id");
           if (node.getAttribute("aria-selected") === "true") {
             return deselectItem(ID!);
@@ -205,7 +204,7 @@ export const useListboxControls = ({
   );
 };
 
-export interface IControlConfig extends ISelectionConfig {
+export interface IControlConfig<T extends IOption> extends ISelectionConfig<T> {
   onEscape?: () => void;
 }
 
