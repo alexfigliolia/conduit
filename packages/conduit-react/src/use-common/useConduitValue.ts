@@ -1,16 +1,9 @@
 import { useCallback, useSyncExternalStore } from "react";
-import type { Conduit, UnknownCacheAbstract } from "@figliolia/conduit";
+import type { CacheEntry } from "@figliolia/conduit";
 
-import { useCacheEntry } from "./useCacheEntry";
-
-export const useConduitValue = <
-  T extends Conduit<any, any, UnknownCacheAbstract>,
->(
-  conduit: T,
-  args: Parameters<T["options"]["operation"]>,
+export const useConduitValue = <T extends CacheEntry<any, any>>(
+  cacheEntry: T,
 ) => {
-  const cacheEntry = useCacheEntry(conduit, args);
-
   const getState = useCallback(() => {
     return cacheEntry.getValue();
   }, [cacheEntry]);
@@ -20,6 +13,6 @@ export const useConduitValue = <
     [cacheEntry],
   );
   return useSyncExternalStore(subscribe, getState, getState) as ReturnType<
-    T["readCache"]
+    T["getValue"]
   >;
 };

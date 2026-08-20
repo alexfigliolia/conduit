@@ -1,12 +1,12 @@
 import { useCallback } from "react";
 import type {
-  Conduit,
+  BaseConduit,
   IOperationOptions,
   UnknownCacheAbstract,
 } from "@figliolia/conduit";
 
 export const useConduitExecution = <
-  T extends Conduit<any, any, UnknownCacheAbstract>,
+  T extends BaseConduit<any, any, UnknownCacheAbstract>,
 >(
   conduit: T,
   args: Parameters<T["options"]["operation"]>,
