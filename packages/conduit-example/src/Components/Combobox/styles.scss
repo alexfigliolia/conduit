@@ -1,0 +1,9 @@
+.combobox {
+  width: 100%;
+  position: relative;
+  display: block;
+  & > .list-box {
+    display: block;
+    list-style-type: none;
+  }
+}

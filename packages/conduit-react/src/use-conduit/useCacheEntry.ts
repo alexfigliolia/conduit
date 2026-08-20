@@ -7,5 +7,5 @@ export const useCacheEntry = <
   conduit: T,
   args: Parameters<T["options"]["operation"]>,
 ) => {
-  return useMemo(() => conduit.getCacheEntry(args), [conduit, args]);
+  return useMemo(() => conduit.getCacheEntry(...args), [conduit, args]);
 };
