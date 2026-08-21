@@ -29,8 +29,8 @@ export const Search = memo(function Search(_: Propless) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
-  const deferredLoading = useDebouncer(setLoading, 300);
-  const deferredSearch = useDebouncer(setSearchQuery, 1000);
+  const deferredLoading = useDebouncer(setLoading, 1000);
+  const deferredSearch = useDebouncer(setSearchQuery, 300);
 
   const controls = useRef<ComboboxControls>(null);
 
@@ -41,7 +41,6 @@ export const Search = memo(function Search(_: Propless) {
   const onInputChange = useCallback(
     (text: string) => {
       setQuery(text);
-      setLoading(!!text.length);
       deferredSearch.execute(text);
     },
     [deferredSearch.execute],
@@ -61,6 +60,7 @@ export const Search = memo(function Search(_: Propless) {
 
   const { value, status } = useConduit(GeocodingConduit, {
     args: [searchQuery],
+    skipWhen: !searchQuery,
   });
 
   const options = useMemo(
@@ -75,7 +75,9 @@ export const Search = memo(function Search(_: Propless) {
   );
 
   useEffect(() => {
-    if (status === ConduitStatus.IDOL) {
+    if (status === ConduitStatus.IN_FLIGHT) {
+      setLoading(true);
+    } else if (status === ConduitStatus.IDOL) {
       deferredLoading.execute(false);
     }
   }, [status, options]);
