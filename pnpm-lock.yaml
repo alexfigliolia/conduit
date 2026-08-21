@@ -77,6 +77,9 @@ importers:
       '@figliolia/react-galena':
         specifier: ^5.0.3
         version: 5.0.3(@figliolia/galena@4.0.5(@figliolia/event-emitter@1.2.0))(react@19.2.8)
+      '@figliolia/react-hooks':
+        specifier: ^1.7.3
+        version: 1.7.3(@figliolia/size-observer@2.2.0(react@19.2.8))(react@19.2.8)
       '@types/react':
         specifier: ^19.2.18
         version: 19.2.18
@@ -447,6 +450,17 @@ packages:
     peerDependencies:
       '@figliolia/galena': '>=4.0.1'
       react: '>=18.0.0'
+
+  '@figliolia/react-hooks@1.7.3':
+    resolution: {integrity: sha512-Q4ojE6vCAus+Sz0mAo8TzR3iO8WvAhJFSgxu2VKHEKVEBWHqZkgp+K9An0f6LghjdeYwMj6uUsFuSNLSD/keew==}
+    peerDependencies:
+      '@figliolia/size-observer': ^2.2.0
+      react: ^18.0 || ^19
+
+  '@figliolia/size-observer@2.2.0':
+    resolution: {integrity: sha512-xzK57KpnhZfMWO8JRyAyorLoyVGrqUdCnEFeeqa4MK0DBWdUTbO/0P/y3hI3SFmIOAc0aeuuOzPlMJC71m+wFg==}
+    peerDependencies:
+      react: ^18.3.1
 
   '@jridgewell/gen-mapping@0.3.13':
     resolution: {integrity: sha512-2kkt/7niJ6MgEPxF0bYdQ6etZaA+fQvDcLKckhy1yIQOzaoKjBBjSj63/aLVjYE3qhRt5dvM+uUyfCg6UKCBbA==}
@@ -2959,6 +2973,15 @@ snapshots:
   '@figliolia/react-galena@5.0.3(@figliolia/galena@4.0.5(@figliolia/event-emitter@1.2.0))(react@19.2.8)':
     dependencies:
       '@figliolia/galena': 4.0.5(@figliolia/event-emitter@1.2.0)
+      react: 19.2.8
+
+  '@figliolia/react-hooks@1.7.3(@figliolia/size-observer@2.2.0(react@19.2.8))(react@19.2.8)':
+    dependencies:
+      '@figliolia/size-observer': 2.2.0(react@19.2.8)
+      react: 19.2.8
+
+  '@figliolia/size-observer@2.2.0(react@19.2.8)':
+    dependencies:
       react: 19.2.8
 
   '@jridgewell/gen-mapping@0.3.13':

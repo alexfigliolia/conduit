@@ -1,23 +1,28 @@
 import {
   useCallback,
+  useEffect,
+  useEffectEvent,
   useId,
+  useImperativeHandle,
   useMemo,
   useRef,
-  useState,
-  type ChangeEvent,
   type ChangeEventHandler,
+  type Dispatch,
   type ReactNode,
   type RefObject,
+  type SetStateAction,
 } from "react";
 import {
   Listbox,
-  type IListBoxOption,
   type IOption,
+  type ISelectionConfig,
   type ListBoxControls,
-  type ListBoxKeyboardEvent,
+  type ListBoxItemRenderer,
   type ListBoxKeyboardEventHandler,
 } from "@ui/Components/Listbox";
 import { useClassNames } from "@figliolia/classnames";
+
+import { useComboboxControls } from "./useComboboxControls";
 
 import "./styles.scss";
 
@@ -27,52 +32,41 @@ const DEFAULT_RENDER_INPUT = (props: ComboboxInputProps) => (
 );
 
 export const Combobox = <T extends IOption>({
+  ref,
   items,
   inputValue,
   className,
   placeholder,
   onInputChange,
+  renderItem,
+  onChange,
+  renderEmptyState,
   multiple = false,
-  initialSelected = DEFAULT_INITIAL_SELECTED,
   renderInput = DEFAULT_RENDER_INPUT,
+  initialSelected = DEFAULT_INITIAL_SELECTED,
 }: Props<T>) => {
   const listBoxId = useId();
-  const isInteractedWith = useRef(false);
-  const [isOpen, setIsOpen] = useState(false);
-  const input = useRef<HTMLInputElement>(null);
+
   const listboxControls = useRef<ListBoxControls>(null);
   const classes = useClassNames("combobox", className);
 
-  const close = useCallback(() => {
-    setIsOpen(false);
-  }, []);
-
-  const onSearchBoxChange = useCallback(
-    (e: ChangeEvent<HTMLInputElement>) => {
-      isInteractedWith.current = !!e.target.value.length;
-      if (isInteractedWith.current) {
-        setIsOpen(true);
-      } else {
-        setIsOpen(false);
-      }
-      onInputChange(e);
-    },
-    [onInputChange],
-  );
-
-  const onKeyUp = useCallback((e: ListBoxKeyboardEvent) => {
-    listboxControls.current?.onKeyUp?.(e);
-  }, []);
-
-  const onKeyDown = useCallback((e: ListBoxKeyboardEvent) => {
-    listboxControls.current?.onKeyDown?.(e);
-  }, []);
+  const {
+    onKeyDown,
+    onKeyUp,
+    onSearchBoxChange,
+    onInputClick,
+    close,
+    input,
+    isOpen,
+    setIsOpen,
+    isInteractedWith,
+  } = useComboboxControls({ items, onInputChange });
 
   const inputProps = useMemo(
     () =>
       ({
         ref: input,
-        type: "search",
+        type: "text",
         value: inputValue,
         onChange: onSearchBoxChange,
         onKeyUp,
@@ -80,6 +74,7 @@ export const Combobox = <T extends IOption>({
         placeholder,
         role: "combobox",
         autoComplete: "off",
+        onClick: onInputClick,
         "aria-expanded": isOpen,
         "aria-haspopup": "listbox",
         "aria-controls": listBoxId,
@@ -93,6 +88,7 @@ export const Combobox = <T extends IOption>({
       listBoxId,
       onKeyDown,
       onKeyUp,
+      onInputClick,
     ],
   );
 
@@ -105,22 +101,44 @@ export const Combobox = <T extends IOption>({
     [renderInput, inputProps],
   );
 
-  const onChange = useCallback((items: T[]) => {
-    if (input.current) {
-      if (typeof items[0] === "string") {
-        input.current.value = (items as string[]).join(", ");
-      } else {
-        input.current.value = (items as IListBoxOption[])
-          .map(item => item.value)
-          .join(", ");
-      }
+  const listboxClasses = useClassNames({ open: isOpen });
+
+  const onClickOutside = useEffectEvent((e: MouseEvent) => {
+    const node = document.getElementById(listBoxId);
+    if (node !== e.target && !node?.contains?.(e.target as HTMLElement)) {
+      setIsOpen(false);
     }
-  }, []);
+  });
+
+  useEffect(() => {
+    if (isOpen) {
+      document.addEventListener("click", onClickOutside);
+    } else {
+      document.removeEventListener("click", onClickOutside);
+    }
+    return () => {
+      document.removeEventListener("click", onClickOutside);
+    };
+  }, [isOpen]);
+
+  useImperativeHandle(
+    ref,
+    () => ({
+      isOpen,
+      listBoxId,
+      input,
+      setIsOpen,
+      isInteractedWith,
+      listboxControls,
+    }),
+    [isOpen],
+  );
 
   return (
     <div className={classes}>
       {inputNode}
       <Listbox
+        className={listboxClasses}
         id={listBoxId}
         items={items}
         onEscape={close}
@@ -129,20 +147,25 @@ export const Combobox = <T extends IOption>({
         onItemClick={onItemClick}
         initialSelected={initialSelected}
         onChange={onChange}
+        renderItem={renderItem}
+        renderEmptyState={renderEmptyState}
       />
     </div>
   );
 };
 
-export interface Props<T extends IOption> {
-  items: T[];
-  multiple?: boolean;
+export interface Props<T extends IOption> extends Omit<
+  ISelectionConfig<T>,
+  "id"
+> {
   inputValue: string;
   className?: string;
   placeholder?: string;
-  initialSelected?: number[];
-  onInputChange: (e: ChangeEvent<HTMLInputElement>) => void;
+  onInputChange: (text: string) => void;
   renderInput?: (props: ComboboxInputProps) => ReactNode;
+  renderItem?: ListBoxItemRenderer<T>;
+  renderEmptyState?: () => ReactNode;
+  ref?: RefObject<ComboboxControls | null>;
 }
 
 export interface ComboboxInputProps {
@@ -158,4 +181,13 @@ export interface ComboboxInputProps {
   "aria-haspopup": "listbox";
   "aria-controls": string;
   "aria-autocomplete": "list";
+}
+
+export interface ComboboxControls {
+  isOpen: boolean;
+  listBoxId: string;
+  setIsOpen: Dispatch<SetStateAction<boolean>>;
+  input: RefObject<HTMLInputElement | null>;
+  isInteractedWith: RefObject<boolean>;
+  listboxControls: RefObject<ListBoxControls | null>;
 }

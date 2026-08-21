@@ -3,6 +3,9 @@ import type {
   UnknownCacheAbstract,
   InfiniteConduit,
   IInfiniteOperationOptions,
+  CacheEntry,
+  InfiniteConduitValue,
+  ConduitValueType,
 } from "@figliolia/conduit";
 
 export const useCacheEntry = <
@@ -11,5 +14,12 @@ export const useCacheEntry = <
   conduit: T,
   args: IInfiniteOperationOptions<T["options"]["operation"]>,
 ) => {
-  return useMemo(() => conduit.getCacheEntry(args), [conduit, args]);
+  return useMemo(
+    () =>
+      conduit.getCacheEntry(args) as CacheEntry<
+        InfiniteConduitValue<ConduitValueType<T>>,
+        unknown
+      >,
+    [conduit, args],
+  );
 };

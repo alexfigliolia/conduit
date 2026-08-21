@@ -20,7 +20,7 @@
     "noUnusedParameters": true,
     "noFallthroughCasesInSwitch": true,
     "paths": {
-      "@ui/*": ["./src/*"],
+      "@ui/*": ["./src/*"]
     }
   },
   "include": ["src"]

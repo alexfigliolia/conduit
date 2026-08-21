@@ -3,12 +3,18 @@ import {
   useEffect,
   useImperativeHandle,
   type MouseEvent,
+  type ReactNode,
   type RefObject,
 } from "react";
 import { useClassNames } from "@figliolia/classnames";
 
 import { useListboxControls, type IControlConfig } from "./useListboxControls";
-import { Option, type IOption, type OnListboxItemClick } from "./Option";
+import {
+  Option,
+  type IOption,
+  type ListBoxItemRenderer,
+  type OnListboxItemClick,
+} from "./Option";
 
 import "./styles.scss";
 
@@ -16,22 +22,20 @@ export const Listbox = <T extends IOption>({
   id,
   ref,
   items,
-  onChange,
-  onEscape,
   className,
   focusable,
   onItemClick,
+  renderItem,
   multiple = false,
-  initialSelected = [],
+  renderEmptyState = () => "There are no items to show",
+  ...rest
 }: Props<T>) => {
-  const classes = useClassNames("list-box", className);
+  const classes = useClassNames("listbox", className);
   const controls = useListboxControls({
     id,
     items,
-    onChange,
     multiple,
-    onEscape,
-    initialSelected,
+    ...rest,
   });
 
   const onFocus = useCallback(() => {
@@ -68,15 +72,20 @@ export const Listbox = <T extends IOption>({
       tabIndex={focusable ? 0 : undefined}
       aria-multiselectable={multiple}
       aria-activedescendant={controls.activeDescendant}>
-      {items.map((item, index) => (
-        <Option
-          key={typeof item === "string" ? item : item.value}
-          item={item}
-          index={index}
-          {...controls}
-          onItemClick={onOptionClicked}
-        />
-      ))}
+      {items.length ? (
+        items.map((item, index) => (
+          <Option
+            key={`${index}-${items.length}-${typeof item === "string" ? item : item.value}`}
+            item={item}
+            index={index}
+            {...controls}
+            renderItem={renderItem}
+            onItemClick={onOptionClicked}
+          />
+        ))
+      ) : (
+        <li className="empty-state">{renderEmptyState()}</li>
+      )}
     </ul>
   );
 };
@@ -87,7 +96,10 @@ export interface Props<T extends IOption> extends IControlConfig<T> {
   focusable?: boolean;
   items: T[];
   onItemClick?: OnListboxItemClick;
+  renderItem?: ListBoxItemRenderer<T>;
+  renderEmptyState?: () => ReactNode;
 }
 
 export * from "./Option";
 export * from "./useListboxControls";
+export * from "./useSelection";

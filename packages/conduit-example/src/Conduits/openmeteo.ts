@@ -8,6 +8,9 @@ export const DailyWeatherConduit = new Conduit({
   defaultValue: undefined,
   key: ["daily-weather"],
   operation: (location?: ILocation) => {
+    if (!location) {
+      return;
+    }
     return DailyWeather.fetch(location);
   },
 });

@@ -1,7 +1,7 @@
 packages:
   - "packages/*"
 allowBuilds:
-  '@parcel/watcher': true
+  "@parcel/watcher": true
   "@swc/core": false
   esbuild: false
 minimumReleaseAgeExclude:
@@ -25,4 +25,4 @@ minimumReleaseAgeExclude:
   - "@oxfmt/binding-win32-ia32-msvc@0.64.0"
   - "@oxfmt/binding-win32-x64-msvc@0.64.0"
   - oxfmt@0.64.0
-  - '@repokit/core@5.1.6'
+  - "@repokit/core@5.1.6"

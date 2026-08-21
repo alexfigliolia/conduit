@@ -1,6 +1,7 @@
 import {
   useCallback,
   useEffect,
+  useEffectEvent,
   useMemo,
   useRef,
   useState,
@@ -130,7 +131,7 @@ export const useSelection = <T extends IOption>({
     }
   }, [initialSelected, selectItem, getChildNodes]);
 
-  useEffect(() => {
+  const mapToItems = useEffectEvent(() => {
     const indices: number[] = [];
     for (const itemID of selectedItems) {
       const index = document
@@ -141,8 +142,12 @@ export const useSelection = <T extends IOption>({
         indices.push(parseInt(index));
       }
     }
-    onChange?.(indices.map(i => items[i]));
-  }, [selectedItems, onChange, items]);
+    return indices.map(i => items[i]);
+  });
+
+  useEffect(() => {
+    onChange?.(mapToItems());
+  }, [selectedItems, onChange]);
 
   return useMemo(
     () => ({

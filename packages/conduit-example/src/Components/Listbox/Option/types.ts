@@ -36,4 +36,4 @@ export interface ListBoxItem<T extends IOption> {
 
 export type OnListboxItemClick = (e: MouseEvent<HTMLLIElement>) => void;
 
-export const LIST_BOX_OPTION_CLASS = "list-box-option";
+export const LIST_BOX_OPTION_CLASS = "listbox-option";

@@ -146,7 +146,6 @@ export const useListboxControls = <T extends IOption>({
           }
           return selectWithScroll(nodes[currentIndex.current]);
         case "Enter":
-          return selectItem(nodes[currentIndex.current].getAttribute("id")!);
         case " ":
           const node = nodes[currentIndex.current];
           if (!node) {
