@@ -84,6 +84,7 @@ export const useComboboxControls = <T extends IOption>({
       isOpen,
       setIsOpen,
       isInteractedWith,
+      listboxControls,
     }),
     [
       onKeyDown,
@@ -94,6 +95,7 @@ export const useComboboxControls = <T extends IOption>({
       input,
       isOpen,
       setIsOpen,
+      listboxControls,
     ],
   );
 };

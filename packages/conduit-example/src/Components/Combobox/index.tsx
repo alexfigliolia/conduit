@@ -1,11 +1,8 @@
 import {
   useCallback,
-  useEffect,
-  useEffectEvent,
   useId,
   useImperativeHandle,
   useMemo,
-  useRef,
   type ChangeEventHandler,
   type Dispatch,
   type ReactNode,
@@ -20,6 +17,7 @@ import {
   type ListBoxItemRenderer,
   type ListBoxKeyboardEventHandler,
 } from "@ui/Components/Listbox";
+import { useClickOutside } from "@figliolia/react-hooks";
 import { useClassNames } from "@figliolia/classnames";
 
 import { useComboboxControls } from "./useComboboxControls";
@@ -46,8 +44,6 @@ export const Combobox = <T extends IOption>({
   initialSelected = DEFAULT_INITIAL_SELECTED,
 }: Props<T>) => {
   const listBoxId = useId();
-
-  const listboxControls = useRef<ListBoxControls>(null);
   const classes = useClassNames("combobox", className);
 
   const {
@@ -60,7 +56,13 @@ export const Combobox = <T extends IOption>({
     isOpen,
     setIsOpen,
     isInteractedWith,
+    listboxControls,
   } = useComboboxControls({ items, onInputChange });
+
+  const container = useClickOutside<HTMLDivElement, false>({
+    open: isOpen,
+    callback: close,
+  });
 
   const inputProps = useMemo(
     () =>
@@ -81,6 +83,7 @@ export const Combobox = <T extends IOption>({
         "aria-autocomplete": "list",
       }) as const,
     [
+      input,
       inputValue,
       isOpen,
       onInputChange,
@@ -89,6 +92,7 @@ export const Combobox = <T extends IOption>({
       onKeyDown,
       onKeyUp,
       onInputClick,
+      onSearchBoxChange,
     ],
   );
 
@@ -102,24 +106,6 @@ export const Combobox = <T extends IOption>({
   );
 
   const listboxClasses = useClassNames({ open: isOpen });
-
-  const onClickOutside = useEffectEvent((e: MouseEvent) => {
-    const node = document.getElementById(listBoxId);
-    if (node !== e.target && !node?.contains?.(e.target as HTMLElement)) {
-      setIsOpen(false);
-    }
-  });
-
-  useEffect(() => {
-    if (isOpen) {
-      document.addEventListener("click", onClickOutside);
-    } else {
-      document.removeEventListener("click", onClickOutside);
-    }
-    return () => {
-      document.removeEventListener("click", onClickOutside);
-    };
-  }, [isOpen]);
 
   useImperativeHandle(
     ref,
@@ -135,7 +121,7 @@ export const Combobox = <T extends IOption>({
   );
 
   return (
-    <div className={classes}>
+    <div className={classes} ref={container}>
       {inputNode}
       <Listbox
         className={listboxClasses}
