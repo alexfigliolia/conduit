@@ -2,6 +2,8 @@ import type { Setter } from "@figliolia/galena";
 
 import type { CacheEntry, UnknownCacheAbstract } from "../../Cache";
 
+import type { BaseConduit } from "./BaseConduit";
+
 export type CacheGetter<C extends UnknownCacheAbstract> = C | (() => C);
 
 export type IOperation = (...args: any[]) => any;
@@ -77,3 +79,8 @@ export type EvictReturnType<C extends UnknownCacheAbstract> = ReturnType<
 export type IExecutionResult<O extends IOperation, D = IValueType<O>> =
   | ConduitValue<O, D>
   | ReturnType<O>;
+
+export type ConduitValueType<T extends BaseConduit<any, any>> = ConduitValue<
+  T["options"]["operation"],
+  T["options"]["defaultValue"]
+>;

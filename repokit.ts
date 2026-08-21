@@ -8,6 +8,10 @@ export const RepoKit = new RepoKitConfig({
         "pnpm oxlint --type-aware --report-unused-disable-directives --fix && pnpm oxfmt",
       description: "Lints and formwats typescript",
     },
+    "build:libs": {
+      command: "repokit core build && repokit react build",
+      description: "Builds conduit libraries",
+    },
     install: {
       command: "pnpm install",
       description: "Install workspace dependencies",

@@ -95,6 +95,10 @@ export class CacheEntry<T, R> {
     };
   }
 
+  public toJSON() {
+    return this.serialize();
+  }
+
   private cacheNotifier(unsubscriber: () => void) {
     const ID = this.IDs.get();
     const cacheSubscriber = () => {

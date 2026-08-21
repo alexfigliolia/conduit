@@ -1,4 +1,4 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type {
   UnknownCacheAbstract,
   IInfiniteExecuteOptions,
@@ -16,12 +16,15 @@ export const useInfiniteConduit = <
   conduit: T,
   options: IInfiniteExecuteOptions<T["options"]["operation"]>,
 ) => {
-  const cacheEntry = useCacheEntry(conduit, options.args);
+  const { args, expires, cachePolicy } = options;
+  const cacheEntry = useCacheEntry(conduit, args);
   const value = useConduitValue(cacheEntry);
   const status = useConduitStatus(cacheEntry);
-  const fetch = useConduitExecution(conduit, options.args);
+  const fetch = useConduitExecution(conduit, args);
 
-  void conduit.execute(options);
+  useEffect(() => {
+    void conduit.execute({ args, cachePolicy, expires });
+  }, [conduit, cachePolicy, expires, args]);
 
   return useMemo(() => ({ value, status, fetch }), [value, status, fetch]);
 };

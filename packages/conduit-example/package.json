@@ -1,0 +1,32 @@
+{
+  "name": "conduit-example",
+  "version": "0.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "build": "tsc && vp build",
+    "dev": "vp dev",
+    "preview": "vp preview"
+  },
+  "dependencies": {
+    "@figliolia/classnames": "^1.0.1",
+    "@figliolia/conduit": "link:../conduit-core",
+    "@figliolia/conduit-react": "link:../conduit-react",
+    "@figliolia/event-emitter": "^1.2.0",
+    "@figliolia/galena": "^4.0.5",
+    "@figliolia/react-galena": "^5.0.3",
+    "@figliolia/react-hooks": "^1.7.3",
+    "@types/react": "^19.2.18",
+    "@types/react-dom": "^19.2.4",
+    "openmeteo": "^1.2.3",
+    "react": "^19.2.8",
+    "react-dom": "^19.2.8"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-react-swc": "^4.3.3",
+    "sass-embedded": "^1.102.0",
+    "typescript": "~6.0.2",
+    "vite": "^8.2.1",
+    "vite-plus": "^0.2.9"
+  }
+}
