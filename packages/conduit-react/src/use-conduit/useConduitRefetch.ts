@@ -5,15 +5,17 @@ import type {
   UnknownCacheAbstract,
 } from "@figliolia/conduit";
 
-export const useConduitExecution = <
+export const useConduitRefetch = <
   T extends BaseConduit<any, any, UnknownCacheAbstract>,
 >(
   conduit: T,
   args: Parameters<T["options"]["operation"]>,
 ) => {
   return useCallback(
-    (options: IOperationOptions = {}) =>
-      conduit.execute({ ...options, args }) as ReturnType<T["execute"]>,
+    ({ cachePolicy = "no-cache", expires }: IOperationOptions = {}) =>
+      conduit.execute({ cachePolicy, expires, args }) as ReturnType<
+        T["execute"]
+      >,
     [conduit, args],
   );
 };
