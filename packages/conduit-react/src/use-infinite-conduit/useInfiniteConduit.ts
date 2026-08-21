@@ -1,13 +1,14 @@
-import { useMemo } from "react";
+import { useEffect, useMemo } from "react";
 import type {
   UnknownCacheAbstract,
   IInfiniteExecuteOptions,
   InfiniteConduit,
 } from "@figliolia/conduit";
 
-import { useInfiniteConduitValue } from "./useInfiniteConduitValue";
-import { useInfiniteConduitStatus } from "./useInfiniteConduitStatus";
-import { useConduitExecution } from "./useInfiniteConduitExecution";
+import { useConduitStatus, useConduitValue } from "../use-common";
+
+import { useConduitExecution } from "./useConduitExecution";
+import { useCacheEntry } from "./useCacheEntry";
 
 export const useInfiniteConduit = <
   T extends InfiniteConduit<any, UnknownCacheAbstract>,
@@ -15,9 +16,15 @@ export const useInfiniteConduit = <
   conduit: T,
   options: IInfiniteExecuteOptions<T["options"]["operation"]>,
 ) => {
-  void conduit.execute(options);
-  const value = useInfiniteConduitValue(conduit, options.args);
-  const status = useInfiniteConduitStatus(conduit, options.args);
-  const fetch = useConduitExecution(conduit, options.args);
+  const { args, expires, cachePolicy } = options;
+  const cacheEntry = useCacheEntry(conduit, args);
+  const value = useConduitValue(cacheEntry);
+  const status = useConduitStatus(cacheEntry);
+  const fetch = useConduitExecution(conduit, args);
+
+  useEffect(() => {
+    void conduit.execute({ args, cachePolicy, expires });
+  }, [conduit, cachePolicy, expires, args]);
+
   return useMemo(() => ({ value, status, fetch }), [value, status, fetch]);
 };

@@ -1,0 +1,76 @@
+:root {
+  --padding: 1em;
+}
+
+/* 1. Sane layout calculations */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+/* 2. Clear out layout spacing */
+* {
+  margin: 0;
+  padding: 0;
+}
+
+/* 3. Smooth responsive behaviors */
+html {
+  color-scheme: light dark;
+  /* Supports system dark mode */
+  -webkit-text-size-adjust: none;
+  /* Prevents font inflation on mobile */
+  text-size-adjust: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+body {
+  line-height: 1.5;
+  -webkit-font-smoothing: antialiased;
+  font-family:
+    system-ui,
+    -apple-system,
+    BlinkMacSystemFont,
+    "Segoe UI",
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    "Open Sans",
+    "Helvetica Neue",
+    sans-serif;
+}
+
+/* 4. Fix media scaling bugs */
+img,
+picture,
+video,
+canvas,
+svg {
+  display: block;
+  max-width: 100%;
+}
+
+/* 5. Inherit styles for form fields */
+input,
+button,
+textarea,
+select {
+  font: inherit;
+}
+
+/* 6. Clean text wrapping */
+p,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  overflow-wrap: break-word;
+}
+
+button {
+  cursor: pointer;
+}

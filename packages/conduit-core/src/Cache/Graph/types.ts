@@ -23,7 +23,7 @@ export interface ICacheEntry<T, R> {
 export type UnknownCacheAbstract = CacheAbstract<any, any>;
 
 export enum ConduitStatus {
-  UNINITIALIZED,
-  IN_FLIGHT,
-  IDOL,
+  UNINITIALIZED = "uninitialized",
+  IN_FLIGHT = "in-flight",
+  IDOL = "idol",
 }

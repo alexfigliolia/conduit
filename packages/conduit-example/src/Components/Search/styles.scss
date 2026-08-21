@@ -1,0 +1,104 @@
+.search {
+  width: 100%;
+  border-radius: 0.85em;
+  background-color: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(1.5px);
+
+  & > search {
+    width: 100%;
+    height: 3em;
+    & > .combobox {
+      width: 100%;
+      height: 100%;
+      &.loading > .searchbox > .loader-wrapper {
+        opacity: 1;
+      }
+      & > .searchbox {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        height: 100%;
+        & > input,
+        & > button {
+          outline: none;
+          border: none;
+          height: 100%;
+          background-color: transparent;
+        }
+
+        & > input {
+          width: 100%;
+          padding-right: 1em;
+          color: #fff;
+          font-size: 0.9em;
+
+          &::placeholder {
+            color: #f0f0f0;
+            font-style: italic;
+          }
+        }
+
+        & > button {
+          width: 3em;
+          display: grid;
+          place-items: center;
+
+          & > .search-icon {
+            height: 50%;
+            width: 50%;
+          }
+        }
+        & > .loader-wrapper {
+          --w-size: 2em;
+          opacity: 0;
+          transition: opacity 0.5s;
+          position: absolute;
+          right: 13px;
+        }
+      }
+      & > .listbox {
+        position: absolute;
+        top: calc(100% + 0.5em);
+        left: 0;
+        color: #fff;
+        background-color: rgba(255, 255, 255, 0.2);
+        backdrop-filter: blur(1.5px);
+        border-radius: 0.85em;
+        max-height: 250px;
+        overflow-y: scroll;
+        scroll-behavior: smooth;
+        visibility: hidden;
+        opacity: 0;
+        translate: 0px 10px;
+        transition:
+          visibility 0s 0.5s,
+          opacity 0.5s,
+          translate 0.5s;
+        &.open {
+          visibility: visible;
+          opacity: 1;
+          translate: 0px;
+          transition:
+            visibility 0s 0s,
+            opacity 0.5s,
+            translate 0.5s;
+        }
+        & > li {
+          width: 100%;
+          padding: 0.5em 1em;
+          &.empty-state {
+            font-style: italic;
+            font-size: 0.9em;
+          }
+          &[data-focused="true"] {
+            background-color: rgba(255, 255, 255, 0.2);
+          }
+          &[aria-selected="true"] {
+            color: #000;
+            background-color: rgba(255, 255, 255, 1);
+          }
+        }
+      }
+    }
+  }
+}
