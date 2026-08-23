@@ -12,9 +12,8 @@ import "./styles.scss";
 export const Option = <T extends IOption>({
   item,
   index,
-  focusItem,
-  onItemClick,
-  unfocusItem,
+  onHover,
+  onClick,
   isItemFocused,
   isItemSelected,
   renderItem = ({ item }: ListBoxItem<T>) =>
@@ -35,24 +34,23 @@ export const Option = <T extends IOption>({
     [renderItem, itemState],
   );
 
-  const onFocusItem = useCallback(() => {
-    focusItem(id, index);
-  }, [id, index, focusItem]);
+  const onItemHover = useCallback(() => {
+    onHover(id, index);
+  }, [id, index, onHover]);
 
-  const onUnfocusItem = useCallback(() => {
-    unfocusItem(id, index);
-  }, [id, index, unfocusItem]);
+  const onItemClick = useCallback(() => {
+    onClick(id, index);
+  }, [id, index, onClick]);
 
   return (
     <li
       id={id}
       role="option"
-      aria-posinset={index}
-      aria-selected={selected}
-      data-focused={focused}
       onClick={onItemClick}
-      onMouseEnter={onFocusItem}
-      onMouseLeave={onUnfocusItem}
+      aria-posinset={index}
+      data-focused={focused}
+      aria-selected={selected}
+      onMouseEnter={onItemHover}
       className={LIST_BOX_OPTION_CLASS}>
       {renderedNode}
     </li>

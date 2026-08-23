@@ -5,7 +5,6 @@ import {
   useMemo,
   useRef,
   useState,
-  type MouseEvent,
 } from "react";
 
 import { LIST_BOX_OPTION_CLASS, type IOption } from "./Option";
@@ -40,10 +39,10 @@ export const useSelection = <T extends IOption>({
   }, []);
 
   const focusItem = useCallback(
-    (id: string) => {
+    (id: string, allowMulti = true) => {
       setActiveDescendant(id);
       setFocusedItems(previous => {
-        if (!multiple) {
+        if (!multiple || !allowMulti) {
           return new Set([id]);
         }
         const clone = new Set(previous);
@@ -52,6 +51,14 @@ export const useSelection = <T extends IOption>({
       });
     },
     [multiple],
+  );
+
+  const onItemHover = useCallback(
+    (id: string, index: number) => {
+      focusItem(id, false);
+      currentIndex.current = index;
+    },
+    [focusItem],
   );
 
   const unfocusItem = useCallback(
@@ -90,6 +97,22 @@ export const useSelection = <T extends IOption>({
     [multiple, focusItem],
   );
 
+  const forceSelect = useCallback(
+    (id: string) => {
+      setActiveDescendant(id);
+      setSelectedItems(previous => {
+        if (!multiple) {
+          return new Set([id]);
+        }
+        const clone = new Set(previous);
+        clone.add(id);
+        return clone;
+      });
+      focusItem(id);
+    },
+    [multiple, focusItem],
+  );
+
   const deselectItem = useCallback(
     (id: string) => {
       deactivateDescendant(id);
@@ -106,18 +129,11 @@ export const useSelection = <T extends IOption>({
   );
 
   const onItemClick = useCallback(
-    (e: MouseEvent<HTMLLIElement>) => {
-      const target = e.target as HTMLElement;
-      const node =
-        target.tagName === "LI" &&
-        target?.classList?.contains(LIST_BOX_OPTION_CLASS)
-          ? target
-          : target.closest(`.${LIST_BOX_OPTION_CLASS}`)!;
-      const nodeID = node.getAttribute("id")!;
-      selectItem(nodeID);
-      currentIndex.current = Array.from(getChildNodes()).indexOf(node);
+    (id: string, index: number) => {
+      selectItem(id);
+      currentIndex.current = index;
     },
-    [selectItem, getChildNodes],
+    [selectItem],
   );
 
   useEffect(() => {
@@ -158,21 +174,29 @@ export const useSelection = <T extends IOption>({
       activeDescendant,
       focusItem,
       onItemClick,
+      onItemHover,
       unfocusItem,
       selectItem,
+      forceSelect,
       deselectItem,
+      currentIndex,
+      setSelectedItems,
     }),
     [
       setFocusedItems,
       getChildNodes,
       onItemClick,
+      onItemHover,
       focusedItems,
       selectedItems,
       activeDescendant,
       focusItem,
       unfocusItem,
       selectItem,
+      forceSelect,
       deselectItem,
+      currentIndex,
+      setSelectedItems,
     ],
   );
 };

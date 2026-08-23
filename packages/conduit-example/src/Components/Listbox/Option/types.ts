@@ -1,17 +1,13 @@
-import type { MouseEvent, ReactNode } from "react";
+import type { ReactNode } from "react";
 
-export interface ListboxEvents {
-  focusItem: ListBoxEventCallback;
-  unfocusItem: ListBoxEventCallback;
-  onItemClick: OnListboxItemClick;
-}
-
-export interface Props<T extends IOption> extends ListboxEvents {
+export interface Props<T extends IOption> {
   item: T;
   index: number;
   isItemFocused: ListBoxOptionQuery;
   isItemSelected: ListBoxOptionQuery;
   renderItem?: ListBoxItemRenderer<T>;
+  onHover: ListBoxEventCallback;
+  onClick: ListBoxEventCallback;
 }
 
 export type ListBoxOptionQuery = (id: string) => boolean;
@@ -33,7 +29,5 @@ export interface ListBoxItem<T extends IOption> {
   focused: boolean;
   selected: boolean;
 }
-
-export type OnListboxItemClick = (e: MouseEvent<HTMLLIElement>) => void;
 
 export const LIST_BOX_OPTION_CLASS = "listbox-option";
