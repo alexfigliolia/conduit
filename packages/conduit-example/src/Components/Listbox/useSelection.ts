@@ -5,9 +5,12 @@ import {
   useMemo,
   useRef,
   useState,
+  useSyncExternalStore,
 } from "react";
+import { useController } from "@figliolia/react-hooks";
 
 import { LIST_BOX_OPTION_CLASS, type IOption } from "./Option";
+import { KeyStack } from "./KeyStack";
 
 export const useSelection = <T extends IOption>({
   items,
@@ -17,6 +20,11 @@ export const useSelection = <T extends IOption>({
   initialSelected = [],
 }: ISelectionConfig<T>) => {
   const currentIndex = useRef(-1);
+  const keyStack = useController(new KeyStack());
+  const isActive = useSyncExternalStore(
+    keyStack.subscribe,
+    keyStack.isInteracting,
+  );
   const [focusedItems, setFocusedItems] = useState(new Set<string>());
   const [selectedItems, setSelectedItems] = useState(new Set<string>());
   const [activeDescendant, setActiveDescendant] = useState<string | undefined>(
@@ -138,8 +146,9 @@ export const useSelection = <T extends IOption>({
     (id: string, index: number) => {
       selectItem(id);
       currentIndex.current = index;
+      keyStack.setActive(true);
     },
-    [selectItem],
+    [selectItem, keyStack],
   );
 
   useEffect(() => {
@@ -173,6 +182,8 @@ export const useSelection = <T extends IOption>({
 
   return useMemo(
     () => ({
+      isActive,
+      keyStack,
       resetFocus,
       setFocusedItems,
       getChildNodes,
@@ -190,6 +201,8 @@ export const useSelection = <T extends IOption>({
       setSelectedItems,
     }),
     [
+      isActive,
+      keyStack,
       resetFocus,
       setFocusedItems,
       getChildNodes,

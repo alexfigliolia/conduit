@@ -32,7 +32,7 @@ export const useComboboxControls = <T extends IOption>({
       (openOnListChange.current && !!items.length)
     ) {
       setIsOpen(true);
-      listboxControls.current?.keyStack?.deactivate?.();
+      listboxControls.current?.keyStack?.setActive?.(false);
     }
   }, [items.length]);
 

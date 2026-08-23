@@ -22,9 +22,9 @@ export const Listbox = <T extends IOption>({
   ref,
   items,
   className,
-  focusable,
   onItemClick,
   renderItem,
+  focusable = true,
   multiple = false,
   renderEmptyState = () => "There are no items to show",
   ...rest
@@ -37,15 +37,31 @@ export const Listbox = <T extends IOption>({
     ...rest,
   });
 
+  const withFocus = useCallback(
+    (cb: () => void) => {
+      if (!focusable) {
+        return;
+      }
+      return cb();
+    },
+    [focusable],
+  );
+
   const onFocus = useCallback(() => {
-    window.addEventListener("keydown", controls.onKeyDown);
-    window.addEventListener("keyup", controls.onKeyDown);
-  }, [controls.onKeyDown, controls.onKeyUp]);
+    withFocus(() => {
+      controls.keyStack.setActive(true);
+      window.addEventListener("keydown", controls.onKeyDown);
+      window.addEventListener("keyup", controls.onKeyDown);
+    });
+  }, [controls.onKeyDown, controls.onKeyUp, controls.keyStack, withFocus]);
 
   const onBlur = useCallback(() => {
-    window.removeEventListener("keydown", controls.onKeyDown);
-    window.removeEventListener("keyup", controls.onKeyDown);
-  }, [controls.onKeyDown, controls.onKeyUp]);
+    withFocus(() => {
+      controls.keyStack.setActive(false);
+      window.removeEventListener("keydown", controls.onKeyDown);
+      window.removeEventListener("keyup", controls.onKeyDown);
+    });
+  }, [controls.onKeyDown, controls.onKeyUp, controls.keyStack, withFocus]);
 
   useImperativeHandle(ref, () => controls);
 
@@ -68,7 +84,7 @@ export const Listbox = <T extends IOption>({
       onBlur={onBlur}
       onFocus={onFocus}
       className={classes}
-      tabIndex={focusable ? 0 : undefined}
+      tabIndex={focusable ? 0 : -1}
       aria-multiselectable={multiple}
       aria-activedescendant={controls.activeDescendant}>
       {items.length ? (

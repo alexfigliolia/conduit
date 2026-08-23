@@ -4,11 +4,9 @@ import {
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
-import { useController } from "@figliolia/react-hooks";
 
 import { useSelection, type ISelectionConfig } from "./useSelection";
 import type { IOption } from "./Option";
-import { KeyStack } from "./KeyStack";
 
 export const useListboxControls = <T extends IOption>({
   onEscape,
@@ -16,8 +14,9 @@ export const useListboxControls = <T extends IOption>({
 }: IControlConfig<T>) => {
   const shifting = useRef(false);
   const controlling = useRef(false);
-  const keyStack = useController(new KeyStack());
   const {
+    keyStack,
+    isActive,
     resetFocus,
     forceSelect,
     focusedItems,
@@ -239,6 +238,7 @@ export const useListboxControls = <T extends IOption>({
 
   return useMemo(
     () => ({
+      isActive,
       onKeyUp,
       onKeyDown,
       resetFocus,
@@ -254,8 +254,9 @@ export const useListboxControls = <T extends IOption>({
       isItemSelected,
     }),
     [
-      resetFocus,
+      isActive,
       keyStack,
+      resetFocus,
       onKeyUp,
       onKeyDown,
       focusItem,

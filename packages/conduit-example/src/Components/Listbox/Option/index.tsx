@@ -46,6 +46,7 @@ export const Option = <T extends IOption>({
     <li
       id={id}
       role="option"
+      tabIndex={-1}
       onClick={onItemClick}
       aria-posinset={index}
       data-focused={focused}

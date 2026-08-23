@@ -1,5 +1,8 @@
+import { EventEmitter } from "@figliolia/event-emitter";
+
 export class KeyStack {
   private isActive = false;
+  private readonly Emitter = new EventEmitter<{ active: boolean }>();
   public static readonly ACTIVATION_KEYS = [
     "ArrowUp",
     "ArrowDown",
@@ -14,17 +17,30 @@ export class KeyStack {
 
   public push(key: string) {
     if (!this.isActive && KeyStack.ACTIVATION_KEYS.includes(key)) {
-      this.isActive = true;
+      this.setActive(true);
     } else if (this.isActive && !KeyStack.INTERACTION_KEYS.includes(key)) {
-      this.isActive = false;
+      console.log("deactivating on non-interaction key");
+      this.setActive(false);
     }
   }
 
-  public deactivate() {
-    this.isActive = false;
+  public setActive(active: boolean) {
+    this.isActive = active;
+    this.emit();
   }
 
-  public isInteracting() {
+  public readonly isInteracting = () => {
     return this.isActive;
+  };
+
+  public readonly subscribe = (cb: (active: boolean) => void) => {
+    const ID = this.Emitter.on("active", cb);
+    return () => {
+      this.Emitter.off("active", ID);
+    };
+  };
+
+  private emit() {
+    this.Emitter.emit("active", this.isActive);
   }
 }

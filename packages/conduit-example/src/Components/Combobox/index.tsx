@@ -3,24 +3,14 @@ import {
   useId,
   useImperativeHandle,
   useMemo,
-  type ChangeEventHandler,
-  type Dispatch,
   type ReactNode,
-  type RefObject,
-  type SetStateAction,
 } from "react";
-import {
-  Listbox,
-  type IOption,
-  type ISelectionConfig,
-  type ListBoxControls,
-  type ListBoxItemRenderer,
-  type ListBoxKeyboardEventHandler,
-} from "@ui/Components/Listbox";
+import { Listbox, type IOption } from "@ui/Components/Listbox";
 import { useClickOutside } from "@figliolia/react-hooks";
 import { useClassNames } from "@figliolia/classnames";
 
 import { useComboboxControls } from "./useComboboxControls";
+import type { ComboboxInputProps, Props } from "./types";
 
 import "./styles.scss";
 
@@ -134,6 +124,7 @@ export const Combobox = <T extends IOption>({
           id={listBoxId}
           items={items}
           onEscape={close}
+          focusable={false}
           multiple={multiple}
           onChange={onChange}
           ref={listboxControls}
@@ -148,42 +139,3 @@ export const Combobox = <T extends IOption>({
     </div>
   );
 };
-
-export interface Props<T extends IOption> extends Omit<
-  ISelectionConfig<T>,
-  "id"
-> {
-  inputValue: string;
-  className?: string;
-  placeholder?: string;
-  onInputChange: (text: string) => void;
-  renderInput?: (props: ComboboxInputProps) => ReactNode;
-  renderItem?: ListBoxItemRenderer<T>;
-  renderEmptyState?: () => ReactNode;
-  ref?: RefObject<ComboboxControls | null>;
-  renderListBox?: (children: ReactNode, isOpen: boolean) => ReactNode;
-}
-
-export interface ComboboxInputProps {
-  type: string;
-  value: string;
-  ref: RefObject<HTMLInputElement | null>;
-  onChange: ChangeEventHandler<HTMLInputElement>;
-  onKeyUp: ListBoxKeyboardEventHandler;
-  onKeyDown: ListBoxKeyboardEventHandler;
-  placeholder: string | undefined;
-  role: string;
-  "aria-expanded": boolean;
-  "aria-haspopup": "listbox";
-  "aria-controls": string;
-  "aria-autocomplete": "list";
-}
-
-export interface ComboboxControls {
-  isOpen: boolean;
-  listBoxId: string;
-  setIsOpen: Dispatch<SetStateAction<boolean>>;
-  input: RefObject<HTMLInputElement | null>;
-  isInteractedWith: RefObject<boolean>;
-  listboxControls: RefObject<ListBoxControls | null>;
-}
