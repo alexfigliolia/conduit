@@ -5,6 +5,7 @@ import {
   useMemo,
   useRef,
   useState,
+  type ReactNode,
   type SubmitEvent,
 } from "react";
 import type { Propless } from "@ui/Types";
@@ -21,7 +22,9 @@ import {
 import { useDebouncer } from "@figliolia/react-hooks";
 import { useConduit } from "@figliolia/conduit-react";
 import { ConduitStatus } from "@figliolia/conduit";
-import { useClassNames } from "@figliolia/classnames";
+import { classnames, useClassNames } from "@figliolia/classnames";
+
+import { GlassContainer } from "../GlassContainer";
 
 import "./styles.scss";
 
@@ -60,7 +63,7 @@ export const Search = memo(function Search(_: Propless) {
 
   const { value, status } = useConduit(GeocodingConduit, {
     args: [searchQuery],
-    skipWhen: !searchQuery,
+    skipWhen: !searchQuery.length,
   });
 
   const options = useMemo(
@@ -84,17 +87,28 @@ export const Search = memo(function Search(_: Propless) {
 
   const renderInput = useCallback((props: ComboboxInputProps) => {
     return (
-      <div className="searchbox">
+      <GlassContainer Tag="div" className="searchbox">
         <button onClick={onClick}>
           <SearchIcon />
         </button>
         <input name="search" {...props} />
         <Loader />
-      </div>
+      </GlassContainer>
     );
   }, []);
 
   const classes = useClassNames({ loading });
+
+  const glassWrapper = useCallback(
+    (children: ReactNode, isOpen: boolean) => (
+      <GlassContainer
+        Tag="div"
+        className={classnames("dropdown", { open: isOpen })}>
+        {children}
+      </GlassContainer>
+    ),
+    [],
+  );
 
   return (
     <form className="search" onSubmit={onSubmit} autoComplete="off">
@@ -108,6 +122,7 @@ export const Search = memo(function Search(_: Propless) {
           inputValue={query}
           renderInput={renderInput}
           renderItem={renderItem}
+          renderListBox={glassWrapper}
           onChange={onSelectionChange}
         />
       </search>

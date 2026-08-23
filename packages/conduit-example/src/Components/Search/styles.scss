@@ -1,8 +1,5 @@
 .search {
   width: 100%;
-  border-radius: 0.85em;
-  background-color: rgba(255, 255, 255, 0.2);
-  backdrop-filter: blur(1.5px);
 
   & > search {
     width: 100%;
@@ -18,6 +15,9 @@
         align-items: center;
         width: 100%;
         height: 100%;
+        border-radius: 0.85em;
+        --blur: 2.5px;
+        --saturation: 175%;
         & > input,
         & > button {
           outline: none;
@@ -56,14 +56,12 @@
           right: 13px;
         }
       }
-      & > .listbox {
+      & > .dropdown {
+        border-radius: 0.85em;
         position: absolute;
         top: calc(100% + 0.5em);
         left: 0;
         color: #fff;
-        background-color: rgba(255, 255, 255, 0.2);
-        backdrop-filter: blur(1.5px);
-        border-radius: 0.85em;
         max-height: 250px;
         overflow-y: scroll;
         scroll-behavior: smooth;
@@ -83,19 +81,21 @@
             opacity 0.5s,
             translate 0.5s;
         }
-        & > li {
-          width: 100%;
-          padding: 0.5em 1em;
-          &.empty-state {
-            font-style: italic;
-            font-size: 0.9em;
-          }
-          &[data-focused="true"] {
-            background-color: rgba(255, 255, 255, 0.2);
-          }
-          &[aria-selected="true"] {
-            color: #000;
-            background-color: rgba(255, 255, 255, 1);
+        & > .listbox {
+          & > li {
+            width: 100%;
+            padding: 0.5em 1em;
+            &.empty-state {
+              font-style: italic;
+              font-size: 0.9em;
+            }
+            &[data-focused="true"] {
+              background-color: rgba(255, 255, 255, 0.2);
+            }
+            &[aria-selected="true"] {
+              color: #000;
+              background-color: rgba(255, 255, 255, 1);
+            }
           }
         }
       }
