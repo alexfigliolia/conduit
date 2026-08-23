@@ -18,6 +18,7 @@ export const useListboxControls = <T extends IOption>({
   const controlling = useRef(false);
   const keyStack = useController(new KeyStack());
   const {
+    resetFocus,
     forceSelect,
     focusedItems,
     selectedItems,
@@ -240,6 +241,7 @@ export const useListboxControls = <T extends IOption>({
     () => ({
       onKeyUp,
       onKeyDown,
+      resetFocus,
       keyStack,
       focusItem,
       unfocusItem,
@@ -252,6 +254,7 @@ export const useListboxControls = <T extends IOption>({
       isItemSelected,
     }),
     [
+      resetFocus,
       keyStack,
       onKeyUp,
       onKeyDown,

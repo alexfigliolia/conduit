@@ -31,11 +31,10 @@ import "./styles.scss";
 export const Search = memo(function Search(_: Propless) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
+  const controls = useRef<ComboboxControls>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const deferredLoading = useDebouncer(setLoading, 1000);
   const deferredSearch = useDebouncer(setSearchQuery, 300);
-
-  const controls = useRef<ComboboxControls>(null);
 
   const onClick = useCallback(() => {
     controls.current?.input?.current?.focus?.();
@@ -85,17 +84,9 @@ export const Search = memo(function Search(_: Propless) {
     }
   }, [status, options]);
 
-  const renderInput = useCallback((props: ComboboxInputProps) => {
-    return (
-      <GlassContainer Tag="div" className="searchbox">
-        <button onClick={onClick}>
-          <SearchIcon />
-        </button>
-        <input name="search" {...props} />
-        <Loader />
-      </GlassContainer>
-    );
-  }, []);
+  useEffect(() => {
+    controls.current?.listboxControls?.current?.resetFocus?.();
+  }, [searchQuery]);
 
   const classes = useClassNames({ loading });
 
@@ -109,6 +100,18 @@ export const Search = memo(function Search(_: Propless) {
     ),
     [],
   );
+
+  const renderInput = useCallback((props: ComboboxInputProps) => {
+    return (
+      <GlassContainer Tag="div" className="searchbox">
+        <button onClick={onClick}>
+          <SearchIcon />
+        </button>
+        <input name="search" {...props} />
+        <Loader />
+      </GlassContainer>
+    );
+  }, []);
 
   return (
     <form className="search" onSubmit={onSubmit} autoComplete="off">

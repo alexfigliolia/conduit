@@ -23,6 +23,12 @@ export const useSelection = <T extends IOption>({
     undefined,
   );
 
+  const resetFocus = useCallback(() => {
+    currentIndex.current = -1;
+    setFocusedItems(new Set());
+    setActiveDescendant(undefined);
+  }, []);
+
   const getChildNodes = useCallback(() => {
     return document.querySelectorAll(
       `#${containerID} .${LIST_BOX_OPTION_CLASS}`,
@@ -167,6 +173,7 @@ export const useSelection = <T extends IOption>({
 
   return useMemo(
     () => ({
+      resetFocus,
       setFocusedItems,
       getChildNodes,
       focusedItems,
@@ -183,6 +190,7 @@ export const useSelection = <T extends IOption>({
       setSelectedItems,
     }),
     [
+      resetFocus,
       setFocusedItems,
       getChildNodes,
       onItemClick,
