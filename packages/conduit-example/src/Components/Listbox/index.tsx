@@ -2,7 +2,6 @@ import {
   useCallback,
   useEffect,
   useImperativeHandle,
-  type MouseEvent,
   type ReactNode,
   type RefObject,
 } from "react";
@@ -12,8 +11,8 @@ import { useListboxControls, type IControlConfig } from "./useListboxControls";
 import {
   Option,
   type IOption,
+  type ListBoxEventCallback,
   type ListBoxItemRenderer,
-  type OnListboxItemClick,
 } from "./Option";
 
 import "./styles.scss";
@@ -50,12 +49,12 @@ export const Listbox = <T extends IOption>({
 
   useImperativeHandle(ref, () => controls);
 
-  const onOptionClicked = useCallback(
-    (e: MouseEvent<HTMLLIElement>) => {
-      controls.onItemClick(e);
-      onItemClick?.(e);
+  const onClick = useCallback(
+    (id: string, index: number) => {
+      controls.onItemClick(id, index);
+      onItemClick?.(id, index);
     },
-    [controls.onItemClick, onItemClick],
+    [controls.onItemClick],
   );
 
   useEffect(() => {
@@ -78,9 +77,11 @@ export const Listbox = <T extends IOption>({
             key={`${index}-${items.length}-${typeof item === "string" ? item : item.value}`}
             item={item}
             index={index}
-            {...controls}
+            onClick={onClick}
             renderItem={renderItem}
-            onItemClick={onOptionClicked}
+            onHover={controls.onItemHover}
+            isItemFocused={controls.isItemFocused}
+            isItemSelected={controls.isItemSelected}
           />
         ))
       ) : (
@@ -92,12 +93,11 @@ export const Listbox = <T extends IOption>({
 
 export interface Props<T extends IOption> extends IControlConfig<T> {
   className?: string;
-  ref?: RefObject<ReturnType<typeof useListboxControls> | null>;
   focusable?: boolean;
-  items: T[];
-  onItemClick?: OnListboxItemClick;
+  onItemClick: ListBoxEventCallback;
   renderItem?: ListBoxItemRenderer<T>;
   renderEmptyState?: () => ReactNode;
+  ref?: RefObject<ReturnType<typeof useListboxControls> | null>;
 }
 
 export * from "./Option";

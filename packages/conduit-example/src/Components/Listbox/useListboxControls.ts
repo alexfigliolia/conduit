@@ -4,28 +4,35 @@ import {
   useRef,
   type KeyboardEvent as ReactKeyboardEvent,
 } from "react";
+import { useController } from "@figliolia/react-hooks";
 
 import { useSelection, type ISelectionConfig } from "./useSelection";
 import type { IOption } from "./Option";
+import { KeyStack } from "./KeyStack";
 
 export const useListboxControls = <T extends IOption>({
   onEscape,
   ...options
 }: IControlConfig<T>) => {
-  const currentIndex = useRef(-1);
   const shifting = useRef(false);
   const controlling = useRef(false);
+  const keyStack = useController(new KeyStack());
   const {
+    resetFocus,
+    forceSelect,
     focusedItems,
     selectedItems,
     focusItem,
     unfocusItem,
     selectItem,
     onItemClick,
+    onItemHover,
     deselectItem,
     getChildNodes,
     activeDescendant,
+    setSelectedItems,
     setFocusedItems,
+    currentIndex,
   } = useSelection(options);
 
   const isItemFocused = useCallback(
@@ -50,7 +57,7 @@ export const useListboxControls = <T extends IOption>({
         currentIndex.current++;
       }
     },
-    [getChildNodes],
+    [getChildNodes, currentIndex],
   );
 
   const decrementFocusIndex = useCallback(
@@ -61,7 +68,7 @@ export const useListboxControls = <T extends IOption>({
         currentIndex.current--;
       }
     },
-    [getChildNodes],
+    [getChildNodes, currentIndex],
   );
 
   const focusWithScroll = useCallback(
@@ -80,6 +87,103 @@ export const useListboxControls = <T extends IOption>({
     [selectItem],
   );
 
+  const forceSelectWithScroll = useCallback(
+    (node: Element) => {
+      forceSelect(node.getAttribute("id")!);
+      node.scrollIntoView();
+    },
+    [forceSelect],
+  );
+
+  const onControlA = useCallback(
+    (nodes: NodeListOf<Element>) => {
+      if (!controlling.current || !options.multiple) {
+        return;
+      }
+      if (selectedItems.size === options.items.length) {
+        return setSelectedItems(new Set([]));
+      }
+      setSelectedItems(
+        new Set(Array.from(nodes).map(node => node.getAttribute("id")!)),
+      );
+    },
+    [
+      selectedItems.size,
+      options.items.length,
+      options.multiple,
+      setSelectedItems,
+    ],
+  );
+
+  const onHomeOrEnd = useCallback(
+    (key: "Home" | "End", nodes: NodeListOf<Element>) => {
+      const focusIndex = key === "Home" ? 0 : nodes.length - 1;
+      if (controlling.current && shifting.current && options.multiple) {
+        const start = key === "Home" ? 0 : currentIndex.current;
+        const end = key === "Home" ? currentIndex.current : nodes.length - 1;
+        for (let i = start; i <= end; i++) {
+          const node = nodes[i];
+          forceSelect(node.getAttribute("id")!);
+        }
+      } else {
+        currentIndex.current = focusIndex;
+        focusWithScroll(nodes[currentIndex.current]);
+      }
+    },
+    [currentIndex, focusWithScroll, options.multiple, forceSelect],
+  );
+
+  const onArrowKey = useCallback(
+    (key: "ArrowDown" | "ArrowUp", nodes: NodeListOf<Element>) => {
+      const indexHandler =
+        key === "ArrowDown" ? incrementFocusIndex : decrementFocusIndex;
+      if (!shifting.current) {
+        if (controlling.current) {
+          return onHomeOrEnd(key === "ArrowDown" ? "End" : "Home", nodes);
+        }
+        indexHandler(nodes);
+        setFocusedItems(new Set());
+        return focusWithScroll(nodes[currentIndex.current]);
+      }
+      if (options.multiple) {
+        if (nodes[currentIndex.current]) {
+          forceSelect(nodes[currentIndex.current].getAttribute("id")!);
+        }
+        indexHandler(nodes);
+        return forceSelectWithScroll(nodes[currentIndex.current]);
+      }
+      indexHandler(nodes);
+      return selectWithScroll(nodes[currentIndex.current]);
+    },
+    [
+      onHomeOrEnd,
+      incrementFocusIndex,
+      decrementFocusIndex,
+      selectWithScroll,
+      forceSelect,
+      options.multiple,
+      forceSelectWithScroll,
+      currentIndex,
+      setFocusedItems,
+      focusWithScroll,
+    ],
+  );
+
+  const toggleNode = useCallback(
+    (nodes: NodeListOf<Element>) => {
+      const node = nodes[currentIndex.current];
+      if (!node) {
+        return;
+      }
+      const ID = node.getAttribute("id");
+      if (node.getAttribute("aria-selected") === "true") {
+        return deselectItem(ID!);
+      }
+      return selectItem(ID!);
+    },
+    [deselectItem, selectItem, currentIndex],
+  );
+
   const onKeyUp = useCallback((e: ReactKeyboardEvent<any> | KeyboardEvent) => {
     if (e.key === "Shift") {
       shifting.current = false;
@@ -90,6 +194,7 @@ export const useListboxControls = <T extends IOption>({
 
   const onKeyDown = useCallback(
     (e: ReactKeyboardEvent<any> | KeyboardEvent) => {
+      keyStack.push(e.key);
       const nodes = getChildNodes();
       switch (e.key) {
         case "Shift":
@@ -100,62 +205,21 @@ export const useListboxControls = <T extends IOption>({
           controlling.current = true;
           return;
         case "a":
-          if (!controlling.current) {
-            return;
-          }
-          for (const node of nodes) {
-            selectItem(node.getAttribute("id")!);
-          }
-          return;
+          return onControlA(nodes);
         case "Home":
-          if (controlling.current && shifting.current) {
-            for (let i = 0; i <= currentIndex.current; i++) {
-              const node = nodes[i];
-              selectItem(node.getAttribute("id")!);
-            }
-            currentIndex.current = 0;
-            focusWithScroll(nodes[0]);
-            return;
-          }
-          currentIndex.current = 0;
-          return focusWithScroll(nodes[currentIndex.current]);
+          return onHomeOrEnd("Home", nodes);
         case "End":
-          if (controlling.current && shifting.current) {
-            for (let i = currentIndex.current; i < nodes.length; i++) {
-              const node = nodes[i];
-              selectItem(node.getAttribute("id")!);
-            }
-            focusWithScroll(nodes[nodes.length - 1]);
-            currentIndex.current = nodes.length - 1;
-            return;
-          }
-          currentIndex.current = nodes.length - 1;
-          return focusWithScroll(nodes[currentIndex.current]);
+          return onHomeOrEnd("End", nodes);
         case "ArrowDown":
-          incrementFocusIndex(nodes);
-          if (!shifting.current) {
-            setFocusedItems(new Set());
-            return focusWithScroll(nodes[currentIndex.current]);
-          }
-          return selectWithScroll(nodes[currentIndex.current]);
+          return onArrowKey("ArrowDown", nodes);
         case "ArrowUp":
-          decrementFocusIndex(nodes);
-          if (!shifting.current) {
-            setFocusedItems(new Set());
-            return focusWithScroll(nodes[currentIndex.current]);
-          }
-          return selectWithScroll(nodes[currentIndex.current]);
+          return onArrowKey("ArrowUp", nodes);
         case "Enter":
         case " ":
-          const node = nodes[currentIndex.current];
-          if (!node) {
-            return;
+          if (keyStack.isInteracting()) {
+            e.preventDefault();
           }
-          const ID = node.getAttribute("id");
-          if (node.getAttribute("aria-selected") === "true") {
-            return deselectItem(ID!);
-          }
-          return selectItem(ID!);
+          return toggleNode(nodes);
         case "Escape":
           return onEscape?.();
         default:
@@ -163,15 +227,13 @@ export const useListboxControls = <T extends IOption>({
       }
     },
     [
+      toggleNode,
+      onHomeOrEnd,
+      onArrowKey,
+      onControlA,
       onEscape,
-      selectItem,
-      deselectItem,
-      decrementFocusIndex,
-      incrementFocusIndex,
-      focusWithScroll,
-      selectWithScroll,
       getChildNodes,
-      setFocusedItems,
+      keyStack,
     ],
   );
 
@@ -179,21 +241,27 @@ export const useListboxControls = <T extends IOption>({
     () => ({
       onKeyUp,
       onKeyDown,
+      resetFocus,
+      keyStack,
       focusItem,
       unfocusItem,
       selectItem,
       onItemClick,
+      onItemHover,
       deselectItem,
       activeDescendant,
       isItemFocused,
       isItemSelected,
     }),
     [
+      resetFocus,
+      keyStack,
       onKeyUp,
       onKeyDown,
       focusItem,
       unfocusItem,
       selectItem,
+      onItemHover,
       deselectItem,
       activeDescendant,
       onItemClick,

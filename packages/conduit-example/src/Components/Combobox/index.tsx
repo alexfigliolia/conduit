@@ -29,6 +29,8 @@ const DEFAULT_RENDER_INPUT = (props: ComboboxInputProps) => (
   <input {...props} />
 );
 
+const DEFAULT_LISTBOX_RENDERER = (children: ReactNode) => children;
+
 export const Combobox = <T extends IOption>({
   ref,
   items,
@@ -41,6 +43,7 @@ export const Combobox = <T extends IOption>({
   renderEmptyState,
   multiple = false,
   renderInput = DEFAULT_RENDER_INPUT,
+  renderListBox = DEFAULT_LISTBOX_RENDERER,
   initialSelected = DEFAULT_INITIAL_SELECTED,
 }: Props<T>) => {
   const listBoxId = useId();
@@ -76,6 +79,9 @@ export const Combobox = <T extends IOption>({
         placeholder,
         role: "combobox",
         autoComplete: "off",
+        autoCorrect: "off",
+        autoCapitalize: "off",
+        spellCheck: "false",
         onClick: onInputClick,
         "aria-expanded": isOpen,
         "aria-haspopup": "listbox",
@@ -105,7 +111,7 @@ export const Combobox = <T extends IOption>({
     [renderInput, inputProps],
   );
 
-  const listboxClasses = useClassNames({ open: isOpen });
+  const containerClass = useClassNames({ open: isOpen });
 
   useImperativeHandle(
     ref,
@@ -123,19 +129,22 @@ export const Combobox = <T extends IOption>({
   return (
     <div className={classes} ref={container}>
       {inputNode}
-      <Listbox
-        className={listboxClasses}
-        id={listBoxId}
-        items={items}
-        onEscape={close}
-        multiple={multiple}
-        ref={listboxControls}
-        onItemClick={onItemClick}
-        initialSelected={initialSelected}
-        onChange={onChange}
-        renderItem={renderItem}
-        renderEmptyState={renderEmptyState}
-      />
+      {renderListBox(
+        <Listbox
+          id={listBoxId}
+          items={items}
+          onEscape={close}
+          multiple={multiple}
+          onChange={onChange}
+          ref={listboxControls}
+          renderItem={renderItem}
+          onItemClick={onItemClick}
+          className={containerClass}
+          initialSelected={initialSelected}
+          renderEmptyState={renderEmptyState}
+        />,
+        isOpen,
+      )}
     </div>
   );
 };
@@ -152,6 +161,7 @@ export interface Props<T extends IOption> extends Omit<
   renderItem?: ListBoxItemRenderer<T>;
   renderEmptyState?: () => ReactNode;
   ref?: RefObject<ComboboxControls | null>;
+  renderListBox?: (children: ReactNode, isOpen: boolean) => ReactNode;
 }
 
 export interface ComboboxInputProps {

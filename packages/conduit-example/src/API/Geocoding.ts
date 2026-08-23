@@ -9,6 +9,9 @@ export class Geocoding {
     const URL = `${this.URL}&q=${encodeURIComponent(query)}`;
     const response = await fetch(URL);
     const result = await response.json();
+    if ("code" in result && result.code >= 400) {
+      throw result;
+    }
     return result as PlaceSuggestion[];
   }
 }
