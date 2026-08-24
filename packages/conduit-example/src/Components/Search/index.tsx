@@ -1,4 +1,5 @@
 import {
+  Fragment,
   memo,
   useCallback,
   useEffect,
@@ -16,8 +17,8 @@ import { Loader } from "@ui/Components/Loader";
 import { type ListBoxItem } from "@ui/Components/Listbox";
 import {
   Combobox,
-  type ComboboxControls,
   type ComboboxInputProps,
+  type ComboboxRef,
 } from "@ui/Components/Combobox";
 import { useDebouncer } from "@figliolia/react-hooks";
 import { useConduit } from "@figliolia/conduit-react";
@@ -31,13 +32,13 @@ import "./styles.scss";
 export const Search = memo(function Search(_: Propless) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
-  const controls = useRef<ComboboxControls>(null);
   const [searchQuery, setSearchQuery] = useState("");
   const deferredLoading = useDebouncer(setLoading, 1000);
   const deferredSearch = useDebouncer(setSearchQuery, 300);
+  const controls = useRef<ComboboxRef<(typeof options)[number]>>(null);
 
   const onClick = useCallback(() => {
-    controls.current?.input?.current?.focus?.();
+    controls.current?.controls?.focusInput?.();
   }, []);
 
   const onInputChange = useCallback(
@@ -85,7 +86,7 @@ export const Search = memo(function Search(_: Propless) {
   }, [status, options]);
 
   useEffect(() => {
-    controls.current?.listboxControls?.current?.resetFocus?.();
+    controls.current?.controls?.listbox?.current?.resetFocus?.();
   }, [searchQuery]);
 
   const classes = useClassNames({ loading });
@@ -114,21 +115,23 @@ export const Search = memo(function Search(_: Propless) {
   }, []);
 
   return (
-    <form className="search" onSubmit={onSubmit} autoComplete="off">
-      <search>
-        <Combobox
-          ref={controls}
-          items={options}
-          placeholder="Search"
-          className={classes}
-          onInputChange={onInputChange}
-          inputValue={query}
-          renderInput={renderInput}
-          renderItem={renderItem}
-          renderListBox={glassWrapper}
-          onChange={onSelectionChange}
-        />
-      </search>
-    </form>
+    <Fragment>
+      <form className="search" onSubmit={onSubmit} autoComplete="off">
+        <search>
+          <Combobox
+            ref={controls}
+            items={options}
+            placeholder="Search"
+            className={classes}
+            onInputChange={onInputChange}
+            inputValue={query}
+            renderInput={renderInput}
+            renderItem={renderItem}
+            renderListBox={glassWrapper}
+            onChange={onSelectionChange}
+          />
+        </search>
+      </form>
+    </Fragment>
   );
 });

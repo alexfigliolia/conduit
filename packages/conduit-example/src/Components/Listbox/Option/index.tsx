@@ -1,10 +1,12 @@
 import { useCallback, useId, useMemo } from "react";
 
+import { useListBoxContext } from "../Context";
+
 import {
   LIST_BOX_OPTION_CLASS,
   type IOption,
   type ListBoxItem,
-  type Props,
+  type OptionProps,
 } from "./types";
 
 import "./styles.scss";
@@ -12,17 +14,21 @@ import "./styles.scss";
 export const Option = <T extends IOption>({
   item,
   index,
-  onHover,
   onClick,
-  isItemFocused,
-  isItemSelected,
   renderItem = ({ item }: ListBoxItem<T>) =>
     typeof item === "string" ? item : item.value,
-}: Props<T>) => {
+}: OptionProps<T>) => {
   const id = useId();
+  const { controls, state } = useListBoxContext<T>();
 
-  const focused = useMemo(() => isItemFocused(id), [id, isItemFocused]);
-  const selected = useMemo(() => isItemSelected(id), [id, isItemSelected]);
+  const focused = useMemo(
+    () => state.focusedItems.has(id),
+    [id, state.focusedItems],
+  );
+  const selected = useMemo(
+    () => state.selectedItems.has(id),
+    [id, state.selectedItems],
+  );
 
   const itemState = useMemo(
     () => ({ id, item, index, focused, selected }),
@@ -34,18 +40,20 @@ export const Option = <T extends IOption>({
     [renderItem, itemState],
   );
 
-  const onItemHover = useCallback(() => {
-    onHover(id, index);
-  }, [id, index, onHover]);
-
   const onItemClick = useCallback(() => {
-    onClick(id, index);
-  }, [id, index, onClick]);
+    controls.onItemClick(id, index);
+    onClick?.(id, index);
+  }, [id, index, onClick, controls]);
+
+  const onItemHover = useCallback(() => {
+    controls.onItemHover(id, index);
+  }, [id, index, controls]);
 
   return (
     <li
       id={id}
       role="option"
+      tabIndex={-1}
       onClick={onItemClick}
       aria-posinset={index}
       data-focused={focused}
