@@ -183,11 +183,9 @@ export class ListBoxSelection<
       | ((prev: ListBoxSelectionState) => Partial<ListBoxSelectionState>),
   ) {
     if (typeof state === "function") {
-      this.update(prev => ({ ...prev, ...state(prev) }));
-    } else {
-      this.update(prev => ({ ...prev, ...state }));
+      return this.update(prev => ({ ...prev, ...state(prev) }));
     }
-    console.log(this.getState());
+    this.update(prev => ({ ...prev, ...state }));
   }
 
   private operateOnSet<T>(instance: Set<T>, mutator: (set: Set<T>) => void) {

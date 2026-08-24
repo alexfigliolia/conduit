@@ -3,6 +3,7 @@ import {
   useId,
   useImperativeHandle,
   useMemo,
+  type ChangeEvent,
   type ReactNode,
 } from "react";
 import { Listbox, type IOption } from "@ui/Components/Listbox";
@@ -39,61 +40,46 @@ export const Combobox = <T extends IOption>({
   const listBoxId = useId();
   const classes = useClassNames("combobox", className);
 
-  const {
-    onKeyDown,
-    onKeyUp,
-    onSearchBoxChange,
-    onInputClick,
-    close,
-    input,
-    isOpen,
-    setIsOpen,
-    isInteractedWith,
-    listboxControls,
-  } = useComboboxControls({ items, onInputChange });
+  const { controls, isOpen } = useComboboxControls<T>(items);
 
   const container = useClickOutside<HTMLDivElement, false>({
     open: isOpen,
     callback: close,
   });
 
+  const onSearch = useCallback(
+    (e: ChangeEvent<HTMLInputElement>) => {
+      onInputChange(controls.onSearchBoxChange(e));
+    },
+    [onInputChange, controls],
+  );
+
   const inputProps = useMemo(
     () =>
       ({
-        ref: input,
+        ref: controls.input,
         type: "text",
         value: inputValue,
-        onChange: onSearchBoxChange,
-        onKeyUp,
-        onKeyDown,
+        onChange: onSearch,
+        onKeyUp: controls.onKeyUp,
+        onKeyDown: controls.onKeyDown,
         placeholder,
         role: "combobox",
         autoComplete: "off",
         autoCorrect: "off",
         autoCapitalize: "off",
         spellCheck: "false",
-        onClick: onInputClick,
+        onClick: controls.onInputClick,
         "aria-expanded": isOpen,
         "aria-haspopup": "listbox",
         "aria-controls": listBoxId,
         "aria-autocomplete": "list",
       }) as const,
-    [
-      input,
-      inputValue,
-      isOpen,
-      onInputChange,
-      placeholder,
-      listBoxId,
-      onKeyDown,
-      onKeyUp,
-      onInputClick,
-      onSearchBoxChange,
-    ],
+    [inputValue, isOpen, onSearch, placeholder, listBoxId, controls],
   );
 
   const onItemClick = useCallback(() => {
-    input.current?.focus?.();
+    controls.input.current?.focus?.();
   }, []);
 
   const inputNode = useMemo(
@@ -108,26 +94,23 @@ export const Combobox = <T extends IOption>({
     () => ({
       isOpen,
       listBoxId,
-      input,
-      setIsOpen,
-      isInteractedWith,
-      listboxControls,
+      controls,
     }),
-    [isOpen],
+    [isOpen, controls, listBoxId],
   );
 
   return (
     <div className={classes} ref={container}>
       {inputNode}
       {renderListBox(
-        <Listbox
-          id={listBoxId}
+        <Listbox<T>
           items={items}
           onEscape={close}
           focusable={false}
           multiple={multiple}
           onChange={onChange}
-          ref={listboxControls}
+          ref={controls.listbox}
+          containerID={listBoxId}
           renderItem={renderItem}
           onItemClick={onItemClick}
           className={containerClass}
@@ -139,3 +122,5 @@ export const Combobox = <T extends IOption>({
     </div>
   );
 };
+
+export * from "./types";

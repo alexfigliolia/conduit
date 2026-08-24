@@ -1,22 +1,17 @@
-import type {
-  ChangeEventHandler,
-  Dispatch,
-  ReactNode,
-  RefObject,
-  SetStateAction,
-} from "react";
+import type { ChangeEventHandler, ReactNode, RefObject } from "react";
 
 import type {
   IOption,
-  ISelectionConfig,
-  ListBoxControls,
   ListBoxItemRenderer,
   ListBoxKeyboardEventHandler,
+  ListBoxProviderProps,
 } from "../Listbox";
 
+import type { ComboboxControls } from "./ComboboxControls";
+
 export interface Props<T extends IOption> extends Omit<
-  ISelectionConfig<T>,
-  "id"
+  ListBoxProviderProps<T>,
+  "containerID" | "ref"
 > {
   inputValue: string;
   className?: string;
@@ -25,7 +20,7 @@ export interface Props<T extends IOption> extends Omit<
   renderInput?: (props: ComboboxInputProps) => ReactNode;
   renderItem?: ListBoxItemRenderer<T>;
   renderEmptyState?: () => ReactNode;
-  ref?: RefObject<ComboboxControls | null>;
+  ref?: RefObject<ComboboxRef<T> | null>;
   renderListBox?: (children: ReactNode, isOpen: boolean) => ReactNode;
 }
 
@@ -44,11 +39,8 @@ export interface ComboboxInputProps {
   "aria-autocomplete": "list";
 }
 
-export interface ComboboxControls {
+export interface ComboboxRef<T extends IOption> {
   isOpen: boolean;
   listBoxId: string;
-  setIsOpen: Dispatch<SetStateAction<boolean>>;
-  input: RefObject<HTMLInputElement | null>;
-  isInteractedWith: RefObject<boolean>;
-  listboxControls: RefObject<ListBoxControls | null>;
+  controls: ComboboxControls<T>;
 }
