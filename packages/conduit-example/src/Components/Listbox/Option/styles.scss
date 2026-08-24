@@ -1,3 +1,9 @@
-.listbox-option {
+li[role="option"] {
   cursor: pointer;
+  &[data-focused="true"] {
+    background-color: green;
+  }
+  &[aria-selected="true"] {
+    background-color: blue;
+  }
 }

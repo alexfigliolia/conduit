@@ -1,13 +1,10 @@
 import type { ReactNode } from "react";
 
-export interface Props<T extends IOption> {
+export interface OptionProps<T extends IOption> {
   item: T;
   index: number;
-  isItemFocused: ListBoxOptionQuery;
-  isItemSelected: ListBoxOptionQuery;
   renderItem?: ListBoxItemRenderer<T>;
-  onHover: ListBoxEventCallback;
-  onClick: ListBoxEventCallback;
+  onClick?: ListBoxEventCallback;
 }
 
 export type ListBoxOptionQuery = (id: string) => boolean;

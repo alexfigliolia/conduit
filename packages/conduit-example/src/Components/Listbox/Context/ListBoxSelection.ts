@@ -1,0 +1,198 @@
+import { State } from "@figliolia/galena";
+
+import { LIST_BOX_OPTION_CLASS, type IOption } from "../Option";
+
+import type { ListBoxSelectionOptions, ListBoxSelectionState } from "./types";
+
+export class ListBoxSelection<
+  T extends IOption,
+> extends State<ListBoxSelectionState> {
+  public static readonly ACTIVATION_KEYS = [
+    "ArrowUp",
+    "ArrowDown",
+    "Home",
+    "End",
+  ];
+  public static readonly INTERACTION_KEYS = [
+    ...this.ACTIVATION_KEYS,
+    "Enter",
+    " ",
+  ];
+  constructor(public options: ListBoxSelectionOptions<T>) {
+    super({
+      isActive: false,
+      currentIndex: -1,
+      focusedItems: new Set(),
+      selectedItems: new Set(),
+      activeDescendant: undefined,
+    });
+  }
+
+  public configure(options: ListBoxSelectionOptions<T>) {
+    this.options = options;
+  }
+
+  public getChildNodes() {
+    return document.querySelectorAll(
+      `#${this.options.containerID} .${LIST_BOX_OPTION_CLASS}`,
+    );
+  }
+
+  public destroy(multiple: boolean = false) {
+    this.reset();
+    this.options.multiple = multiple;
+  }
+
+  public pushKey(key: string) {
+    const { isActive } = this.getState();
+    if (!isActive && ListBoxSelection.ACTIVATION_KEYS.includes(key)) {
+      this.setActive(true);
+    } else if (isActive && !ListBoxSelection.INTERACTION_KEYS.includes(key)) {
+      this.setActive(false);
+    }
+  }
+
+  public get currentIndex() {
+    return this.getState().currentIndex;
+  }
+
+  public setIndex(currentIndex: number) {
+    this.mergeState({ currentIndex });
+  }
+
+  public incrementCurrentIndex(nodeLength: number) {
+    this.mergeState(prev => ({
+      currentIndex:
+        prev.currentIndex + 1 >= nodeLength ? 0 : prev.currentIndex + 1,
+    }));
+  }
+
+  public decrementCurrentIndex(nodeLength: number) {
+    this.mergeState(prev => ({
+      currentIndex:
+        prev.currentIndex - 1 < 0 ? nodeLength - 1 : prev.currentIndex - 1,
+    }));
+  }
+
+  public resetFocus() {
+    this.mergeState({
+      currentIndex: -1,
+      focusedItems: new Set(),
+      activeDescendant: undefined,
+    });
+  }
+
+  public activateDescendant(id: string) {
+    this.mergeState({ activeDescendant: id });
+  }
+
+  public focusItem(id: string, allowMulti = true) {
+    this.activateDescendant(id);
+    this.mergeState(previous => {
+      if (!this.options.multiple || !allowMulti) {
+        return { focusedItems: new Set([id]) };
+      }
+      return {
+        focusedItems: this.operateOnSet(previous.focusedItems, set => {
+          set.add(id);
+        }),
+      };
+    });
+  }
+
+  public selectItem(id: string) {
+    this.activateDescendant(id);
+    this.mergeState(previous => {
+      if (previous.selectedItems.has(id)) {
+        return {
+          selectedItems: this.operateOnSet(previous.selectedItems, set => {
+            set.delete(id);
+          }),
+        };
+      }
+      if (!this.options.multiple) {
+        return { selectedItems: new Set([id]) };
+      }
+      return {
+        selectedItems: this.operateOnSet(previous.selectedItems, set => {
+          set.add(id);
+        }),
+      };
+    });
+  }
+
+  public forceSelect(id: string) {
+    this.activateDescendant(id);
+    this.mergeState(previous => {
+      if (!this.options.multiple) {
+        return { selectedItems: new Set([id]) };
+      }
+      return {
+        selectedItems: this.operateOnSet(previous.selectedItems, set => {
+          set.add(id);
+        }),
+      };
+    });
+    this.focusItem(id);
+  }
+
+  public deselectItem(id: string) {
+    this.activateDescendant(id);
+    this.mergeState(previous => {
+      if (!this.options.multiple) {
+        return { selectedItems: new Set() };
+      }
+      return {
+        selectedItems: this.operateOnSet(previous.selectedItems, set =>
+          set.delete(id),
+        ),
+      };
+    });
+  }
+
+  public setSelections(list: string[]) {
+    this.mergeState({ selectedItems: new Set(list) });
+  }
+
+  public clearSelections() {
+    this.mergeState({ selectedItems: new Set() });
+  }
+
+  public clearFocusedItems() {
+    this.mergeState({ focusedItems: new Set() });
+  }
+
+  public onItemClick(id: string, index: number) {
+    this.selectItem(id);
+    this.setIndex(index);
+    this.setActive(true);
+  }
+
+  public readonly onItemHover = (id: string, index: number) => {
+    this.focusItem(id, false);
+    this.setIndex(index);
+  };
+
+  public setActive(isActive: boolean) {
+    this.mergeState({ isActive });
+  }
+
+  private mergeState(
+    state:
+      | Partial<ListBoxSelectionState>
+      | ((prev: ListBoxSelectionState) => Partial<ListBoxSelectionState>),
+  ) {
+    if (typeof state === "function") {
+      this.update(prev => ({ ...prev, ...state(prev) }));
+    } else {
+      this.update(prev => ({ ...prev, ...state }));
+    }
+    console.log(this.getState());
+  }
+
+  private operateOnSet<T>(instance: Set<T>, mutator: (set: Set<T>) => void) {
+    const clone = new Set(instance);
+    mutator(clone);
+    return clone;
+  }
+}
