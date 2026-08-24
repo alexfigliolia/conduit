@@ -44,7 +44,7 @@ export const Combobox = <T extends IOption>({
 
   const container = useClickOutside<HTMLDivElement, false>({
     open: isOpen,
-    callback: close,
+    callback: controls.close,
   });
 
   const onSearch = useCallback(
@@ -105,13 +105,13 @@ export const Combobox = <T extends IOption>({
       {renderListBox(
         <Listbox<T>
           items={items}
-          onEscape={close}
           focusable={false}
           multiple={multiple}
           onChange={onChange}
           ref={controls.listbox}
           containerID={listBoxId}
           renderItem={renderItem}
+          onEscape={controls.close}
           onItemClick={onItemClick}
           className={containerClass}
           initialSelected={initialSelected}
