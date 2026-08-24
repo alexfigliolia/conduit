@@ -10,6 +10,7 @@ import {
   useConduitResolver,
   useConduitStatus,
   useConduitValue,
+  useResolvedValue,
 } from "../use-common";
 
 import { useConduitRefetch } from "./useConduitRefetch";
@@ -21,9 +22,10 @@ export const useConduit = <T extends Conduit<any, any, UnknownCacheAbstract>>(
 ) => {
   useConduitResolver(conduit, options);
   const cacheEntry = useCacheEntry(conduit, options.args);
-  const value = useConduitValue(cacheEntry);
+  const state = useConduitValue(cacheEntry);
   const status = useConduitStatus(cacheEntry);
   const refetch = useConduitRefetch(conduit, options.args);
+  const value = useResolvedValue(state, status);
 
   return useMemo(() => ({ value, status, refetch }), [value, status, refetch]);
 };
