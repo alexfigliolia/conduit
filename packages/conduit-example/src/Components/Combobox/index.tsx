@@ -16,6 +16,7 @@ import {
   type ComboboxInputProps,
   type Props,
 } from "./types";
+import { Input } from "./Input";
 import { ComboboxContext } from "./Context";
 
 import "./styles.scss";
@@ -23,7 +24,7 @@ import "./styles.scss";
 const DEFAULT_INITIAL_SELECTED: number[] = [];
 const DEFAULT_RENDER_INPUT = <T extends IOption>(
   props: ComboboxInputProps<T>,
-) => <input {...props} />;
+) => <Input {...props} />;
 
 const DEFAULT_LISTBOX_RENDERER = (listbox: ReactNode) => listbox;
 
@@ -96,7 +97,7 @@ export const Combobox = <T extends IOption>({
         {renderListBox(
           <Listbox<T>
             items={items}
-            focusable={false}
+            independent={false}
             multiple={multiple}
             onChange={onChange}
             ref={controls.listbox}
