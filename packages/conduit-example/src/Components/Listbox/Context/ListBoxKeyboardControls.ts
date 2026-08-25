@@ -87,45 +87,50 @@ export class ListBoxKeyboardControls<
       }
     } else {
       this.setIndex(focusIndex);
-      this.focusWithScroll(nodes[focusIndex]);
+      this.withNodeRangeError(focusIndex, () => {
+        this.focusWithScroll(nodes[focusIndex]);
+      });
     }
   }
 
   private onArrowKey(key: "ArrowDown" | "ArrowUp", nodes: NodeListOf<Element>) {
-    const indexHandler = () => {
-      if (key === "ArrowDown") {
-        return this.incrementCurrentIndex(nodes.length);
-      }
-      this.decrementCurrentIndex(nodes.length);
-    };
+    if (this.lastKnownNodeLength === 0) {
+      return this.resetFocus();
+    }
     if (!this.shifting) {
       if (this.controlling) {
         return this.onHomeOrEnd(key === "ArrowDown" ? "End" : "Home", nodes);
       }
-      indexHandler();
+      this.moveIndex(key, nodes);
       this.clearFocusedItems();
       return this.focusWithScroll(nodes[this.currentIndex]);
     }
     if (this.options.multiple) {
-      if (nodes[this.currentIndex]) {
+      this.withNodeRangeError(this.currentIndex, () => {
         this.forceSelect(nodes[this.currentIndex].getAttribute("id")!);
-      }
-      indexHandler();
+      });
+      this.moveIndex(key, nodes);
       return this.forceSelectWithScroll(nodes[this.currentIndex]);
     }
-    indexHandler();
+    this.moveIndex(key, nodes);
     return this.selectWithScroll(nodes[this.currentIndex]);
   }
 
   private toggleNode(nodes: NodeListOf<Element>) {
-    const node = nodes[this.currentIndex];
-    if (!node) {
-      return;
+    this.withNodeRangeError(this.currentIndex, () => {
+      const node = nodes[this.currentIndex];
+      const ID = node.getAttribute("id");
+      if (node.getAttribute("aria-selected") === "true") {
+        return this.deselectItem(ID!);
+      }
+      return this.selectItem(ID!);
+    });
+  }
+
+  private moveIndex(key: "ArrowUp" | "ArrowDown", nodes: NodeListOf<Element>) {
+    if (key === "ArrowDown") {
+      return this.incrementCurrentIndex(nodes.length);
     }
-    const ID = node.getAttribute("id");
-    if (node.getAttribute("aria-selected") === "true") {
-      return this.deselectItem(ID!);
-    }
-    return this.selectItem(ID!);
+    this.decrementCurrentIndex(nodes.length);
   }
 }
