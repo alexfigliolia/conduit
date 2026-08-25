@@ -221,6 +221,10 @@ export class ListBoxSelection<
     this.mergeState({ isActive });
   }
 
+  public safeSetNodeLength(index: number) {
+    this.lastKnownNodeLength = Math.max(index + 1, this.lastKnownNodeLength);
+  }
+
   protected mergeState(
     state:
       | Partial<ListBoxSelectionState>
