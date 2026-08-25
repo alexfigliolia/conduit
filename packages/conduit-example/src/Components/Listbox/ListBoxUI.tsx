@@ -19,7 +19,9 @@ export const ListboxUI = <T extends IOption>({
 }: ListBoxUIProps<T>) => {
   const listbox = useRef<HTMLUListElement>(null);
   const { controls, state } = useListBoxContext<T>();
-  const classes = useClassNames("listbox", className);
+  const classes = useClassNames("listbox", className, {
+    active: state.isActive,
+  });
 
   const onOptionClick = useCallback((id: string, index: number) => {
     listbox.current?.focus?.();

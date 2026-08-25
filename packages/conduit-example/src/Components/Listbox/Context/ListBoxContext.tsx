@@ -42,22 +42,23 @@ export const ListBoxProvider = <T extends IOption>({
   const contextValue = useMemo(() => ({ controls, state }), [controls, state]);
 
   const emitInitialItems = useEffectEvent(() => {
-    const items = controls.getChildNodes();
-    const itemList: T[] = [];
-    for (const index of initialSelected) {
-      const itemID = items?.[index]?.getAttribute?.("id");
-      if (itemID) {
-        controls.selectItem(itemID);
-        controls.setIndex(index);
-        itemList.push(options.items[index]);
-      }
+    const items = controls.enableInitiallySelectedOptions(initialSelected);
+    if (items.length) {
+      onChange?.(items);
     }
-    onChange?.(itemList);
+  });
+
+  const emitSelectedItems = useEffectEvent(() => {
+    onChange?.(controls.emitSelectedOptions());
   });
 
   useEffect(() => {
     emitInitialItems();
   }, []);
+
+  useEffect(() => {
+    emitSelectedItems();
+  }, [state.selectedItems]);
 
   useEffect(() => {
     return () => {

@@ -18,6 +18,7 @@ export class ListBoxSelection<
     "Enter",
     " ",
   ];
+  protected lastKnownNodeLength = 0;
   constructor(public options: ListBoxSelectionOptions<T>) {
     super({
       isActive: false,
@@ -33,9 +34,11 @@ export class ListBoxSelection<
   }
 
   public getChildNodes() {
-    return document.querySelectorAll(
+    const nodes = document.querySelectorAll(
       `#${this.options.containerID} .${LIST_BOX_OPTION_CLASS}`,
     );
+    this.lastKnownNodeLength = nodes.length;
+    return nodes;
   }
 
   public destroy(multiple: boolean = false) {
@@ -56,8 +59,49 @@ export class ListBoxSelection<
     return this.getState().currentIndex;
   }
 
+  public enableInitiallySelectedOptions(initialSelected: number[]) {
+    const itemList: T[] = [];
+    if (!initialSelected.length) {
+      return itemList;
+    }
+    const nodes = this.getChildNodes();
+    for (const index of initialSelected) {
+      this.withNodeRangeError(index, () => {
+        const itemID = nodes?.[index]?.getAttribute?.("id");
+        if (itemID) {
+          this.selectItem(itemID);
+          this.setIndex(index);
+          itemList.push(this.options.items[index]);
+        }
+      });
+    }
+    return itemList;
+  }
+
+  public emitSelectedOptions() {
+    const { selectedItems } = this.getState();
+    const itemList: T[] = [];
+    if (!selectedItems.size) {
+      return itemList;
+    }
+    for (const ID of selectedItems) {
+      const node = document.getElementById(ID);
+      const index = node?.getAttribute?.("aria-posinset");
+      // @ts-expect-error isNaN with string
+      if (typeof index === "string" && !isNaN(index)) {
+        const idx = parseInt(index);
+        this.withOptionRangeError(idx, () => {
+          itemList.push(this.options.items[idx]);
+        });
+      }
+    }
+    return itemList;
+  }
+
   public setIndex(currentIndex: number) {
-    this.mergeState({ currentIndex });
+    this.withNodeRangeError(currentIndex, () => {
+      this.mergeState({ currentIndex });
+    });
   }
 
   public incrementCurrentIndex(nodeLength: number) {
@@ -177,7 +221,7 @@ export class ListBoxSelection<
     this.mergeState({ isActive });
   }
 
-  private mergeState(
+  protected mergeState(
     state:
       | Partial<ListBoxSelectionState>
       | ((prev: ListBoxSelectionState) => Partial<ListBoxSelectionState>),
@@ -188,9 +232,32 @@ export class ListBoxSelection<
     this.update(prev => ({ ...prev, ...state }));
   }
 
-  private operateOnSet<T>(instance: Set<T>, mutator: (set: Set<T>) => void) {
+  protected operateOnSet<T>(instance: Set<T>, mutator: (set: Set<T>) => void) {
     const clone = new Set(instance);
     mutator(clone);
     return clone;
+  }
+
+  protected withNodeRangeError<U>(index: number, fn: () => U) {
+    return this.withRangeError(index, this.lastKnownNodeLength, "Node", fn);
+  }
+
+  protected withOptionRangeError<U>(index: number, fn: () => U) {
+    return this.withRangeError(index, this.options.items.length, "Option", fn);
+  }
+
+  private withRangeError<U>(
+    index: number,
+    maxLength: number,
+    type: "Node" | "Option",
+    fn: () => U,
+  ) {
+    if (index < maxLength && index >= 0) {
+      return fn();
+    }
+    const typeName = type.toLowerCase();
+    console.warn(
+      `${type} Range Error: Attempted to operate on list box ${typeName} index "${index}" with ${maxLength === 0 ? `no ${typeName}s` : `a ${type.toLowerCase()} boundary of "0 through ${maxLength - 1}"`}`,
+    );
   }
 }
