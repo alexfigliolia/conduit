@@ -1,4 +1,4 @@
-import { useCallback, useId, useMemo } from "react";
+import { useCallback, useEffect, useId, useLayoutEffect, useMemo } from "react";
 
 import { useListBoxContext } from "../Context";
 
@@ -48,6 +48,10 @@ export const Option = <T extends IOption>({
   const onItemHover = useCallback(() => {
     controls.onItemHover(id, index);
   }, [id, index, controls]);
+
+  useLayoutEffect(() => {
+    controls.safeSetNodeLength(index);
+  }, [index, controls]);
 
   return (
     <li

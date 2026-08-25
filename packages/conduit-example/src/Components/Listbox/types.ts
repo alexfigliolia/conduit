@@ -11,23 +11,28 @@ export interface EmptyStateProps {
   renderEmptyState?: () => ReactNode;
 }
 
-export interface ListBoxCommonUIProps<
-  T extends IOption,
-> extends EmptyStateProps {
-  className?: string;
-  focusable?: boolean;
-  onItemClick?: ListBoxEventCallback;
-  renderItem?: ListBoxItemRenderer<T>;
-}
+export type ListBoxCommonUIProps<T extends IOption> = EmptyStateProps &
+  WithListBoxLabelOptions<{
+    className?: string;
+    onItemClick?: ListBoxEventCallback;
+    renderItem?: ListBoxItemRenderer<T>;
+  }>;
 
-export interface Props<T extends IOption>
-  extends ListBoxProviderProps<T>, ListBoxCommonUIProps<T> {}
+export type Props<T extends IOption> = ListBoxProviderProps<T> &
+  ListBoxCommonUIProps<T>;
 
-export interface ListBoxUIProps<
-  T extends IOption,
-> extends ListBoxCommonUIProps<T> {
+export type ListBoxBaseUIProps<T extends IOption> = ListBoxCommonUIProps<T> & {
   items: T[];
   containerID: string;
-  focusable?: boolean;
   multiple?: boolean;
-}
+};
+
+export type ListBoxUIProps<T extends IOption> = WithListBoxLabelOptions<
+  ListBoxBaseUIProps<T>
+>;
+
+export type ListBoxLabelOptions =
+  | { independent?: true; label: string }
+  | { independent: false; label?: never };
+
+export type WithListBoxLabelOptions<T> = T & ListBoxLabelOptions;

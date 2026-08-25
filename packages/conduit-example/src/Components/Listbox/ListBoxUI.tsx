@@ -1,4 +1,4 @@
-import { useCallback, useRef } from "react";
+import { Fragment, useCallback, useRef } from "react";
 import { useClassNames } from "@figliolia/classnames";
 
 import type { ListBoxUIProps } from "./types";
@@ -8,12 +8,13 @@ import { useListBoxContext } from "./Context";
 
 export const ListboxUI = <T extends IOption>({
   items,
+  label,
   className,
   onItemClick,
   renderItem,
   containerID,
-  focusable = true,
   multiple = false,
+  independent = true,
   renderEmptyState,
 }: ListBoxUIProps<T>) => {
   const listbox = useRef<HTMLUListElement>(null);
@@ -28,29 +29,32 @@ export const ListboxUI = <T extends IOption>({
   }, []);
 
   return (
-    <ul
-      ref={listbox}
-      role="listbox"
-      id={containerID}
-      className={classes}
-      onKeyUp={controls.onKeyUp}
-      onKeyDown={controls.onKeyDown}
-      tabIndex={focusable ? 0 : -1}
-      aria-multiselectable={multiple}
-      aria-activedescendant={state.activeDescendant}>
-      {items.length ? (
-        items.map((item, index) => (
-          <Option
-            item={item}
-            index={index}
-            onClick={onOptionClick}
-            renderItem={renderItem}
-            key={`${index}-${items.length}-${typeof item === "string" ? item : item.value}`}
-          />
-        ))
-      ) : (
-        <EmptyState renderEmptyState={renderEmptyState} />
-      )}
-    </ul>
+    <Fragment>
+      {independent && label}
+      <ul
+        ref={listbox}
+        role="listbox"
+        id={containerID}
+        className={classes}
+        onKeyUp={controls.onKeyUp}
+        onKeyDown={controls.onKeyDown}
+        tabIndex={independent ? 0 : -1}
+        aria-multiselectable={multiple}
+        aria-activedescendant={state.activeDescendant}>
+        {items.length ? (
+          items.map((item, index) => (
+            <Option
+              item={item}
+              index={index}
+              onClick={onOptionClick}
+              renderItem={renderItem}
+              key={`${index}-${items.length}-${typeof item === "string" ? item : item.value}`}
+            />
+          ))
+        ) : (
+          <EmptyState renderEmptyState={renderEmptyState} />
+        )}
+      </ul>
+    </Fragment>
   );
 };
