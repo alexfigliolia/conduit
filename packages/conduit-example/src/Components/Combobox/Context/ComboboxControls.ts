@@ -1,11 +1,10 @@
 import { createRef, type ChangeEvent } from "react";
-import { State } from "@figliolia/galena";
-
 import type {
   IOption,
   ListBoxKeyboardControls,
   ListBoxKeyboardEvent,
-} from "../Listbox";
+} from "@ui/Components/Listbox";
+import { State } from "@figliolia/galena";
 
 export class ComboboxControls<T extends IOption> extends State<boolean> {
   public openOnListChange = false;
