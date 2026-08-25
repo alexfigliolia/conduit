@@ -11,16 +11,21 @@ import { useClickOutside } from "@figliolia/react-hooks";
 import { useClassNames } from "@figliolia/classnames";
 
 import { useComboboxControls } from "./useComboboxControls";
-import type { ComboboxInputProps, Props } from "./types";
+import {
+  comboboxInputProps,
+  type ComboboxInputProps,
+  type Props,
+} from "./types";
+import { ComboboxContext } from "./Context";
 
 import "./styles.scss";
 
 const DEFAULT_INITIAL_SELECTED: number[] = [];
-const DEFAULT_RENDER_INPUT = (props: ComboboxInputProps) => (
-  <input {...props} />
-);
+const DEFAULT_RENDER_INPUT = <T extends IOption>(
+  props: ComboboxInputProps<T>,
+) => <input {...props} />;
 
-const DEFAULT_LISTBOX_RENDERER = (children: ReactNode) => children;
+const DEFAULT_LISTBOX_RENDERER = (listbox: ReactNode) => listbox;
 
 export const Combobox = <T extends IOption>({
   ref,
@@ -39,7 +44,6 @@ export const Combobox = <T extends IOption>({
 }: Props<T>) => {
   const listBoxId = useId();
   const classes = useClassNames("combobox", className);
-
   const { controls, isOpen } = useComboboxControls<T>(items);
 
   const container = useClickOutside<HTMLDivElement, false>({
@@ -56,25 +60,14 @@ export const Combobox = <T extends IOption>({
 
   const inputProps = useMemo(
     () =>
-      ({
-        ref: controls.input,
-        type: "text",
-        value: inputValue,
-        onChange: onSearch,
-        onKeyUp: controls.onKeyUp,
-        onKeyDown: controls.onKeyDown,
+      comboboxInputProps({
+        inputValue,
+        isOpen,
+        onSearch,
         placeholder,
-        role: "combobox",
-        autoComplete: "off",
-        autoCorrect: "off",
-        autoCapitalize: "off",
-        spellCheck: "false",
-        onClick: controls.onInputClick,
-        "aria-expanded": isOpen,
-        "aria-haspopup": "listbox",
-        "aria-controls": listBoxId,
-        "aria-autocomplete": "list",
-      }) as const,
+        listBoxId,
+        controls,
+      }),
     [inputValue, isOpen, onSearch, placeholder, listBoxId, controls],
   );
 
@@ -89,38 +82,38 @@ export const Combobox = <T extends IOption>({
 
   const containerClass = useClassNames({ open: isOpen });
 
-  useImperativeHandle(
-    ref,
-    () => ({
-      isOpen,
-      listBoxId,
-      controls,
-    }),
-    [isOpen, controls, listBoxId],
+  const contextValue = useMemo(
+    () => ({ controls, isOpen, listBoxId }),
+    [controls, isOpen, listBoxId],
   );
 
+  useImperativeHandle(ref, () => contextValue, [contextValue]);
+
   return (
-    <div className={classes} ref={container}>
-      {inputNode}
-      {renderListBox(
-        <Listbox<T>
-          items={items}
-          focusable={false}
-          multiple={multiple}
-          onChange={onChange}
-          ref={controls.listbox}
-          containerID={listBoxId}
-          renderItem={renderItem}
-          onEscape={controls.close}
-          onItemClick={onItemClick}
-          className={containerClass}
-          initialSelected={initialSelected}
-          renderEmptyState={renderEmptyState}
-        />,
-        isOpen,
-      )}
-    </div>
+    <ComboboxContext.Provider value={contextValue}>
+      <div className={classes} ref={container}>
+        {inputNode}
+        {renderListBox(
+          <Listbox<T>
+            items={items}
+            focusable={false}
+            multiple={multiple}
+            onChange={onChange}
+            ref={controls.listbox}
+            containerID={listBoxId}
+            renderItem={renderItem}
+            onEscape={controls.close}
+            onItemClick={onItemClick}
+            className={containerClass}
+            initialSelected={initialSelected}
+            renderEmptyState={renderEmptyState}
+          />,
+          isOpen,
+        )}
+      </div>
+    </ComboboxContext.Provider>
   );
 };
 
 export * from "./types";
+export * from "./Context";
