@@ -7,12 +7,17 @@ import type {
 } from "./Option";
 import type { ListBoxProviderProps } from "./Context";
 
-export interface ListBoxCommonUIProps<T extends IOption> {
+export interface EmptyStateProps {
+  renderEmptyState?: () => ReactNode;
+}
+
+export interface ListBoxCommonUIProps<
+  T extends IOption,
+> extends EmptyStateProps {
   className?: string;
   focusable?: boolean;
   onItemClick?: ListBoxEventCallback;
   renderItem?: ListBoxItemRenderer<T>;
-  renderEmptyState?: () => ReactNode;
 }
 
 export interface Props<T extends IOption>

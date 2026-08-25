@@ -255,9 +255,11 @@ export class ListBoxSelection<
     if (index < maxLength && index >= 0) {
       return fn();
     }
-    const typeName = type.toLowerCase();
-    console.warn(
-      `${type} Range Error: Attempted to operate on list box ${typeName} index "${index}" with ${maxLength === 0 ? `no ${typeName}s` : `a ${type.toLowerCase()} boundary of "0 through ${maxLength - 1}"`}`,
-    );
+    if (import.meta.env.DEV) {
+      const typeName = type.toLowerCase();
+      console.warn(
+        `${type} Range Error: Attempted to operate on list box ${typeName} index "${index}" with ${maxLength === 0 ? `no ${typeName}s` : `a ${type.toLowerCase()} boundary of "0 through ${maxLength - 1}"`}`,
+      );
+    }
   }
 }

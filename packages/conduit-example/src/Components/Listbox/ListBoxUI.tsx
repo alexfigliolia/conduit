@@ -3,9 +3,8 @@ import { useClassNames } from "@figliolia/classnames";
 
 import type { ListBoxUIProps } from "./types";
 import { Option, type IOption } from "./Option";
+import { EmptyState } from "./EmptyState";
 import { useListBoxContext } from "./Context";
-
-import "./styles.scss";
 
 export const ListboxUI = <T extends IOption>({
   items,
@@ -15,7 +14,7 @@ export const ListboxUI = <T extends IOption>({
   containerID,
   focusable = true,
   multiple = false,
-  renderEmptyState = () => "There are no items to show",
+  renderEmptyState,
 }: ListBoxUIProps<T>) => {
   const listbox = useRef<HTMLUListElement>(null);
   const { controls, state } = useListBoxContext<T>();
@@ -50,7 +49,7 @@ export const ListboxUI = <T extends IOption>({
           />
         ))
       ) : (
-        <li className="empty-state">{renderEmptyState()}</li>
+        <EmptyState renderEmptyState={renderEmptyState} />
       )}
     </ul>
   );

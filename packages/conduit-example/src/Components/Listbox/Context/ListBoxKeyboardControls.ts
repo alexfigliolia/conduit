@@ -55,9 +55,10 @@ export class ListBoxKeyboardControls<
         return this.onArrowKey("ArrowUp", nodes);
       case "Enter":
       case " ":
-        if (this.getState().isActive) {
-          e.preventDefault();
+        if (!this.getState().isActive) {
+          return;
         }
+        e.preventDefault();
         return this.toggleNode(nodes);
       case "Escape":
         return this.options.onEscape?.();
