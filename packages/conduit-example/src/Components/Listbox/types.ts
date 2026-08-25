@@ -32,7 +32,7 @@ export type ListBoxUIProps<T extends IOption> = WithListBoxLabelOptions<
 >;
 
 export type ListBoxLabelOptions =
-  | { independent?: true; label: string }
+  | { independent?: true; label: ReactNode }
   | { independent: false; label?: never };
 
 export type WithListBoxLabelOptions<T> = T & ListBoxLabelOptions;
