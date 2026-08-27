@@ -1,17 +1,17 @@
 import { describe, expect, it } from "vitest";
 
 import { InfiniteConduitValue } from "../Conduits/InfiniteConduit/InfiniteConduitValue";
-import { InfiniteConduitValueSerializer } from "../Cache/Serialization/InfiniteConduitValueSerializer";
 import {
   BigIntSerializer,
   DateSerializer,
+  InfiniteConduitValueSerializer,
   MapSerializer,
   RegExpSerializer,
-  Serializer,
   SetSerializer,
   TypeName,
   UndefinedSerializer,
-} from "../Cache/Serialization";
+} from "../Cache/Serialization/Serializers";
+import { Serializer } from "../Cache/Serialization";
 import { SERIALIZABLE_TEST_TYPES } from "../__fixtures__/types";
 import {
   MapInit,
