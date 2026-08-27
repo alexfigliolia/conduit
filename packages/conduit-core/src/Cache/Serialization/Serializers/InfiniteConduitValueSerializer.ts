@@ -1,4 +1,4 @@
-import { InfiniteConduitValue } from "../../Conduits/InfiniteConduit/InfiniteConduitValue";
+import { InfiniteConduitValue } from "../../../Conduits/InfiniteConduit/InfiniteConduitValue";
 
 import {
   type OnPrimitive,
