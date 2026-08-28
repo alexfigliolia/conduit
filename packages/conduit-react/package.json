@@ -7,12 +7,12 @@
     "react",
     "state"
   ],
-  "homepage": "https://github.com/alexfigliolia/conduit/blob/main/conduit-react/README.md",
+  "homepage": "https://github.com/alexfigliolia/conduit/blob/main/packages/conduit-react/README.md",
   "license": "MIT",
   "author": "Alex Figliolia",
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/alexfigliolia/conduit-react.git"
+    "url": "git+https://github.com/alexfigliolia/conduit.git"
   },
   "files": [
     "dist",
