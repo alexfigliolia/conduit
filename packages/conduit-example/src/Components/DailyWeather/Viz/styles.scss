@@ -1,0 +1,36 @@
+.daily-weather-viz {
+  width: 150px;
+  height: 6px;
+  flex-shrink: 1;
+  --end-color: transparent;
+  --start-color: transparent;
+  & > svg {
+    width: 100%;
+    height: 100%;
+    overflow: visible;
+    & > .line {
+      fill: #05091139;
+    }
+    & > .box {
+      scale: 0 1;
+      opacity: 0;
+      transform-origin: 0% 50%;
+      animation: scaleX 1s 0.5s forwards;
+      filter: drop-shadow(
+          -1px 0px 2px rgba(from var(--start-color) r g b / 40%)
+        )
+        drop-shadow(1px 0px 2px rgba(from var(--end-color) r g b / 40%));
+    }
+  }
+}
+
+@keyframes scaleX {
+  from {
+    scale: 0 1;
+    opacity: 0;
+  }
+  to {
+    scale: 1 1;
+    opacity: 1;
+  }
+}

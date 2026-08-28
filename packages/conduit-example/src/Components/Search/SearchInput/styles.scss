@@ -1,0 +1,51 @@
+.searchbox {
+  display: flex;
+  align-items: center;
+  width: 100%;
+  height: 100%;
+  position: relative;
+  border-radius: 0.85em;
+  transition: border 0.3s;
+  border: 1px solid transparent;
+  &:focus-within {
+    border: 1px solid rgba(#fff, 0.65);
+  }
+
+  & > input,
+  & > button {
+    outline: none;
+    border: none;
+    height: 100%;
+    background-color: transparent;
+  }
+
+  & > input {
+    width: 100%;
+    padding-right: 1em;
+    color: #fff;
+    font-size: 0.9em;
+
+    &::placeholder {
+      color: #f0f0f0;
+      font-style: italic;
+    }
+  }
+
+  & > button {
+    width: 3em;
+    display: grid;
+    place-items: center;
+
+    & > .search-icon {
+      height: 50%;
+      width: 50%;
+    }
+  }
+  & > .loader-wrapper {
+    --w-size: 2em;
+    opacity: 0;
+    transition: opacity 0.5s;
+    position: absolute;
+    right: 13px;
+  }
+}

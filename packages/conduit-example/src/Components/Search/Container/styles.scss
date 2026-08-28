@@ -1,0 +1,33 @@
+.search-dropdown {
+  border-radius: 0.85em;
+  position: absolute;
+  top: calc(100% + 0.5em);
+  left: 0;
+  color: #fff;
+  max-height: 250px;
+  overflow-y: scroll;
+  scroll-behavior: smooth;
+  border: 0.5px solid transparent;
+  visibility: hidden;
+  opacity: 0;
+  translate: 0px 10px;
+  transition:
+    visibility 0s 0.5s,
+    opacity 0.5s,
+    translate 0.5s,
+    border 0.3s;
+  &.open {
+    visibility: visible;
+    opacity: 1;
+    translate: 0px;
+    transition:
+      visibility 0s 0s,
+      opacity 0.5s,
+      translate 0.5s,
+      border 0.3s;
+  }
+  &:has(.listbox.active),
+  &:hover {
+    border: 0.5px solid rgba(#fff, 0.65);
+  }
+}

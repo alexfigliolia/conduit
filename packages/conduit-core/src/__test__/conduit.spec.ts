@@ -70,7 +70,7 @@ describe("Conduits", () => {
         // prepoluate the cache
         cache.set(conduit.options.key, args, [0]);
         // execute with the no cache option
-        await conduit.execute({ args, cachePolicy: "no-cache" });
+        await conduit.execute({ args, cachePolicy: "bypass-cache" });
         // assert that the execution bypasses the cache
         expect(conduit.options.operation).toHaveBeenCalledTimes(1);
         // assert that results then populate the cache entry

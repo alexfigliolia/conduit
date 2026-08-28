@@ -1,0 +1,20 @@
+@use "Styles/Variables";
+
+.temp-value {
+  width: 3ch;
+  font-size: 1.75em;
+  @include Variables.center;
+  & > data {
+    font-weight: 400;
+    flex-shrink: 0;
+    display: flex;
+    &:first-of-type {
+      opacity: 0.65;
+    }
+    & > span {
+      font-size: 0.75em;
+      display: block;
+      margin-top: 2.5%;
+    }
+  }
+}

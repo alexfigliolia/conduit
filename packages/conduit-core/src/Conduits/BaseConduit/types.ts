@@ -34,7 +34,7 @@ export interface IConduitWithPolicy<
 
 export type CachePolicy =
   | "read-cache-with-respect-to-expiry"
-  | "no-cache"
+  | "bypass-cache"
   | "cache-only";
 
 export interface IExecuteOptions<O extends any[]> extends IOperationOptions {

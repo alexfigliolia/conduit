@@ -12,7 +12,7 @@ export const useConduitRefetch = <
   args: Parameters<T["options"]["operation"]>,
 ) => {
   return useCallback(
-    ({ cachePolicy = "no-cache", expires }: IOperationOptions = {}) =>
+    ({ cachePolicy = "bypass-cache", expires }: IOperationOptions = {}) =>
       conduit.execute({ cachePolicy, expires, args }) as ReturnType<
         T["execute"]
       >,

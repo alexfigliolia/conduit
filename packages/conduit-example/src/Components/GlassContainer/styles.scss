@@ -1,5 +1,5 @@
 .glass-container {
-  --blur: 50px;
+  --blur: 10px;
   --saturation: 200%;
   background: rgba(30, 30, 35, 0.45);
   backdrop-filter: blur(var(--blur)) saturate(var(--saturation));

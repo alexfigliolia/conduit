@@ -1,0 +1,39 @@
+@use "Styles/Variables";
+
+.daily-weather {
+  color: #fff;
+  width: 100%;
+  display: flex;
+  gap: 1em;
+  flex-direction: column;
+  line-height: 1;
+  & > div {
+    width: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-radius: 0.85em;
+    padding: 1em;
+    & > span {
+      font-weight: 700;
+    }
+    & > div {
+      gap: 1.5em;
+      @include Variables.center;
+      & > img {
+        width: auto;
+        height: 2em;
+        @include Variables.fadeIn;
+      }
+      & > .img-placeholder {
+        width: 2em;
+        height: 2em;
+      }
+      & > .temp {
+        gap: 0.75em;
+        @include Variables.center;
+        @include Variables.fadeIn;
+      }
+    }
+  }
+}

@@ -1,0 +1,9 @@
+.app > div {
+  display: flex;
+  gap: 1em;
+  padding: var(--padding);
+  flex-direction: column;
+  & > :last-child {
+    padding-bottom: var(--padding);
+  }
+}

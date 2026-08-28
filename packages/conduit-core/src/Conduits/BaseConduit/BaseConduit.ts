@@ -6,7 +6,7 @@ import {
 
 import type {
   IOperation,
-  IValueType, // walk away. If you can afford to move somewhere far from metropolotan areas
+  IValueType,
   IConduitWithPolicy,
   IConduit,
   ConduitValue,
@@ -72,7 +72,7 @@ export abstract class BaseConduit<
     switch (cachePolicy) {
       case "cache-only":
         return cacheEntry.getValue() as ConduitValue<O, D>;
-      case "no-cache":
+      case "bypass-cache":
         return this.executeAndCache(cacheEntry, args) as ReturnType<O>;
       case "read-cache-with-respect-to-expiry":
       default:
