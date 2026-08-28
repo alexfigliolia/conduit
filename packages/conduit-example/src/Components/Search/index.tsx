@@ -11,9 +11,7 @@ import {
 } from "react";
 import type { Propless } from "@ui/Types";
 import { Location } from "@ui/State";
-import { SearchIcon } from "@ui/Icons/SearchIcon";
 import { GeocodingConduit } from "@ui/Conduits";
-import { Loader } from "@ui/Components/Loader";
 import { type ListBoxItem } from "@ui/Components/Listbox";
 import {
   Combobox,
@@ -23,9 +21,11 @@ import {
 import { useDebouncer } from "@figliolia/react-hooks";
 import { useConduit } from "@figliolia/conduit-react";
 import { ConduitStatus } from "@figliolia/conduit";
-import { classnames, useClassNames } from "@figliolia/classnames";
+import { useClassNames } from "@figliolia/classnames";
 
-import { GlassContainer } from "../GlassContainer";
+import type { LocationOption } from "./SearchInput/types";
+import { SearchInput } from "./SearchInput";
+import { Container } from "./Container";
 
 import "./styles.scss";
 
@@ -35,10 +35,14 @@ export const Search = memo(function Search(_: Propless) {
   const [searchQuery, setSearchQuery] = useState("");
   const deferredLoading = useDebouncer(setLoading, 1000);
   const deferredSearch = useDebouncer(setSearchQuery, 300);
-  const controls = useRef<ComboboxRef<(typeof options)[number]>>(null);
+  const combobox = useRef<ComboboxRef<(typeof options)[number]>>(null);
 
-  const onClick = useCallback(() => {
-    controls.current?.controls?.focusInput?.();
+  const focusInput = useCallback(() => {
+    combobox.current?.controls?.focusInput?.();
+  }, []);
+
+  const onSubmit = useCallback((e: SubmitEvent<HTMLFormElement>) => {
+    e.preventDefault();
   }, []);
 
   const onInputChange = useCallback(
@@ -49,16 +53,14 @@ export const Search = memo(function Search(_: Propless) {
     [deferredSearch.execute],
   );
 
-  const onSubmit = useCallback((e: SubmitEvent<HTMLFormElement>) => {
-    e.preventDefault();
-  }, []);
-
   const onSelectionChange = useCallback((items: typeof options) => {
     if (items[0]) {
       setQuery(items[0].display_name);
-      return Location.set({ latitude: items[0].lat, longitude: items[0].lon });
+      return Location.set({
+        latitude: items[0].lat,
+        longitude: items[0].lon,
+      });
     }
-    Location.set(undefined);
   }, []);
 
   const { value, status } = useConduit(GeocodingConduit, {
@@ -73,8 +75,24 @@ export const Search = memo(function Search(_: Propless) {
   );
 
   const renderItem = useCallback(
-    ({ item }: ListBoxItem<(typeof options)[number]>) => item.display_name,
+    ({ item }: ListBoxItem<LocationOption>) => item.display_name,
     [],
+  );
+
+  const classes = useClassNames({ loading });
+
+  const glassWrapper = useCallback(
+    (children: ReactNode, isOpen: boolean) => (
+      <Container children={children} isOpen={isOpen} />
+    ),
+    [],
+  );
+
+  const renderInput = useCallback(
+    (props: ComboboxInputProps<LocationOption>) => (
+      <SearchInput {...props} focusInput={focusInput} />
+    ),
+    [focusInput],
   );
 
   useEffect(() => {
@@ -86,49 +104,24 @@ export const Search = memo(function Search(_: Propless) {
   }, [status, options]);
 
   useEffect(() => {
-    controls.current?.controls?.listbox?.current?.resetFocus?.();
+    combobox.current?.controls?.listbox?.current?.resetFocus?.();
   }, [searchQuery]);
-
-  const classes = useClassNames({ loading });
-
-  const glassWrapper = useCallback(
-    (children: ReactNode, isOpen: boolean) => (
-      <GlassContainer
-        Tag="div"
-        className={classnames("dropdown", { open: isOpen })}>
-        {children}
-      </GlassContainer>
-    ),
-    [],
-  );
-
-  const renderInput = useCallback((props: ComboboxInputProps) => {
-    return (
-      <GlassContainer Tag="div" className="searchbox">
-        <button onClick={onClick}>
-          <SearchIcon />
-        </button>
-        <input name="search" {...props} />
-        <Loader />
-      </GlassContainer>
-    );
-  }, []);
 
   return (
     <Fragment>
       <form className="search" onSubmit={onSubmit} autoComplete="off">
         <search>
           <Combobox
-            ref={controls}
+            ref={combobox}
             items={options}
             placeholder="Search"
             className={classes}
-            onInputChange={onInputChange}
             inputValue={query}
             renderInput={renderInput}
             renderItem={renderItem}
             renderListBox={glassWrapper}
             onChange={onSelectionChange}
+            onInputChange={onInputChange}
           />
         </search>
       </form>

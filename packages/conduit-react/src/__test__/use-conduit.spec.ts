@@ -26,7 +26,7 @@ describe("Use Conduit", () => {
     expect(result.current.value).toEqual(args);
     expect(result.current.status).toEqual(ConduitStatus.IDOL);
     act(() => {
-      expect(result.current.fetch({ cachePolicy: "no-cache" })).toEqual(args);
+      expect(result.current.refetch()).toEqual(args);
     });
     expect(conduit.options.operation).toHaveBeenCalledTimes(2);
   });
@@ -47,7 +47,7 @@ describe("Use Conduit", () => {
     // expect(result.current.value).toEqual([1, 2, 3]);
     // await conduit.getCacheEntry(...args).getOutstandingTask();
     // expect(result.current.status).toEqual(ConduitStatus.IDOL);
-    // await act(() => result.current.fetch({ cachePolicy: "no-cache" }));
+    // await act(() => result.current.refetch({ cachePolicy: "bypass-cache" }));
     // vi.advanceTimersByTime(1000);
     // expect(conduit.options.operation).toHaveBeenCalledTimes(2);
     act(() => conduit.writeCache({ args, value: [1, 2, 3, 4] }));

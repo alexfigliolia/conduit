@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useId, useLayoutEffect, useMemo } from "react";
+import { useCallback, useId, useLayoutEffect, useMemo } from "react";
 
 import { useListBoxContext } from "../Context";
 

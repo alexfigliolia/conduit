@@ -16,13 +16,17 @@
     "@figliolia/galena": "^4.0.5",
     "@figliolia/react-galena": "^5.0.3",
     "@figliolia/react-hooks": "^1.7.3",
+    "@figliolia/size-observer": "^2.2.0",
     "@types/react": "^19.2.18",
     "@types/react-dom": "^19.2.4",
+    "d3": "^7.9.0",
     "openmeteo": "^1.2.3",
     "react": "^19.2.8",
-    "react-dom": "^19.2.8"
+    "react-dom": "^19.2.8",
+    "temporal-polyfill": "^1.0.4"
   },
   "devDependencies": {
+    "@types/d3": "^7.4.3",
     "sass-embedded": "^1.102.0",
     "typescript": "~6.0.2",
     "vite": "^8.2.1",

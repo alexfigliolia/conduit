@@ -11,7 +11,7 @@ export const useComboboxControls = <T extends IOption>(items: T[]) => {
 
   useEffect(() => {
     if (items.length && controls.openOnListChange && !controls.getState()) {
-      controls.openOnListChange = false;
+      controls.openOnListChange.set(false);
       controls.set(true);
     }
   }, [controls, items.length]);
