@@ -34,7 +34,7 @@ describe("Use Conduit", () => {
   it("It returns a the conduit's value, status, and fetcher as reactive values - async", async () => {
     vi.useFakeTimers();
     vi.setTimerTickMode("manual");
-    // @ts-expect-error using bundled conduit dependencies
+    // @ts-expect-error  using bundled conduit dependencies
     const conduit = createAsyncConduit({ cache });
     const args = [1, 2, 3];
     const { result } = renderHook(() =>
@@ -43,13 +43,9 @@ describe("Use Conduit", () => {
     );
     expect(result.current.value).toEqual(undefined);
     expect(result.current.status).toEqual(ConduitStatus.IN_FLIGHT);
-    vi.advanceTimersByTime(1100);
-    // expect(result.current.value).toEqual([1, 2, 3]);
-    // await conduit.getCacheEntry(...args).getOutstandingTask();
-    // expect(result.current.status).toEqual(ConduitStatus.IDOL);
-    // await act(() => result.current.refetch({ cachePolicy: "bypass-cache" }));
-    // vi.advanceTimersByTime(1000);
-    // expect(conduit.options.operation).toHaveBeenCalledTimes(2);
+    await act(() => vi.advanceTimersByTime(1100));
+    expect(result.current.value).toEqual([1, 2, 3]);
+    expect(result.current.status).toEqual(ConduitStatus.IDOL);
     act(() => conduit.writeCache({ args, value: [1, 2, 3, 4] }));
     expect(result.current.value).toEqual([1, 2, 3, 4]);
   });
