@@ -1,0 +1,5 @@
+@use "Styles/Variables";
+
+.slot-machine-numbers {
+  @include Variables.center;
+}

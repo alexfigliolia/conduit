@@ -68,6 +68,9 @@ importers:
       '@figliolia/conduit-react':
         specifier: link:../conduit-react
         version: link:../conduit-react
+      '@figliolia/data-structures':
+        specifier: ^1.2.1
+        version: 1.2.1(@figliolia/event-emitter@1.2.0)
       '@figliolia/event-emitter':
         specifier: ^1.2.0
         version: 1.2.0
@@ -406,6 +409,11 @@ packages:
     resolution: {integrity: sha512-C0v417+15L2yVMsrbY8UjcglbQiJBdmofKTxNKDNgTRMDVdG5NKMxPSq1FTcPkUPNH2uFpK1P1bv+3yf4EgbXw==}
     peerDependencies:
       react: ^18.3.1
+
+  '@figliolia/data-structures@1.2.1':
+    resolution: {integrity: sha512-DFIuMfiPrAyGt3Elz6FT1trsX8cDLcv0lgxa7WcSnr3/U+W166Fr5FLni0d8Kd5h344/0zmMw4bEvQBDzFt3PQ==}
+    peerDependencies:
+      '@figliolia/event-emitter': ^1.1.6
 
   '@figliolia/event-emitter@1.2.0':
     resolution: {integrity: sha512-cEuKUJx8cG5ED7p4xGm5x/OUjZUAcz28P8syO5tnvoiRnd33RkMvsz249YBX97vQGTPYLIi18A1ZeUwyr4ITbw==}
@@ -3208,6 +3216,10 @@ snapshots:
   '@figliolia/classnames@1.0.1(react@19.2.8)':
     dependencies:
       react: 19.2.8
+
+  '@figliolia/data-structures@1.2.1(@figliolia/event-emitter@1.2.0)':
+    dependencies:
+      '@figliolia/event-emitter': 1.2.0
 
   '@figliolia/event-emitter@1.2.0': {}
 

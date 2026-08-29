@@ -55,13 +55,14 @@ export class BoxPlotChart<T, R extends BoxCompute = BoxCompute> {
     const height = yScale.bandwidth();
     const radius = height / 2;
     rect
+      .transition()
+      .duration(750)
       .attr("x", xScale(data.quantLow))
       .attr("width", xScale(data.quantHigh) - xScale(data.quantLow))
       .attr("y", 0)
       .attr("height", height)
       .attr("rx", radius)
-      .attr("ry", radius)
-      .style("fill", "#69b3a2");
+      .attr("ry", radius);
     return rect.node()!;
   }
 
