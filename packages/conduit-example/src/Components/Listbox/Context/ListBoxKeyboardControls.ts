@@ -50,15 +50,17 @@ export class ListBoxKeyboardControls<
       case "End":
         return this.onHomeOrEnd("End", nodes);
       case "ArrowDown":
+        this.preventNativeBehaviorWhenActive(e);
         return this.onArrowKey("ArrowDown", nodes);
       case "ArrowUp":
+        this.preventNativeBehaviorWhenActive(e);
         return this.onArrowKey("ArrowUp", nodes);
       case "Enter":
       case " ":
         if (!this.getState().isActive) {
           return;
         }
-        e.preventDefault();
+        this.preventNativeBehaviorWhenActive(e);
         return this.toggleNode(nodes);
       case "Escape":
         return this.options.onEscape?.();
@@ -133,5 +135,11 @@ export class ListBoxKeyboardControls<
       return this.incrementCurrentIndex(nodes.length);
     }
     this.decrementCurrentIndex(nodes.length);
+  }
+
+  private preventNativeBehaviorWhenActive(e: ListBoxKeyboardEvent) {
+    if (this.getState().isActive) {
+      e.preventDefault();
+    }
   }
 }
