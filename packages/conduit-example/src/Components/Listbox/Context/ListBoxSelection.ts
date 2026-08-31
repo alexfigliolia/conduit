@@ -163,6 +163,7 @@ export class ListBoxSelection<
         }),
       };
     });
+    this.focusItem(id);
   }
 
   public forceSelect(id: string) {

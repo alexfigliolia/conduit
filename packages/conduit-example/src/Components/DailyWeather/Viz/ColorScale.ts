@@ -24,30 +24,20 @@ export class ColorScale {
   ];
 
   public static resolve(min: number, max: number) {
-    return {
-      startColor: this.resolveBottomUp(min),
-      endColor: this.resolveTopDown(max),
-    };
-  }
-
-  private static resolveBottomUp(value: number) {
-    let current = this.COLD.color;
-    const { length } = this.RESOLVERS;
-    for (let i = 0; i < length; i++) {
-      if (value >= this.RESOLVERS[i].threshold) {
-        current = this.RESOLVERS[i].color;
+    let startColor = this.COLD.color;
+    let endColor = startColor;
+    let startIndex = 0;
+    let endIndex = this.RESOLVERS.length - 1;
+    while (startIndex <= endIndex) {
+      if (min >= this.RESOLVERS[startIndex].threshold) {
+        startColor = this.RESOLVERS[startIndex].color;
       }
-    }
-    return current;
-  }
-
-  private static resolveTopDown(value: number) {
-    const { length } = this.RESOLVERS;
-    for (let i = length - 1; i > -1; i--) {
-      if (value >= this.RESOLVERS[i].threshold) {
-        return this.RESOLVERS[i].color;
+      startIndex++;
+      if (max >= this.RESOLVERS[endIndex].threshold) {
+        endColor = this.RESOLVERS[endIndex].color;
       }
+      endIndex--;
     }
-    return "transparent";
+    return { startColor, endColor };
   }
 }

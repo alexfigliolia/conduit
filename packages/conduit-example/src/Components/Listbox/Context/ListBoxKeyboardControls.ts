@@ -11,17 +11,17 @@ export class ListBoxKeyboardControls<
 
   public focusWithScroll(node: Element) {
     this.focusItem(node.getAttribute("id")!);
-    node.scrollIntoView();
+    node.scrollIntoView({ block: "nearest" });
   }
 
   public selectWithScroll(node: Element) {
     this.selectItem(node.getAttribute("id")!);
-    node.scrollIntoView();
+    node.scrollIntoView({ block: "nearest" });
   }
 
   public forceSelectWithScroll(node: Element) {
     this.forceSelect(node.getAttribute("id")!);
-    node.scrollIntoView();
+    node.scrollIntoView({ block: "nearest" });
   }
 
   public readonly onKeyUp = (e: ListBoxKeyboardEvent) => {
@@ -50,17 +50,15 @@ export class ListBoxKeyboardControls<
       case "End":
         return this.onHomeOrEnd("End", nodes);
       case "ArrowDown":
-        this.preventNativeBehaviorWhenActive(e);
         return this.onArrowKey("ArrowDown", nodes);
       case "ArrowUp":
-        this.preventNativeBehaviorWhenActive(e);
         return this.onArrowKey("ArrowUp", nodes);
       case "Enter":
       case " ":
         if (!this.getState().isActive) {
           return;
         }
-        this.preventNativeBehaviorWhenActive(e);
+        e.preventDefault();
         return this.toggleNode(nodes);
       case "Escape":
         return this.options.onEscape?.();
@@ -135,11 +133,5 @@ export class ListBoxKeyboardControls<
       return this.incrementCurrentIndex(nodes.length);
     }
     this.decrementCurrentIndex(nodes.length);
-  }
-
-  private preventNativeBehaviorWhenActive(e: ListBoxKeyboardEvent) {
-    if (this.getState().isActive) {
-      e.preventDefault();
-    }
   }
 }
