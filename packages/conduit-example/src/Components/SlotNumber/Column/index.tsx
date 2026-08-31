@@ -31,11 +31,11 @@ export const Column = ({ target, column, index }: IColumn) => {
   return (
     <div
       className="column"
-      aria-label={column[target].toString()}
       style={{
         width: dimensions?.width,
         height: dimensions?.height,
-      }}>
+      }}
+      aria-hidden>
       <div className="dummy" ref={node} aria-hidden>
         {column[target]}
       </div>

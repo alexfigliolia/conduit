@@ -1,5 +1,5 @@
 import { useEffect, useEffectEvent, useMemo, useState } from "react";
-import { useController } from "@figliolia/react-hooks";
+import { useController, useNodeDimensions } from "@figliolia/react-hooks";
 
 import { Queue } from "./Queue";
 import { Column } from "./Column";
@@ -9,6 +9,7 @@ import "./styles.scss";
 export const SlotNumber = ({ value }: Props) => {
   const queue = useController(new Queue());
   const [currentValue, setCurrentValue] = useState(value);
+  const [node, dimensions] = useNodeDimensions<HTMLDivElement>();
 
   const enqueue = useEffectEvent((value: string | number) => {
     void queue.push(() => setCurrentValue(value));
@@ -44,7 +45,16 @@ export const SlotNumber = ({ value }: Props) => {
   }, [currentValue]);
 
   return (
-    <div className="slot-machine-numbers">
+    <div
+      className="slot-machine-numbers"
+      aria-label={value.toString()}
+      style={{
+        width: dimensions?.width,
+        height: dimensions?.height,
+      }}>
+      <div className="dummy" ref={node}>
+        {value}
+      </div>
       {columns.map((column, i) => (
         <Column key={i} index={i} {...column} />
       ))}

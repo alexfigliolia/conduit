@@ -1,7 +1,7 @@
 @use "Styles/Variables";
 
 .temp-value {
-  width: 3ch;
+  min-width: 3ch;
   font-size: 1.75em;
   @include Variables.center;
   & > data {
