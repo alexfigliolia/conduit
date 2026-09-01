@@ -15,6 +15,8 @@ import {
   type ConduitStatus,
 } from "../../Cache";
 
+import type { ConduitOperationSubscriber } from "./types";
+
 export class Conduit<
   O extends IOperation,
   D = IValueType<O>,
@@ -41,6 +43,10 @@ export class Conduit<
     onChange,
   }: ConduitCacheSubscriber<O, ConduitStatus>) {
     return this.getCacheEntry(...args).subscribeToStatus(onChange);
+  }
+
+  public subscribe({ args, onChange }: ConduitOperationSubscriber<O, D>) {
+    return this.getCacheEntry(...args).subscribe(onChange);
   }
 
   public getStatus(...args: Parameters<O>) {

@@ -41,7 +41,7 @@ describe("Infinite Conduits", () => {
           paging: { ...pageArgs.paging, pageSize: 20 },
         };
         // Writing new data to each page should update the Infinite Conduit's data
-        conduit.writeCache(pageArgs, nextPageData);
+        conduit.writeCache({ args: pageArgs, value: nextPageData });
         expect(conduit.readCache(pageArgs)[pointer++]).toEqual(nextPageData);
       }
     });
@@ -57,7 +57,7 @@ describe("Infinite Conduits", () => {
     expect(conduit.getStatus(args)).toEqual(ConduitStatus.IDOL);
   });
 
-  it("An InfiniteConduit's cache entry should be accessible via argumements with all pagingArgPaths omitted", () => {
+  it("An InfiniteConduit's cache entry should be accessible via argumements with all paginationArgs omitted", () => {
     const args = data[0]!;
     const conduit1 = createAsyncInfiniteConduit(cache);
     const pagingArgs1 = conduit1.getInfiniteOptions(args);
@@ -67,13 +67,13 @@ describe("Infinite Conduits", () => {
     expect(pagingArgs2).toEqual({ search: "query", paging: {} });
   });
 
-  it("An InfiniteConduit should throw when pagingArgPaths do not point to an argument value", () => {
+  it("An InfiniteConduit should throw when paginationArgs do not point to an argument value", () => {
     const conduit = new InfiniteConduit({
       cache,
       key: ["test"],
       operation: (_: { options: { pageSize: number; cursor?: string } }) => {},
       // @ts-expect-error intentional
-      pagingArgPaths: ["options.cursor.fake.path"],
+      paginationArgs: ["options.cursor.fake.path"],
     });
     expect(() => {
       conduit.readCache({ options: { cursor: "123123", pageSize: 10 } });
@@ -87,20 +87,20 @@ describe("Infinite Conduits", () => {
       });
     }).toThrow();
     expect(() => {
-      conduit.subscribeToValue(
-        { options: { cursor: "123123", pageSize: 10 } },
-        () => {},
-      );
+      conduit.subscribeToValue({
+        args: { options: { cursor: "123123", pageSize: 10 } },
+        onChange: () => {},
+      });
     }).toThrow();
     expect(() => {
-      conduit.subscribeToStatus(
-        { options: { cursor: "123123", pageSize: 10 } },
-        () => {},
-      );
+      conduit.subscribeToStatus({
+        args: { options: { cursor: "123123", pageSize: 10 } },
+        onChange: () => {},
+      });
     }).toThrow();
   });
 
-  it("An InfiniteConduit should throw when pagingArgPaths do not point to an argument value", () => {
+  it("An InfiniteConduit should throw when paginationArgs do not point to an argument value", () => {
     expect(() => {
       new InfiniteConduit({
         cache,
@@ -108,7 +108,7 @@ describe("Infinite Conduits", () => {
         operation: (_: {
           options: { pageSize: number; cursor?: string };
         }) => {},
-        pagingArgPaths: [],
+        paginationArgs: [],
       });
     }).toThrow();
   });

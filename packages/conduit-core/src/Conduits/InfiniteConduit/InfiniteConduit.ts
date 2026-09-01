@@ -16,6 +16,11 @@ import type {
   IInfiniteOperation,
   IInfiniteOperationOptions,
   IInfiniteExecuteOptions,
+  IInfiniteValueSubscriber,
+  IPageValueSubscriber,
+  IInfiniteStatusSubscriber,
+  IInfiniteCacheWrite,
+  IInfiniteConduitSubscriber,
 } from "./types";
 import { InfiniteConduitValue } from "./InfiniteConduitValue";
 
@@ -25,22 +30,22 @@ export class InfiniteConduit<
 > extends BaseConduit<O, undefined, C> {
   private readonly pagingTokens: string[][];
   private readonly defaultValue: IValueType<O>[];
-  private readonly pagingArgPaths: IPagingArgs<O>;
+  private readonly paginationArgs: IPagingArgs<O>;
   constructor({
     operation,
-    pagingArgPaths,
+    paginationArgs,
     defaultValue = [],
     ...options
   }: IInfiniteConduit<O, C>) {
     super({ ...options, operation, defaultValue: undefined });
     this.defaultValue = defaultValue;
-    this.pagingArgPaths = pagingArgPaths;
-    this.pagingTokens = this.pagingArgPaths.map(t => t.split("."));
-    if (!pagingArgPaths.length) {
+    this.paginationArgs = paginationArgs;
+    this.pagingTokens = this.paginationArgs.map(t => t.split("."));
+    if (!paginationArgs.length) {
       throw new Error(
         `Paging Arg Path Error: At least one path an operation's argument used for pagination is required`,
         {
-          cause: pagingArgPaths,
+          cause: paginationArgs,
         },
       );
     }
@@ -110,7 +115,7 @@ export class InfiniteConduit<
             {
               cause: {
                 args,
-                path: this.pagingArgPaths[i],
+                path: this.paginationArgs[i],
               },
             },
           );
@@ -120,31 +125,26 @@ export class InfiniteConduit<
     return result;
   }
 
-  public subscribeToValue(
-    args: IInfiniteOperationOptions<O>,
-    onChange: (value: InfiniteConduitValue<IValueType<O>>) => void,
-  ) {
+  public subscribe({ args, onChange }: IInfiniteConduitSubscriber<O>) {
+    return this.getCacheEntry(args).subscribe(onChange);
+  }
+
+  public subscribeToValue({ args, onChange }: IInfiniteValueSubscriber<O>) {
     return this.getCacheEntry(args).subscribeToValue(onChange);
   }
 
-  public subscribeToPageValue(
-    args: IInfiniteOperationOptions<O>,
-    onChange: (value: IValueType<O> | undefined) => void,
-  ) {
+  public subscribeToPageValue({ args, onChange }: IPageValueSubscriber<O>) {
     return this.getPageCacheEntry(args).subscribeToValue(onChange);
   }
 
-  public subscribeToStatus(
-    args: IInfiniteOperationOptions<O>,
-    onChange: (value: ConduitStatus) => void,
-  ) {
+  public subscribeToStatus({ args, onChange }: IInfiniteStatusSubscriber<O>) {
     return this.getCacheEntry(args).subscribeToStatus(onChange);
   }
 
-  public subscribeToPageStatus(
-    args: IInfiniteOperationOptions<O>,
-    onChange: (value: ConduitStatus) => void,
-  ) {
+  public subscribeToPageStatus({
+    args,
+    onChange,
+  }: IInfiniteStatusSubscriber<O>) {
     return this.getPageCacheEntry(args).subscribeToStatus(onChange);
   }
 
@@ -156,10 +156,7 @@ export class InfiniteConduit<
     return this.getPageCacheEntry(args).getStatus();
   }
 
-  public writeCache(
-    args: IInfiniteOperationOptions<O>,
-    value: IValueType<O> | undefined,
-  ) {
+  public writeCache({ args, value }: IInfiniteCacheWrite<O>) {
     return this.getPageCacheEntry(args).setValue(value);
   }
 

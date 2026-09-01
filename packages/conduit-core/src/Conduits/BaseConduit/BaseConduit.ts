@@ -28,6 +28,7 @@ export abstract class BaseConduit<
   }
 
   public abstract execute(options: any): unknown;
+  public abstract subscribe(...args: any[]): () => void;
   public abstract subscribeToValue(...args: any[]): () => void;
   public abstract subscribeToStatus(...args: any[]): () => void;
   public abstract getStatus(...args: any[]): ConduitStatus;

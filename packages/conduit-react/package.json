@@ -1,6 +1,6 @@
 {
   "name": "@figliolia/conduit-react",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "React bindings for conduit",
   "keywords": [
     "conduit",
@@ -42,7 +42,7 @@
     "react-dom": "^19.2.8"
   },
   "peerDependencies": {
-    "@figliolia/conduit": ">=1.0.0",
+    "@figliolia/conduit": ">=0.0.1",
     "@figliolia/galena": ">=4.0.0",
     "@figliolia/react-galena": ">=5.0.0",
     "react": ">=19.0.0"
