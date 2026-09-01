@@ -1,0 +1,47 @@
+@use "Styles/Variables";
+
+.icon-indicator {
+  --size: 2em;
+  height: var(--size);
+  width: auto;
+  overflow: hidden;
+  position: relative;
+  @include Variables.center;
+  @include Variables.fadeIn;
+  & > img {
+    width: auto;
+    height: var(--size);
+    &.next,
+    &.pending {
+      translate: 0 100%;
+      position: absolute;
+      top: calc(50% - calc(var(--size) / 2));
+      left: calc(50% - calc(var(--size) / 2));
+    }
+    &.next {
+      animation: reveal 0.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    }
+    &.prev {
+      translate: 0 0;
+      animation: hide 0.5s cubic-bezier(0.76, 0, 0.24, 1) forwards;
+    }
+  }
+}
+
+@keyframes hide {
+  from {
+    translate: 0 0;
+  }
+  to {
+    translate: 0 -100%;
+  }
+}
+
+@keyframes reveal {
+  from {
+    translate: 0 100%;
+  }
+  to {
+    translate: 0 0%;
+  }
+}

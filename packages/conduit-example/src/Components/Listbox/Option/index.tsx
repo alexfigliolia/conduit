@@ -22,8 +22,8 @@ export const Option = <T extends IOption>({
   const { controls, state } = useListBoxContext<T>();
 
   const focused = useMemo(
-    () => state.focusedItems.has(id),
-    [id, state.focusedItems],
+    () => state.focusedItem === id,
+    [id, state.focusedItem],
   );
   const selected = useMemo(
     () => state.selectedItems.has(id),

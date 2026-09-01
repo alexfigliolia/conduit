@@ -3,18 +3,18 @@ import {
   toLocaleString,
   diffDays,
 } from "temporal-polyfill/fns/PlainDate";
-import { memo, useMemo, useRef } from "react";
+import { memo, useCallback, useMemo, useRef } from "react";
 import type { Propless } from "@ui/Types";
 import { Dates } from "@ui/Tools/Dates";
 import { useLocation } from "@ui/State";
 import { DailyWeatherConduit } from "@ui/Conduits";
-import { WeatherIcon } from "@ui/Components/WeatherIcon";
 import { GlassContainer } from "@ui/Components/GlassContainer";
 import { useLocale } from "@figliolia/react-hooks";
 import { useConduit } from "@figliolia/conduit-react";
 
 import { Viz } from "./Viz";
 import { Temperature } from "./Temperature";
+import { IconIndicator } from "./IconIndicator";
 
 import "./styles.scss";
 
@@ -39,7 +39,7 @@ export const DailyWeather = memo((_: Propless) => {
 
   const date = useMemo(() => Dates.from(time), [time]);
 
-  const isNight = useMemo(() => time.getHours() >= 18, [time]);
+  const isNight = useCallback((date: Date) => date.getHours() >= 18, []);
 
   const dayNames = useMemo(
     () =>
@@ -69,13 +69,15 @@ export const DailyWeather = memo((_: Propless) => {
       className="daily-weather"
       aria-label="Daily Weather Forecasts for the next 7 days">
       {dayNames.map((day, i) => {
+        const time = value?.daily?.time[0];
+        const night = time ? isNight(time) : false;
         return (
           <GlassContainer key={day} Tag="div" className="daily-weather__day">
             {<span>{i === 0 ? "Today" : day.slice(0, 3)}</span>}
             <div>
               {hasResolved.current ? (
-                <WeatherIcon
-                  night={i === 0 && isNight}
+                <IconIndicator
+                  night={night}
                   code={value?.daily?.weather_code?.[i] ?? 0}
                 />
               ) : (

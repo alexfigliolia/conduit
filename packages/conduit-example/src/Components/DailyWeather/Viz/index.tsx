@@ -13,7 +13,10 @@ export const Viz = ({ data }: Props) => {
 
   const onRender = useCallback((result: BoxPlotRenderResult<number[]>) => {
     setBox(result.box);
-    const { startColor, endColor } = ColorScale.resolve(result.min, result.max);
+    const { startColor, endColor } = ColorScale.resolve(
+      result.quantLow,
+      result.quantHigh,
+    );
     setStartColor(startColor);
     setEndColor(endColor);
   }, []);

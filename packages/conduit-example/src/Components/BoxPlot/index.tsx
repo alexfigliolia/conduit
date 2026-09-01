@@ -21,7 +21,6 @@ export function BoxPlot<T, R extends BoxCompute = BoxCompute>({
   children,
 }: Props<T, R>) {
   const nodeID = useId();
-
   const chart = useController(
     new BoxPlotChart(nodeID, (domain: number[]) => {
       if (!domain.length) {
@@ -47,20 +46,20 @@ export function BoxPlot<T, R extends BoxCompute = BoxCompute>({
     }),
   );
 
-  const render = useEffectEvent((data: number[]) => {
+  const render = useEffectEvent(() => {
     const result = (chart.render(data) ?? null) as BoxPlotRenderResult<T, R>;
     onRender?.(result);
   });
 
-  const debouncedRender = useDebouncer((data: number[]) => render(data), 100);
+  const debouncedRender = useDebouncer(render, 100);
 
   const node = useSizeObserver<SVGSVGElement>({
     width: true,
-    onChange: () => debouncedRender.execute(data),
+    onChange: debouncedRender.execute,
   });
 
   useEffect(() => {
-    render(data);
+    render();
   }, [data]);
 
   return (

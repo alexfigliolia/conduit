@@ -31,8 +31,8 @@ export interface ListBoxContextValue<T extends IOption> {
 export interface ListBoxSelectionState {
   isActive: boolean;
   currentIndex: number;
-  focusedItems: Set<string>;
   selectedItems: Set<string>;
+  focusedItem: string | undefined;
   activeDescendant: string | undefined;
 }
 

@@ -1,3 +1,4 @@
+import { SlotNumber } from "@ui/Components/SlotNumber";
 import { AriaHidden } from "@ui/Components/AriaHidden";
 
 import "./styles.scss";
@@ -17,7 +18,7 @@ export const Temperature = ({
         </AriaHidden>
       ) : (
         <data value={value}>
-          {value.toFixed(0)}
+          <SlotNumber value={value.toFixed(0)} />
           <span>℉</span>
         </data>
       )}

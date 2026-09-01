@@ -20,11 +20,6 @@
     & > div {
       gap: 1.5em;
       @include Variables.center;
-      & > img {
-        width: auto;
-        height: 2em;
-        @include Variables.fadeIn;
-      }
       & > .img-placeholder {
         width: 2em;
         height: 2em;

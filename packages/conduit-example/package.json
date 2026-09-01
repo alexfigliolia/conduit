@@ -12,6 +12,7 @@
     "@figliolia/classnames": "^1.0.1",
     "@figliolia/conduit": "link:../conduit-core",
     "@figliolia/conduit-react": "link:../conduit-react",
+    "@figliolia/data-structures": "^1.2.1",
     "@figliolia/event-emitter": "^1.2.0",
     "@figliolia/galena": "^4.0.5",
     "@figliolia/react-galena": "^5.0.3",
