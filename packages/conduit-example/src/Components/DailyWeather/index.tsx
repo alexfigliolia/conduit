@@ -73,7 +73,7 @@ export const DailyWeather = memo((_: Propless) => {
         const night = time ? isNight(time) : false;
         return (
           <GlassContainer key={day} Tag="div" className="daily-weather__day">
-            {<span>{i === 0 ? "Today" : day.slice(0, 3)}</span>}
+            <span>{i === 0 ? "Today" : day.slice(0, 3)}</span>
             <div>
               {hasResolved.current ? (
                 <IconIndicator
