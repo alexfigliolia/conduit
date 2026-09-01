@@ -153,7 +153,7 @@ export const createAsyncInfiniteConduit = (cache: Cache) => {
     }) => {
       return options;
     },
-    pagingArgPaths: ["paging"],
+    paginationArgs: ["paging"],
   });
 };
 
@@ -167,7 +167,7 @@ export const createSyncInfiniteConduit = (cache: Cache) => {
     }) => {
       return options;
     },
-    pagingArgPaths: ["paging.cursor", "paging.pageSize"],
+    paginationArgs: ["paging.cursor", "paging.pageSize"],
   });
 };
 
@@ -187,7 +187,7 @@ export const createAsyncInfiniteNetworkConduit = (cache: Cache) => {
     }) => {
       return options;
     },
-    pagingArgPaths: ["paging"],
+    paginationArgs: ["paging"],
   });
 };
 
@@ -201,7 +201,7 @@ export const createSyncInfiniteNetworkConduit = (cache: Cache) => {
     }) => {
       return options;
     },
-    pagingArgPaths: ["paging.cursor", "paging.pageSize"],
+    paginationArgs: ["paging.cursor", "paging.pageSize"],
   });
 };
 
@@ -230,7 +230,7 @@ export const createThrowingSyncInfiniteNetworkConduit = (cache: Cache) => {
           throw new Error("Thrown Error");
         },
       ),
-    pagingArgPaths: ["paging.cursor", "paging.pageSize"],
+    paginationArgs: ["paging.cursor", "paging.pageSize"],
   });
 };
 
@@ -253,7 +253,7 @@ export const createThrowingAsyncInfiniteNetworkConduit = (cache: Cache) => {
           throw new Error("Thrown Error");
         },
       ),
-    pagingArgPaths: ["paging"],
+    paginationArgs: ["paging"],
   });
 };
 
