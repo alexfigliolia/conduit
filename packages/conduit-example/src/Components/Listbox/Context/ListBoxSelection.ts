@@ -16,6 +16,7 @@ export class ListBoxSelection<
   public static readonly INTERACTION_KEYS = [
     ...this.ACTIVATION_KEYS,
     "Enter",
+    "Shift",
     " ",
   ];
   protected lastKnownNodeLength = 0;
@@ -23,7 +24,7 @@ export class ListBoxSelection<
     super({
       isActive: false,
       currentIndex: -1,
-      focusedItems: new Set(),
+      focusedItem: undefined,
       selectedItems: new Set(),
       activeDescendant: undefined,
     });
@@ -121,7 +122,7 @@ export class ListBoxSelection<
   public resetFocus() {
     this.mergeState({
       currentIndex: -1,
-      focusedItems: new Set(),
+      focusedItem: undefined,
       activeDescendant: undefined,
     });
   }
@@ -130,18 +131,9 @@ export class ListBoxSelection<
     this.mergeState({ activeDescendant: id });
   }
 
-  public focusItem(id: string, allowMulti = true) {
+  public focusItem(id: string) {
     this.activateDescendant(id);
-    this.mergeState(previous => {
-      if (!this.options.multiple || !allowMulti) {
-        return { focusedItems: new Set([id]) };
-      }
-      return {
-        focusedItems: this.operateOnSet(previous.focusedItems, set => {
-          set.add(id);
-        }),
-      };
-    });
+    this.mergeState({ focusedItem: id });
   }
 
   public selectItem(id: string) {
@@ -203,8 +195,8 @@ export class ListBoxSelection<
     this.mergeState({ selectedItems: new Set() });
   }
 
-  public clearFocusedItems() {
-    this.mergeState({ focusedItems: new Set() });
+  public clearFocusedItem() {
+    this.mergeState({ focusedItem: undefined });
   }
 
   public onItemClick(id: string, index: number) {
@@ -214,7 +206,7 @@ export class ListBoxSelection<
   }
 
   public readonly onItemHover = (id: string, index: number) => {
-    this.focusItem(id, false);
+    this.focusItem(id);
     this.setIndex(index);
   };
 

@@ -59,6 +59,13 @@ export class ListBoxKeyboardControls<
           return;
         }
         e.preventDefault();
+        if (
+          this.options.multiple &&
+          this.shifting &&
+          this.getState().selectedItems.size
+        ) {
+          return this.groupSelectFromLastSelection(nodes);
+        }
         return this.toggleNode(nodes);
       case "Escape":
         return this.options.onEscape?.();
@@ -103,15 +110,8 @@ export class ListBoxKeyboardControls<
         return this.onHomeOrEnd(key === "ArrowDown" ? "End" : "Home", nodes);
       }
       this.moveIndex(key, nodes);
-      this.clearFocusedItems();
+      this.clearFocusedItem();
       return this.focusWithScroll(nodes[this.currentIndex]);
-    }
-    if (this.options.multiple) {
-      this.withNodeRangeError(this.currentIndex, () => {
-        this.forceSelect(nodes[this.currentIndex].getAttribute("id")!);
-      });
-      this.moveIndex(key, nodes);
-      return this.forceSelectWithScroll(nodes[this.currentIndex]);
     }
     this.moveIndex(key, nodes);
     return this.selectWithScroll(nodes[this.currentIndex]);
@@ -125,6 +125,29 @@ export class ListBoxKeyboardControls<
         return this.deselectItem(ID!);
       }
       return this.selectItem(ID!);
+    });
+  }
+
+  private groupSelectFromLastSelection(nodes: NodeListOf<Element>) {
+    this.withNodeRangeError(this.currentIndex, () => {
+      const { selectedItems, currentIndex } = this.getState();
+      const lastSelection = Array.from(selectedItems).pop();
+      if (lastSelection === undefined) {
+        return;
+      }
+      let open = false;
+      for (let i = 0; i < nodes.length; i++) {
+        if (nodes[i].getAttribute("id") === lastSelection) {
+          open = true;
+          continue;
+        }
+        if (open && i <= currentIndex) {
+          this.forceSelect(nodes[i].getAttribute("id")!);
+        }
+        if (i > currentIndex) {
+          break;
+        }
+      }
     });
   }
 

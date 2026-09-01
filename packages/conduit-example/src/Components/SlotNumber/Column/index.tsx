@@ -12,7 +12,7 @@ export const Column = ({ target, column, index }: IColumn) => {
 
   const delay = useMemo(() => index * 100, [index]);
 
-  const onNewTarget = useEffectEvent(() => {
+  const animateToTarget = useEffectEvent(() => {
     timeout.execute(() => {
       setTranslate(`0 -${target * 10}%`);
       setAnimating(true);
@@ -23,7 +23,7 @@ export const Column = ({ target, column, index }: IColumn) => {
   });
 
   useEffect(() => {
-    onNewTarget();
+    animateToTarget();
   }, [target]);
 
   const numClasses = useClassNames("nums", { animating });

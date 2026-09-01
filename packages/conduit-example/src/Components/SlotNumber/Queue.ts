@@ -6,7 +6,7 @@ export class Queue {
 
   public push(item: Task) {
     const { resolve, promise } = Promise.withResolvers();
-    const task = async () => {
+    const task = () => {
       resolve(item());
     };
     this.queue.push(task);
