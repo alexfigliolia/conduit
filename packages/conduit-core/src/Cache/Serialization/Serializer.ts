@@ -4,7 +4,7 @@ import {
   SetSerializer,
   RegExpSerializer,
   MapSerializer,
-  InfiniteConduitValueSerializer,
+  InfiniteConduitPageSerializer,
   HashTableSerializer,
   DateSerializer,
   BigIntSerializer,
@@ -12,6 +12,7 @@ import {
   AbstractSerializer,
   type OnPrimitive,
   type Primitive,
+  InfiniteConduitValueSerializer,
 } from "./Serializers";
 
 export class Serializer {
@@ -36,6 +37,7 @@ export class Serializer {
     new DateSerializer(),
     new RegExpSerializer(),
     new UndefinedSerializer(),
+    new InfiniteConduitPageSerializer(this.BINDINGS),
     new InfiniteConduitValueSerializer(this.BINDINGS),
   ];
   public static readonly KEY_SERIALIZATION_INDICATOR = `${this.SERIALIZATION_MARKER}:Key`;

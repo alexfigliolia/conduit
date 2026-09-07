@@ -1,4 +1,6 @@
-import type { SerializedNode } from "./types";
+import type { NonFunction } from "@figliolia/galena";
+
+import type { SerializedGraph, SerializedNode } from "./types";
 import { Graph } from "./Graph";
 import { CacheAbstract } from "./CacheAbstract";
 
@@ -6,19 +8,29 @@ export class Cache extends CacheAbstract<
   Graph,
   Record<string, SerializedNode>
 > {
-  constructor(initialState?: Record<string, SerializedNode>) {
-    super(Graph.fromSerialized(initialState));
+  public storage = Graph.fromSerialized(this.options.data, this);
+
+  public override serialize(): SerializedGraph {
+    return {
+      data: this.storage.serialize(this).nodes,
+      lastPageID: this.InfiniteCache.lastPageID,
+      lastInfiniteID: this.InfiniteCache.lastInfiniteID,
+    };
   }
 
-  public serialize() {
-    return this.storage.serialize().nodes;
-  }
-
-  public set<T>(key: any[], args: any[], value: T) {
+  public set<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    value: T | (() => T),
+  ) {
     return this.storage.index(key, args, value);
   }
 
-  public createEntryIfNotExists<T>(key: any[], args: any[], defaultValue: T) {
+  public createEntryIfNotExists<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    defaultValue: T | (() => T),
+  ) {
     return this.storage.createCacheEntryIfNotExists<T>(key, args, defaultValue);
   }
 
@@ -27,7 +39,12 @@ export class Cache extends CacheAbstract<
   }
 
   public evict(key: any[], args: any[]) {
-    return this.get(key, args)?.evict?.();
+    const entry = this.get(key, args);
+    const result = entry?.evict?.();
+    if (entry) {
+      this.InfiniteCache.onEvict(entry);
+    }
+    return result;
   }
 
   public reset() {

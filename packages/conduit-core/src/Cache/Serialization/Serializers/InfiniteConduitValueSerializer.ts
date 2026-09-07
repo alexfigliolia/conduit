@@ -10,7 +10,7 @@ import {
 import { AbstractSerializer } from "./AbstractSerializer";
 
 export class InfiniteConduitValueSerializer extends AbstractSerializer<
-  InfiniteConduitValue<any>,
+  InfiniteConduitValue<any, any>,
   any[]
 > {
   public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:ICV`;
@@ -19,16 +19,11 @@ export class InfiniteConduitValueSerializer extends AbstractSerializer<
   }
 
   public toPath(
-    value: InfiniteConduitValue<any>,
+    value: InfiniteConduitValue<any, any>,
     onValue: OnPrimitive,
   ): boolean {
     onValue(this.KEY_INDICATOR);
-    const pages = value.value.getState();
-    for (const entry of pages) {
-      if (!this.config.traverse(entry, onValue)) {
-        return false;
-      }
-    }
+    this.config.traverse(value, onValue);
     return onValue(this.KEY_INDICATOR);
   }
 
@@ -37,13 +32,17 @@ export class InfiniteConduitValueSerializer extends AbstractSerializer<
   }
 
   public deserialize(value: ConduitSerializedValue<any[]>) {
-    if (!Array.isArray(value.value)) {
+    if (!value.value) {
       this.sanitationError(value.value);
     }
-    return new InfiniteConduitValue(this.config.deserialize(value.value ?? []));
+    const config = this.config.deserialize(value.value);
+    if (typeof config.infiniteCacheID !== "string") {
+      this.sanitationError(config);
+    }
+    return new InfiniteConduitValue(config);
   }
 
-  protected serializeValue(value: InfiniteConduitValue<any>) {
-    return this.config.serialize(Array.from(value.value.getState()));
+  protected serializeValue(value: InfiniteConduitValue<any, any>) {
+    return this.config.serialize(value);
   }
 }

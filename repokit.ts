@@ -23,5 +23,14 @@ export const RepoKit = new RepoKitConfig({
         "(--coverage)": "Run with coverage reporting",
       },
     },
+    madge: {
+      command:
+        "pnpm madge --circular --ts-config ./tsconfig.json --extensions ts ./",
+      description: "List all circular references in the codebase using madge",
+    },
+    "list-circular-references": {
+      command: "pnpm dpdm --no-warning --no-tree -T **/*.ts",
+      description: "List all circular references in the codebase",
+    },
   },
 });

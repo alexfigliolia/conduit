@@ -6,7 +6,7 @@ export const PRIMITIVES = [
   BigInt("123123123123"),
 ];
 
-export const SERIALIZABLE_PRIMITIVES = [...PRIMITIVES].filter(
+export const SERIALIZABLE_PRIMITIVES = PRIMITIVES.filter(
   v => !["bigint", "undefined"].includes(typeof v),
 );
 

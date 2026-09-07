@@ -2,6 +2,7 @@ import {
   BaseConduit,
   type IValueType,
   type EvictReturnType,
+  ConduitExecutor,
 } from "../BaseConduit";
 import { TypeChecker } from "../../Cache/Serialization";
 import {
@@ -10,40 +11,45 @@ import {
   ConduitStatus,
 } from "../../Cache";
 
-import type {
-  IInfiniteConduit,
-  IPagingArgs,
-  IInfiniteOperation,
-  IInfiniteOperationOptions,
-  IInfiniteExecuteOptions,
-  IInfiniteValueSubscriber,
-  IPageValueSubscriber,
-  IInfiniteStatusSubscriber,
-  IInfiniteCacheWrite,
-  IInfiniteConduitSubscriber,
+import {
+  type PageType,
+  type IInfiniteConduit,
+  type IPagingArgs,
+  type IInfiniteOperation,
+  type IInfiniteOperationOptions,
+  type IInfiniteExecuteOptions,
+  type IInfiniteValueSubscriber,
+  type IPageValueSubscriber,
+  type IInfiniteStatusSubscriber,
+  type IInfiniteCacheWrite,
+  type IInfiniteConduitSubscriber,
 } from "./types";
 import { InfiniteConduitValue } from "./InfiniteConduitValue";
+import { InfiniteConduitPage } from "./InfiniteConduitPage";
+import { DUMMY_PAGE } from "./DummyPage";
 
 export class InfiniteConduit<
   O extends IInfiniteOperation<any, any>,
   C extends UnknownCacheAbstract = UnknownCacheAbstract,
-> extends BaseConduit<O, undefined, C> {
+> extends BaseConduit<O, InfiniteConduitPage<IValueType<O>, C>, C> {
   private readonly pagingTokens: string[][];
   private readonly defaultValue: IValueType<O>[];
   private readonly paginationArgs: IPagingArgs<O>;
   constructor({
-    operation,
     paginationArgs,
     defaultValue = [],
     ...options
   }: IInfiniteConduit<O, C>) {
-    super({ ...options, operation, defaultValue: undefined });
+    super({
+      ...options,
+      defaultValue: DUMMY_PAGE,
+    });
     this.defaultValue = defaultValue;
     this.paginationArgs = paginationArgs;
     this.pagingTokens = this.paginationArgs.map(t => t.split("."));
     if (!paginationArgs.length) {
       throw new Error(
-        `Paging Arg Path Error: At least one path an operation's argument used for pagination is required`,
+        `Paging Arg Path Error: At least one path an operation's argument object must be used for pagination`,
         {
           cause: paginationArgs,
         },
@@ -51,47 +57,64 @@ export class InfiniteConduit<
     }
   }
 
-  public override execute(options: IInfiniteExecuteOptions<O>) {
-    const infiniteCacheEntry = this.getCacheEntry(options.args);
-    const pageCacheEntry = this.getPageCacheEntry(options.args);
-    const pagingData = infiniteCacheEntry.getValue();
-    pagingData.registerPageCacheEntry(pageCacheEntry);
-    infiniteCacheEntry.setStatus(ConduitStatus.IN_FLIGHT);
-    const { args, ...rest } = options;
-    const result = this.runWithCachePolicy({
-      ...rest,
-      args: [args],
-      cacheEntry: pageCacheEntry,
-    });
+  public override execute({
+    args,
+    expires = this.expires,
+    cachePolicy = this.options.cachePolicy,
+  }: IInfiniteExecuteOptions<O>) {
+    const infiniteEntry = this.getCacheEntry(args);
+    const pageCacheEntry = this.getPageCacheEntry(args, infiniteEntry);
+    infiniteEntry.setStatus(ConduitStatus.IN_FLIGHT);
+    const result = new ConduitExecutor({
+      expires,
+      cachePolicy,
+      onCacheRead: (value: InfiniteConduitPage<IValueType<O>, C>) =>
+        value.value,
+      cacheInterceptor: (previous, next: IValueType<O>) =>
+        previous.write(next, this.getCache()),
+    }).build(
+      this.options.operation,
+      pageCacheEntry,
+      // @ts-expect-error typescript bug
+    )(args);
     if (result && (result as unknown) instanceof Promise) {
-      return (result as Promise<IValueType<O>>).then(v => {
-        return this.onPageExecution(v, infiniteCacheEntry);
-      });
+      return (result as Promise<IValueType<O>>).then(v =>
+        this.onPageExecution(v, infiniteEntry),
+      );
     }
-    return this.onPageExecution(result, infiniteCacheEntry);
+    return this.onPageExecution(
+      result as PageType<ReturnType<O>>,
+      infiniteEntry,
+    );
   }
 
   public override getCacheEntry(args: IInfiniteOperationOptions<O>) {
-    const entry = InfiniteConduit.getCacheEntry(
-      this.getCache(),
+    let created = false;
+    const cache = this.getCache();
+    const cacheNode = InfiniteConduit.getCacheEntry(
+      cache,
       this.options.key,
       [this.getInfiniteOptions(args)],
-      new InfiniteConduitValue(this.defaultValue),
+      () => {
+        created = true;
+        return new InfiniteConduitValue<IValueType<O>, C>({
+          value: this.defaultValue,
+          infiniteCacheID: cache.InfiniteCache.getInfiniteID(),
+        });
+      },
     );
-    const value = entry.getValue();
-    if (!value.cacheWriter) {
-      value.registerCacheWriter(value => entry.setValue(value));
+    if (created) {
+      cache.registerInfiniteCacheEntry(cacheNode);
     }
-    return entry;
+    return cacheNode;
   }
 
-  public getPageCacheEntry(args: IInfiniteOperationOptions<O>) {
-    return InfiniteConduit.getCacheEntry(
-      this.getCache(),
-      this.options.key,
-      [args],
-      undefined,
-    ) as CacheEntry<IValueType<O> | undefined, EvictReturnType<C>>;
+  public getPageCacheEntry(
+    args: IInfiniteOperationOptions<O>,
+    infiniteCacheEntry = this.getCacheEntry(args),
+  ) {
+    const { value, infiniteCacheID } = infiniteCacheEntry.getValue();
+    return this.getOrCreatePageCacheEntry(args, value.length, infiniteCacheID);
   }
 
   public getInfiniteOptions(args: IInfiniteOperationOptions<O>) {
@@ -125,16 +148,20 @@ export class InfiniteConduit<
     return result;
   }
 
-  public subscribe({ args, onChange }: IInfiniteConduitSubscriber<O>) {
+  public subscribe({ args, onChange }: IInfiniteConduitSubscriber<O, C>) {
     return this.getCacheEntry(args).subscribe(onChange);
   }
 
   public subscribeToValue({ args, onChange }: IInfiniteValueSubscriber<O>) {
-    return this.getCacheEntry(args).subscribeToValue(onChange);
+    return this.getCacheEntry(args).subscribeToValue(value =>
+      onChange(value.decompose()),
+    );
   }
 
   public subscribeToPageValue({ args, onChange }: IPageValueSubscriber<O>) {
-    return this.getPageCacheEntry(args).subscribeToValue(onChange);
+    return this.getPageCacheEntry(args).subscribeToValue(value =>
+      onChange(value.value),
+    );
   }
 
   public subscribeToStatus({ args, onChange }: IInfiniteStatusSubscriber<O>) {
@@ -157,32 +184,89 @@ export class InfiniteConduit<
   }
 
   public writeCache({ args, value }: IInfiniteCacheWrite<O>) {
-    return this.getPageCacheEntry(args).setValue(value);
+    return this.getPageCacheEntry(args).setValue(previous =>
+      previous.write(value, this.getCache()),
+    );
   }
 
   public readCache(args: IInfiniteOperationOptions<O>) {
-    return this.getCacheEntry(args).getValue().getValue();
+    return this.getCacheEntry(args).getValue().decompose();
   }
 
   public readPageCache(args: IInfiniteOperationOptions<O>) {
-    return this.getPageCacheEntry(args).getValue();
+    return this.getPageCacheEntry(args).getValue().value;
   }
 
   public evict(args: IInfiniteOperationOptions<O>) {
-    const entry = this.getCacheEntry(args);
-    entry.getValue().destroy();
-    return entry.evict();
+    return this.getCache().evict(this.options.key, [
+      this.getInfiniteOptions(args),
+    ]);
   }
 
   public evictPage(args: IInfiniteOperationOptions<O>) {
-    return this.getPageCacheEntry(args).evict();
+    return this.getCache().evict(this.options.key, [args]);
+  }
+
+  public evictAll(args: IInfiniteOperationOptions<O>) {
+    const cache = this.getCache();
+    const node = cache.get<
+      InfiniteConduitValue<InfiniteConduitPage<IValueType<O>, C>, C>
+    >(this.options.key, [this.getInfiniteOptions(args)]);
+    const value = node?.getValue?.();
+    const result = node?.evict?.();
+    const pages =
+      value?.value?.map?.(page => {
+        const node = cache.InfiniteCache.getPageNode(page.pageID);
+        return node?.evict?.();
+      }) ?? [];
+    if (result instanceof Promise) {
+      return Promise.all([result, ...pages]).then(
+        v => v[0],
+      ) as EvictReturnType<C>;
+    }
+    return result as EvictReturnType<C>;
   }
 
   private onPageExecution<V>(
     value: V,
-    cacheEntry: CacheEntry<InfiniteConduitValue<IValueType<O>>, unknown>,
+    cacheEntry: CacheEntry<
+      InfiniteConduitValue<IValueType<O>, C>,
+      EvictReturnType<C>
+    >,
   ) {
     cacheEntry.setStatus(ConduitStatus.IDOL);
     return value;
+  }
+
+  private getOrCreatePageCacheEntry(
+    args: IInfiniteOperationOptions<O>,
+    index: number,
+    infiniteCacheID: string,
+  ) {
+    let created = false;
+    const cache = this.getCache();
+    const entry = InfiniteConduit.getCacheEntry(
+      this.getCache(),
+      this.options.key,
+      [args],
+      () => {
+        created = true;
+        return new InfiniteConduitPage({
+          cache,
+          index,
+          write: true,
+          infiniteCacheID,
+          value: undefined,
+          pageID: cache.InfiniteCache.getPageID(),
+        });
+      },
+    ) as unknown as CacheEntry<
+      InfiniteConduitPage<IValueType<O>, C>,
+      ReturnType<C["evict"]>
+    >;
+    if (created) {
+      cache.registerPageCacheEntry(entry);
+    }
+    return entry;
   }
 }

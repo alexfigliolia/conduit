@@ -2,16 +2,26 @@ import type {
   IInfiniteOperation,
   IInfiniteOperationOptions,
 } from "../InfiniteConduit";
-import type { IConduit, IValueType, IOperation } from "../BaseConduit";
+import type {
+  IConduit,
+  IValueType,
+  IOperation,
+  ConduitCacheIndex,
+  ConduitValue,
+} from "../BaseConduit";
 import type { UnknownCacheAbstract } from "../../Cache";
 
 import type { ConduitNetworkResult } from "./ConduitNetworkResult";
 
 export interface INetworkConduit<
   O extends IOperation,
+  D = undefined,
   C extends UnknownCacheAbstract = UnknownCacheAbstract,
-> extends Omit<IConduit<O, IValueType<O>, C>, "defaultValue"> {
-  defaultValue?: IValueType<O>;
+> extends Omit<
+  IConduit<O, ConduitNetworkResult<ConduitValue<O, D>>, C>,
+  "defaultValue"
+> {
+  defaultValue?: D;
 }
 
 export interface IConduitNetworkResult<T, E> {
@@ -33,3 +43,16 @@ export type IInfiniteNetworkOperation<
 ) => ReturnType<O> extends Promise<any>
   ? Promise<ConduitNetworkResult<IValueType<O>, E>>
   : ConduitNetworkResult<IValueType<O>, E>;
+
+export interface NetworkConduitCacheWrite<
+  O extends IOperation,
+  D = undefined,
+> extends ConduitCacheIndex<O> {
+  value:
+    | IConduitNetworkResult<ConduitValue<O, D>, unknown>
+    | ((
+        previous: ConduitNetworkResult<ConduitValue<O, D>>,
+      ) =>
+        | IConduitNetworkResult<ConduitValue<O, D>, unknown>
+        | Promise<IConduitNetworkResult<ConduitValue<O, D>, unknown>>);
+}

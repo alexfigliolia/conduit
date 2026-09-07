@@ -1,6 +1,7 @@
 import { describe, expect, it } from "vitest";
 
 import { InfiniteConduitValue } from "../Conduits/InfiniteConduit/InfiniteConduitValue";
+import { InfiniteConduitPage } from "../Conduits";
 import {
   BigIntSerializer,
   DateSerializer,
@@ -83,12 +84,20 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
       }
       if (serializer instanceof InfiniteConduitValueSerializer) {
         return it(`It serializes InfiniteCondiutValues to special objects`, () => {
-          const infiniteValue = [1, 2, 3].map(page => ({
-            data: page % 2 === 0,
-            page,
-          }));
+          const infiniteValue = [1, 2, 3].map(
+            (page, index) =>
+              new InfiniteConduitPage({
+                index,
+                infiniteCacheID: "10",
+                pageID: index.toString(),
+                value: page % 2 === 0,
+              }),
+          );
           const serialized = serializer.serialize(
-            new InfiniteConduitValue(infiniteValue),
+            new InfiniteConduitValue({
+              value: infiniteValue,
+              infiniteCacheID: "10",
+            }),
           );
           expect(serialized[Serializer.SERIALIZATION_MARKER]).toEqual(
             TypeName.INFINITE_CONDUIT_VALUE,

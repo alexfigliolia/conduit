@@ -6,7 +6,6 @@ import { Logger } from "./Logger";
 
 const cache = new Cache();
 
-Logger.info("Building the cache using all JSON serializeable primitives");
 Logger.info("Assembling the graph");
 
 TEST_TYPES.map((p, i) => {

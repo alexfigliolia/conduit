@@ -1,26 +1,40 @@
-import type { Setter } from "@figliolia/galena";
+import type { NonFunction, Setter } from "@figliolia/galena";
 
 import type { Primitive } from "../Serialization";
 import { Serializer } from "../Serialization";
 
-import { type SerializedNode, type ParentPointer } from "./types";
+import {
+  type UnknownCacheAbstract,
+  type SerializedNode,
+  type ParentPointer,
+} from "./types";
 import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";
 
 export class Graph<T = any> {
   public nodes: Record<any, Graph> = {};
   public entry?: CacheEntry<T, Promise<void>>;
-  constructor(public parent: ParentPointer = null) {}
+  constructor(
+    private readonly cache: UnknownCacheAbstract,
+    public parent: ParentPointer = null,
+  ) {}
 
-  public static from(node: SerializedNode, parent: ParentPointer = null) {
-    const graph = new Graph(parent);
+  public static from(
+    cache: UnknownCacheAbstract,
+    node: SerializedNode,
+    parent: ParentPointer = null,
+  ) {
+    const graph = new Graph(cache, parent);
     if (node.entry) {
-      graph.entry = CacheEntry.from(node.entry, graph.evict);
+      graph.entry = CacheEntry.from(node.entry, graph.evict, cache);
     }
     for (const key in node.nodes) {
       const childNode = node.nodes[key];
       if (childNode) {
-        graph.set(key, Graph.from(childNode, new NodeParent(graph, key)));
+        graph.set(
+          key,
+          Graph.from(cache, childNode, new NodeParent(graph, key)),
+        );
       }
     }
     return graph;
@@ -28,17 +42,25 @@ export class Graph<T = any> {
 
   public static fromSerialized(
     serialized: Record<string, SerializedNode> = {},
+    cache: UnknownCacheAbstract,
   ) {
-    const graph = new Graph();
+    const graph = new Graph(cache);
     for (const key in serialized) {
       if (serialized[key]) {
-        graph.set(key, Graph.from(serialized[key], new NodeParent(graph, key)));
+        graph.set(
+          key,
+          Graph.from(cache, serialized[key], new NodeParent(graph, key)),
+        );
       }
     }
     return graph;
   }
 
-  public index<T>(key: any[], args: any[], value: T) {
+  public index<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    value: T | (() => T),
+  ) {
     const { node, created } = this.maybeIndex(key, args, value);
     if (created) {
       node.entry!.updatedAt = Date.now();
@@ -53,7 +75,7 @@ export class Graph<T = any> {
     Serializer.toPath(key, args, primative => {
       let next = current.get(primative);
       if (!next) {
-        next = new Graph(new NodeParent(current, primative));
+        next = new Graph(this.cache, new NodeParent(current, primative));
         current.set(primative, next);
       }
       current = next;
@@ -62,10 +84,10 @@ export class Graph<T = any> {
     return current as Graph<T>;
   }
 
-  public createCacheEntryIfNotExists<T>(
+  public createCacheEntryIfNotExists<T extends NonFunction<any>>(
     key: any[],
     args: any[],
-    defaultValue: T,
+    defaultValue: T | (() => T),
   ) {
     const { node } = this.maybeIndex(key, args, defaultValue);
     return node.entry!;
@@ -84,14 +106,13 @@ export class Graph<T = any> {
     this.nodes[key as any] = node;
   }
 
-  public readonly evict = () => {
+  public readonly evict = async () => {
     this.entry = undefined;
-    return Promise.resolve().then(async () => {
-      if (await this.treeTrimDownwards(node => !node.entry)) {
-        this.nodes = {};
-        await this.treeTrimUpwards();
-      }
-    });
+    await Promise.resolve();
+    if (await this.treeTrimDownwards(node => !node.entry)) {
+      this.nodes = {};
+      await this.treeTrimUpwards();
+    }
   };
 
   public reset() {
@@ -100,18 +121,18 @@ export class Graph<T = any> {
     }
   }
 
-  public serialize() {
+  public serialize(cache: UnknownCacheAbstract) {
     const nodes = Object.keys(this.nodes).reduce<
       Record<string, SerializedNode>
     >((acc, next) => {
       if (this.nodes[next]) {
-        acc[next] = this.nodes[next].serialize();
+        acc[next] = this.nodes[next].serialize(cache);
       }
       return acc;
     }, {});
     const result: SerializedNode<T> = { nodes };
     if (this.entry) {
-      result.entry = this.entry.serialize();
+      result.entry = this.entry.toJSON();
     }
     return result;
   }
@@ -173,13 +194,18 @@ export class Graph<T = any> {
     }
   }
 
-  public maybeIndex<T>(key: any[], args: any[], defaultValue: T) {
+  public maybeIndex<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    defaultValue: T | (() => T),
+  ) {
     let created = false;
     const node = this.createNodeIfNotExists<T>(key, args);
     if (!node.entry) {
       node.entry = new CacheEntry<T, Promise<void>>({
-        defaultValue,
         evict: node.evict,
+        defaultValue: // @ts-expect-error typescript-bug
+          typeof defaultValue === "function" ? defaultValue() : defaultValue,
       });
       created = true;
     }

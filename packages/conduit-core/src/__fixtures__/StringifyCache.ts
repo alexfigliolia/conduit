@@ -1,21 +1,30 @@
+import type { NonFunction } from "@figliolia/galena";
+
 import { TypeChecker } from "../Cache/Serialization";
 import { CacheAbstract, CacheEntry } from "../Cache";
 
 export class StringifyCache extends CacheAbstract<
   Record<string, CacheEntry<any, void>>
 > {
-  constructor(initialState: Record<string, CacheEntry<any, void>> = {}) {
-    super(initialState);
+  public storage = this.options.data ?? {};
+
+  public override serialize() {
+    return {
+      data: this.storage,
+      lastPageID: this.InfiniteCache.lastPageID,
+      lastInfiniteID: this.InfiniteCache.lastInfiniteID,
+    };
   }
 
-  public serialize() {
-    return this.storage;
-  }
-
-  public set<T>(key: any[], args: any[], value: T) {
-    const entry = new CacheEntry({
-      defaultValue: value,
+  public set<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    value: T | (() => T),
+  ) {
+    const entry = new CacheEntry<T, void>({
       evict: () => this.evict(key, args),
+      // @ts-expect-error typescript bug
+      defaultValue: typeof value === "function" ? value() : value,
     });
     this.storage[this.hash(key, args)] = entry;
     return entry;

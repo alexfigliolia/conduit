@@ -14,7 +14,7 @@ export abstract class AbstractSerializer<T, O> {
     return {
       [AbstractSerializer.SERIALIZATION_MARKER]: this.typeName,
       value: this.serializeValue(value),
-    }; // relax. Stop interupting him.
+    };
   }
 
   public matchPostSerializedInput(

@@ -1,3 +1,5 @@
+import type { NonFunction } from "@figliolia/galena";
+
 import type { NodeParent } from "./NodeParent";
 import type { CacheAbstract } from "./CacheAbstract";
 
@@ -15,8 +17,8 @@ export interface SerializedCacheEntry<T = unknown> {
   status: ConduitStatus;
 }
 
-export interface ICacheEntry<T, R> {
-  defaultValue: T;
+export interface ICacheEntry<T extends NonFunction<any>, R> {
+  defaultValue: NonFunction<T>;
   evict: () => R;
 }
 
@@ -26,4 +28,17 @@ export enum ConduitStatus {
   UNINITIALIZED = "uninitialized",
   IN_FLIGHT = "in-flight",
   IDOL = "idol",
+}
+
+export type SerializedGraph = SerializedStorage<Record<string, SerializedNode>>;
+
+export interface IInfiniteCache {
+  lastPageID?: string;
+  lastInfiniteID?: string;
+}
+
+export interface SerializedStorage<
+  T extends Record<string, any>,
+> extends Required<IInfiniteCache> {
+  data: T;
 }

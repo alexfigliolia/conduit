@@ -184,7 +184,11 @@ describe("Cache", () => {
           Promise.resolve(conduit.evict(...args.slice(0, i + 1))),
         ),
       );
-      expect(cache.serialize()).toEqual({});
+      expect(cache.serialize()).toEqual({
+        data: {},
+        lastPageID: "-1",
+        lastInfiniteID: "-1",
+      });
     });
 
     it("Cache should not tree trim if there are cache entries beneath an evicted node", async () => {

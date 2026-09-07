@@ -248,9 +248,11 @@ const todaysWeather = await WeatherConduit.execute({ args: {
 ```
 
 ## The Cache
+
 The Conduit `Cache` is your data storage and reactivity provider. You will likely never need to interact with the cache directly - as each of your Conduits provide methods for accessing and subscribing to cached data.
 
 However it may be prudent to pre-populate the `Cache` using server-side data if using Conduits in server-rendered applications. To do so, simply serialize your cache data on the server and append it to your request responses:
+
 ```typescript
 // On the server
 import { Cache } from "@figliolia/conduit";
@@ -271,19 +273,20 @@ app.get('*', (req, res) => {
 });
 
 // on the client initialize the cache with serverside data
-const ConduitCache = new Cache(window.__CONDUIT_CACHE__); 
+const ConduitCache = new Cache(window.__CONDUIT_CACHE__);
 ```
+
 Using this technique your Conduit cache will be populated with the results of each operation that took place on the server.
 
 ### The Cache Structure
 
-Your serialized cache data may look unusual if inspecting it via `console.log()`. This is because the underlying storage structure of the cache is a [Graph](https://en.wikipedia.org/wiki/Graph_(abstract_data_type)). The graph is an optimization technique for caching conduit operation results without having to `stringify` keys and arguments. It improves the speed of cache interactions by roughly `5x`.
+Your serialized cache data may look unusual if inspecting it via `console.log()`. This is because the underlying storage structure of the cache is a [Graph](<https://en.wikipedia.org/wiki/Graph_(abstract_data_type)>). The graph is an optimization technique for caching conduit operation results without having to `stringify` keys and arguments. It improves the speed of cache interactions by roughly `5x`.
 
 When inserting a conduit operation result into the cache, the conduit's key, operation arguments, and result are traversed into a deterministic set of JavaScript primitives - used to create edges between graph nodes.
 
 Each of your conduit cache entries sit in the graph at the very bottom of each path these edges create.
 
-This storages structure uses serialization that is more robust than `JSON.stringify()`. With it, you can pass `Maps`, `Sets`, `Regexes`, `Dates`, `BigInts` (and more) over the wire using your conduit cache. 
+This storages structure uses serialization that is more robust than `JSON.stringify()`. With it, you can pass `Maps`, `Sets`, `Regexes`, `Dates`, `BigInts` (and more) over the wire using your conduit cache.
 
 These complex types - normally not supported in standard JSON - are decomposed into JSON-valid primitives and reconstructed when building your cache from serialized data.
 
@@ -306,6 +309,7 @@ If you wish to see support for a specific web-framework, please [file and issue 
 To see Conduit in a simple react application you can head over to [the example app](https://github.com/alexfigliolia/conduit/blob/main/packages/conduit-example).
 
 To run the app, you can clone this repository and run:
+
 ```bash
 pnpm i && pnpm setup:repo && repokit example vite:install && repokit example dev
 ```

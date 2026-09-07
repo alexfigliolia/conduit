@@ -2,14 +2,16 @@ import { type NonFunction, State } from "@figliolia/galena";
 import { AutoIncrementingID } from "@figliolia/event-emitter";
 
 import { Serializer } from "../Serialization";
+import { InfiniteConduitValue } from "../../Conduits/InfiniteConduit/InfiniteConduitValue";
+import { InfiniteConduitPage } from "../../Conduits/InfiniteConduit/InfiniteConduitPage";
 
 import {
+  type UnknownCacheAbstract,
   type ICacheEntry,
   type SerializedCacheEntry,
   ConduitStatus,
 } from "./types";
 
-// TODO - clear subscribers on evictions
 export class CacheEntry<T, R> {
   public lastRead = 0;
   public updatedAt = 0;
@@ -19,17 +21,20 @@ export class CacheEntry<T, R> {
   private readonly subscriptions = new Map<string, () => void>();
   public readonly Status = new State(ConduitStatus.UNINITIALIZED);
   constructor(public readonly options: ICacheEntry<T, R>) {
-    this.State = new State(options.defaultValue as NonFunction<T>);
+    this.State = new State(options.defaultValue);
   }
 
-  public static from<T, R>(
+  public static from<T extends NonFunction<any>, R>(
     entry: SerializedCacheEntry<T>,
     evict: () => R,
+    cache: UnknownCacheAbstract,
   ): CacheEntry<T, R> {
+    const value = Serializer.deserialize(entry.value);
     const cacheNode = new CacheEntry<T, R>({
       evict,
-      defaultValue: Serializer.deserialize(entry.value),
+      defaultValue: value,
     });
+    this.invokeRegister(cache, cacheNode);
     cacheNode.lastRead = entry.lastRead;
     cacheNode.updatedAt = entry.updatedAt;
     cacheNode.setStatus(entry.status);
@@ -47,7 +52,7 @@ export class CacheEntry<T, R> {
   }
 
   public getOutstandingTask<T = unknown>() {
-    return this.outstandingTask as Promise<T> | undefined;
+    return this.outstandingTask as T | undefined;
   }
 
   public subscribeToValue(onChange: (value: T) => void) {
@@ -133,5 +138,17 @@ export class CacheEntry<T, R> {
       subscriber();
     }
     this.subscriptions.clear();
+  }
+
+  private static invokeRegister<R>(
+    cache: UnknownCacheAbstract,
+    cacheEntry: CacheEntry<any, R>,
+  ) {
+    const { defaultValue } = cacheEntry.options;
+    if (defaultValue instanceof InfiniteConduitValue) {
+      cache.registerInfiniteCacheEntry(cacheEntry);
+    } else if (defaultValue instanceof InfiniteConduitPage) {
+      cache.registerPageCacheEntry(cacheEntry);
+    }
   }
 }

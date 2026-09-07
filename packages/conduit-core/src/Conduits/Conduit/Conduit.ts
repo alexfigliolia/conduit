@@ -1,13 +1,12 @@
 import {
   type IOperation,
-  type IValueType, // walk away. If you can afford to move somewhere far from metropolotan areas
   type IExecuteOptions,
   type ConduitCacheSubscriber,
   type ConduitCacheWrite,
   type ConduitValue,
   type EvictReturnType,
-  type IExecutionResult,
   BaseConduit,
+  ConduitExecutor,
 } from "../BaseConduit";
 import {
   type UnknownCacheAbstract,
@@ -19,16 +18,21 @@ import type { ConduitOperationSubscriber } from "./types";
 
 export class Conduit<
   O extends IOperation,
-  D = IValueType<O>,
+  D = undefined,
   C extends UnknownCacheAbstract = UnknownCacheAbstract,
 > extends BaseConduit<O, D, C> {
-  public execute(
-    options: IExecuteOptions<Parameters<O>>,
-  ): IExecutionResult<O, D> {
-    return this.runWithCachePolicy({
-      ...options,
-      cacheEntry: this.getCacheEntry(...options.args),
-    });
+  public execute({
+    args,
+    expires = this.expires,
+    cachePolicy = this.options.cachePolicy,
+  }: IExecuteOptions<Parameters<O>>) {
+    return new ConduitExecutor<ConduitValue<O, D>>({
+      expires,
+      cachePolicy,
+    }).build(
+      this.options.operation,
+      this.getCacheEntry(...args),
+    )(...args);
   }
 
   public subscribeToValue({
