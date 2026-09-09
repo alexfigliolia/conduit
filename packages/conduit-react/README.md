@@ -161,5 +161,5 @@ To see Conduit in a simple react application you can head over to [the example a
 To run the app, you can clone this repository and run:
 
 ```bash
-pnpm i && pnpm setup:repo && repokit example vite:install && repokit example dev
+pnpm i && pnpm setup:repo && repokit example dev
 ```
