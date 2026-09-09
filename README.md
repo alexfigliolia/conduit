@@ -470,6 +470,88 @@ const clientCache = new Cache({
 });
 ```
 
+### Using Custom Caches
+Conduits are designed to accept custom caches for storing Conduit data. The default cache is a reactive graph data store that benchmarks at `~4-5x` more performant than flat JavaScript objects and uses less memory on average.
+
+Understanding that this structure may not always be the most optimal schema, this library exposes the `CacheAbstract`. It allows developers to build a cache optimized for their data and use it with their conduits.
+
+To build and use your own cache, simply extend the `CacheAbstract`:
+
+```typescript
+import { CacheAbstract, type CacheOptions, CacheEntry } from "@figliolia/conduit";
+
+export class MyCustomCache extends CacheAbstract<MySchema, MySerializedSchema> {
+  public storage: MySchema;
+  constructor(options: CacheOptions<MySerializedSchema> = {}) {
+    super(options);
+    this.storage = this.createMyStorage(options?.data?.data);
+  }
+
+  createMyStorage(initialData?: MySerializedSchema): MySchema {
+    // build and return your custom data structure
+  }
+
+  public override serialize(): SerializedStorage<MySerializedSchema> {
+    // implement your cache serialization
+    return {
+      ...super.lastInfiniteIDs,
+      data: { /* your custom serializer */ }
+    }
+  }
+
+  public override set<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    value: T | (() => T),
+  ): CacheEntry<T, any> | undefined {
+    // implement your mechanism for storing cached data based on 
+    // conduit keys and operation args
+  }
+
+  public override get<T>(
+    key: any[],
+    args: any[],
+  ): CacheEntry<T, any> | undefined {
+    // implement your mechanism for retrieving cached entries based on 
+    // conduit keys and operation args
+  }
+
+  public override reset() {
+    // implement your mechanism for clearing the cache
+    super.resetInfiniteCache();
+  }
+
+  public override evict(key: any[], args: any[]) {
+    // implement your mechanism for evicting cache entries
+  }
+
+  public override createEntryIfNotExists<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    defaultValue: T | (() => T),
+  ): CacheEntry<T, any> {
+    // Implement your mechanism for creating cache entries if
+    // not already existent
+  }
+}
+```
+
+Lastly pass an instance of your cache to your conduits
+
+```typescript
+import { Conduit } from "@figliolia/conduit";
+import { MyCustomCache } from "./my-custom-cache";
+
+const cache = new MyCustomCache();
+
+const myConduit = new Conduit({
+  cache
+  // ... other arguments
+});
+```
+
+Now your conduits will use your own custom cache as the underlying data store. 
+
 ## Usage with React
 
 To use your conduits as stateful operations in your React Applications, head over to the [Conduit React Docs](https://github.com/alexfigliolia/conduit/blob/main/packages/conduit-react/README.md)
