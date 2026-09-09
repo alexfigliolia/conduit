@@ -3,23 +3,18 @@ import {
   memo,
   useCallback,
   useEffect,
-  useMemo,
   useRef,
   useState,
   type ReactNode,
   type SubmitEvent,
 } from "react";
-import type { Propless } from "@ui/Types";
-import { Location } from "@ui/State";
-import { GeocodingConduit } from "@ui/Conduits";
-import { type ListBoxItem } from "@ui/Components/Listbox";
+import { type IOption, type ListBoxItem } from "@ui/Components/Listbox";
 import {
   Combobox,
   type ComboboxInputProps,
   type ComboboxRef,
 } from "@ui/Components/Combobox";
 import { useDebouncer } from "@figliolia/react-hooks";
-import { useConduit } from "@figliolia/conduit-react";
 import { ConduitStatus } from "@figliolia/conduit";
 import { useClassNames } from "@figliolia/classnames";
 
@@ -29,13 +24,29 @@ import { Container } from "./Container";
 
 import "./styles.scss";
 
-export const Search = memo(function Search(_: Propless) {
+function SearchComponent<T extends IOption>({
+  status,
+  options,
+  className,
+  renderEmptyState,
+  onSelectionChange,
+  onSearchQueryChange,
+}: Props<T>) {
   const [query, setQuery] = useState("");
   const [loading, setLoading] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
   const deferredLoading = useDebouncer(setLoading, 1000);
-  const deferredSearch = useDebouncer(setSearchQuery, 300);
-  const combobox = useRef<ComboboxRef<(typeof options)[number]>>(null);
+  const combobox = useRef<ComboboxRef<T>>(null);
+
+  const onQueryChange = useCallback(
+    (value: string) => {
+      setSearchQuery(value);
+      onSearchQueryChange(value);
+    },
+    [onSearchQueryChange],
+  );
+
+  const deferredSearch = useDebouncer(onQueryChange, 300);
 
   const focusInput = useCallback(() => {
     combobox.current?.controls?.focusInput?.();
@@ -53,30 +64,23 @@ export const Search = memo(function Search(_: Propless) {
     [deferredSearch.execute],
   );
 
-  const onSelectionChange = useCallback((items: typeof options) => {
-    if (items[0]) {
-      setQuery(items[0].display_name);
-      return Location.set({
-        latitude: items[0].lat,
-        longitude: items[0].lon,
-      });
-    }
+  const format = useCallback((item: T) => {
+    return typeof item === "string" ? item : item.value;
   }, []);
 
-  const { value, status } = useConduit(GeocodingConduit, {
-    args: [searchQuery],
-    skipWhen: !searchQuery.length,
-  });
-
-  const options = useMemo(
-    () =>
-      (value.data ?? []).map(item => ({ ...item, value: item.display_name })),
-    [value],
+  const onSelection = useCallback(
+    (items: typeof options) => {
+      if (items[0]) {
+        setQuery(format(items[0]));
+        onSelectionChange(items[0]);
+      }
+    },
+    [onSelectionChange, format],
   );
 
   const renderItem = useCallback(
-    ({ item }: ListBoxItem<LocationOption>) => item.display_name,
-    [],
+    ({ item }: ListBoxItem<T>) => format(item),
+    [format],
   );
 
   const classes = useClassNames({ loading });
@@ -107,9 +111,11 @@ export const Search = memo(function Search(_: Propless) {
     combobox.current?.controls?.listbox?.current?.resetFocus?.();
   }, [searchQuery]);
 
+  const formClasses = useClassNames("search", className);
+
   return (
     <Fragment>
-      <form className="search" onSubmit={onSubmit} autoComplete="off">
+      <form className={formClasses} onSubmit={onSubmit} autoComplete="off">
         <search>
           <Combobox
             ref={combobox}
@@ -120,11 +126,23 @@ export const Search = memo(function Search(_: Propless) {
             renderInput={renderInput}
             renderItem={renderItem}
             renderListBox={glassWrapper}
-            onChange={onSelectionChange}
+            onChange={onSelection}
             onInputChange={onInputChange}
+            renderEmptyState={renderEmptyState}
           />
         </search>
       </form>
     </Fragment>
   );
-});
+}
+
+export const Search = memo(SearchComponent) as typeof SearchComponent;
+
+export interface Props<T extends IOption> {
+  options: T[];
+  className?: string;
+  status: ConduitStatus;
+  renderEmptyState?: () => ReactNode;
+  onSelectionChange: (item: T) => void;
+  onSearchQueryChange: (value: string) => void;
+}

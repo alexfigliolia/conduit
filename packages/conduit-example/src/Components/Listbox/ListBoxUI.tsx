@@ -24,7 +24,6 @@ export const ListboxUI = <T extends IOption>({
   });
 
   const onOptionClick = useCallback((id: string, index: number) => {
-    listbox.current?.focus?.();
     onItemClick?.(id, index);
   }, []);
 

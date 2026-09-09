@@ -15,6 +15,7 @@ export const Viz = ({ data }: Props) => {
     setBox(result.box);
     const { startColor, endColor } = ColorScale.resolve(
       result.quantLow,
+      result.median,
       result.quantHigh,
     );
     setStartColor(startColor);

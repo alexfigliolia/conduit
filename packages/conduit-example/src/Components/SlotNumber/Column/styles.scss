@@ -1,8 +1,13 @@
+@use "Styles/Variables";
+
 .column {
+  opacity: 0;
+  flex-shrink: 0;
   position: relative;
+  animation: fade-in var(--duration) forwards var(--easing);
   transition:
-    width 0.3s,
-    height 0.3s;
+    width var(--duration) var(--easing),
+    height var(--duration) var(--easing);
   overflow: hidden;
   & > .nums {
     --delay: 0s;
@@ -10,13 +15,13 @@
     display: flex;
     flex-direction: column;
     transition:
-      opacity 0.75s var(--delay) cubic-bezier(0.76, 0, 0.24, 1),
-      translate 1s var(--delay) cubic-bezier(0.76, 0, 0.24, 1);
+      opacity calc(var(--duration) * 0.75) var(--delay) var(--easing),
+      translate var(--duration) var(--delay) var(--easing);
     &.animating {
       opacity: 0.65;
       transition:
-        opacity 0.5s var(--delay) cubic-bezier(0.76, 0, 0.24, 1),
-        translate 1s var(--delay) cubic-bezier(0.76, 0, 0.24, 1);
+        opacity calc(var(--duration) * 0.5) var(--delay) var(--easing),
+        translate var(--duration) var(--delay) var(--easing);
     }
   }
 }

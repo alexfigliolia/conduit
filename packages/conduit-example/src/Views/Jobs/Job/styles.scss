@@ -1,0 +1,75 @@
+@use "Styles/Variables";
+
+.job-listing {
+  width: 100%;
+  display: flex;
+  opacity: 0;
+  flex-direction: column;
+  gap: 0.5em;
+  padding: 1em;
+  color: #fff;
+  border-radius: 0.85em;
+  animation: fade-in 0.5s forwards;
+  & > div {
+    width: 100%;
+    display: flex;
+    align-items: flex-start;
+  }
+  &__title {
+    gap: 1em;
+    & svg,
+    & img {
+      flex-shrink: 0;
+      width: 3em;
+    }
+    & img {
+      height: auto;
+      border-radius: 50%;
+      overflow: hidden;
+    }
+    & svg {
+      height: 3em;
+      scale: 1.15;
+      & path {
+        fill: #fff;
+      }
+    }
+  }
+  &__title-meta {
+    width: 100%;
+    display: flex;
+    flex-direction: column;
+    gap: 0.3em;
+    & > span {
+      text-box-trim: trim-both;
+    }
+    & > a {
+      text-decoration: none;
+      color: #fff;
+      outline: none;
+      &:visited {
+        color: #fff;
+      }
+      &:hover,
+      &:focus {
+        text-decoration: underline;
+      }
+    }
+  }
+  &__location {
+    display: flex;
+    align-items: center;
+    gap: 0.25em;
+    font-size: 0.9em;
+    & span {
+      opacity: 0.75;
+    }
+    & > svg {
+      width: 0.9em;
+      height: 0.9em;
+      & path {
+        fill: #fb2a5d;
+      }
+    }
+  }
+}

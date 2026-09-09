@@ -5,7 +5,7 @@ import type {
   ListBoxEventCallback,
   ListBoxItemRenderer,
 } from "./Option";
-import type { ListBoxProviderProps } from "./Context";
+import type { ListBoxProviderProps, ListBoxScrollDirection } from "./Context";
 
 export interface EmptyStateProps {
   renderEmptyState?: () => ReactNode;
@@ -19,7 +19,11 @@ export type ListBoxCommonUIProps<T extends IOption> = EmptyStateProps &
   }>;
 
 export type Props<T extends IOption> = ListBoxProviderProps<T> &
-  ListBoxCommonUIProps<T>;
+  ListBoxCommonUIProps<T> & {
+    selectable?: boolean;
+    scrollDirection?: ListBoxScrollDirection;
+    scrollToNodeOnFocus?: boolean;
+  };
 
 export type ListBoxBaseUIProps<T extends IOption> = ListBoxCommonUIProps<T> & {
   items: T[];
@@ -32,7 +36,10 @@ export type ListBoxUIProps<T extends IOption> = WithListBoxLabelOptions<
 >;
 
 export type ListBoxLabelOptions =
-  | { independent?: true; label: ReactNode }
-  | { independent: false; label?: never };
+  | ({ independent?: true } & (
+      | { "aria-labelledby": string; label: ReactNode }
+      | { "aria-label": string }
+    ))
+  | { independent: false; label?: never; "aria-labelledby"?: string };
 
 export type WithListBoxLabelOptions<T> = T & ListBoxLabelOptions;

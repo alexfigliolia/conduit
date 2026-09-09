@@ -1,4 +1,10 @@
-import { useCallback, useId, useLayoutEffect, useMemo } from "react";
+import {
+  useCallback,
+  useId,
+  useLayoutEffect,
+  useMemo,
+  type MouseEvent,
+} from "react";
 
 import { useListBoxContext } from "../Context";
 
@@ -49,6 +55,10 @@ export const Option = <T extends IOption>({
     controls.onItemHover(id, index);
   }, [id, index, controls]);
 
+  const preventDefault = useCallback((e: MouseEvent<HTMLLIElement>) => {
+    e.preventDefault();
+  }, []);
+
   useLayoutEffect(() => {
     controls.safeSetNodeLength(index);
   }, [index, controls]);
@@ -63,6 +73,7 @@ export const Option = <T extends IOption>({
       data-focused={focused}
       aria-selected={selected}
       onMouseEnter={onItemHover}
+      onMouseDown={preventDefault}
       className={LIST_BOX_OPTION_CLASS}>
       {renderedNode}
     </li>

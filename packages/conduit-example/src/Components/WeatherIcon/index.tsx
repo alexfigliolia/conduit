@@ -3,12 +3,14 @@ import windGustsCloudy from "@ui/WeatherIcons/wind-gusts-cloudy.svg";
 import windGustsCloudy5 from "@ui/WeatherIcons/wind-gusts-cloudy-5.svg";
 import unknownPrecipitation2 from "@ui/WeatherIcons/unknown-precipitation-2.svg";
 import sunny from "@ui/WeatherIcons/sunny.svg";
+import snowflake from "@ui/WeatherIcons/snowflake.svg";
 import shower from "@ui/WeatherIcons/shower.svg";
 import rain2 from "@ui/WeatherIcons/rain-3.svg";
 import rain3 from "@ui/WeatherIcons/rain-3.svg";
 import partlyCloudy from "@ui/WeatherIcons/partly-cloudy.svg";
 import partlyCloudyNight from "@ui/WeatherIcons/partly-cloudy-night.svg";
 import nightShower from "@ui/WeatherIcons/night-shower-2.svg";
+import thunderSleet from "@ui/WeatherIcons/lightning-sleet.svg";
 import lightDrizzle from "@ui/WeatherIcons/light-drizzle.svg";
 import heavyRain from "@ui/WeatherIcons/heavy-rain-2.svg";
 import hail from "@ui/WeatherIcons/hail.svg";
@@ -19,7 +21,6 @@ import cloud from "@ui/WeatherIcons/cloudy.svg";
 import cloudyNight from "@ui/WeatherIcons/cloudy-night.svg";
 import clearNight from "@ui/WeatherIcons/clear-night.svg";
 
-// TODO - add alt text
 export const WeatherIcon = memo(
   ({ code, night, className }: WeatherIconProps) => {
     const icon = useMemo(() => {
@@ -79,7 +80,12 @@ export const WeatherIcon = memo(
           }
           return rain3;
         case 81:
+        case 65:
           return heavyRain;
+        case 71:
+          return snowflake;
+        case 95:
+          return thunderSleet;
         default:
           console.log("unknown weather code", code);
           return sunny;

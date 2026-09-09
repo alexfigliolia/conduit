@@ -11,13 +11,11 @@ export type ListBoxKeyboardEvent = ReactKeyboardEvent<any> | KeyboardEvent;
 
 export type ListBoxKeyboardEventHandler = (e: ListBoxKeyboardEvent) => void;
 
-export interface ListBoxProviderProps<T extends IOption> {
-  items: T[];
-  multiple?: boolean;
+export interface ListBoxProviderProps<
+  T extends IOption,
+> extends ListBoxSelectionOptions<T> {
   initialSelected?: number[];
   onChange?: ListBoxChangeEvent<T>;
-  onEscape?: () => void;
-  containerID: string;
   ref?: RefObject<ListBoxKeyboardControls<T> | null>;
 }
 
@@ -41,4 +39,9 @@ export interface ListBoxSelectionOptions<T extends IOption> {
   multiple?: boolean;
   containerID: string;
   onEscape?: () => void;
+  selectable?: boolean;
+  scrollDirection?: ListBoxScrollDirection;
+  scrollToNodeOnFocus?: boolean;
 }
+
+export type ListBoxScrollDirection = "block" | "inline";

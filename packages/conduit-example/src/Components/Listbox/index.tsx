@@ -11,6 +11,9 @@ export const Listbox = <T extends IOption>({
   containerID,
   multiple = false,
   initialSelected,
+  selectable,
+  scrollDirection,
+  scrollToNodeOnFocus,
   ...uiProps
 }: Props<T>) => {
   return (
@@ -21,7 +24,10 @@ export const Listbox = <T extends IOption>({
       onEscape={onEscape}
       onChange={onChange}
       containerID={containerID}
-      initialSelected={initialSelected}>
+      initialSelected={initialSelected}
+      selectable={selectable}
+      scrollDirection={scrollDirection}
+      scrollToNodeOnFocus={scrollToNodeOnFocus}>
       <ListboxUI
         {...uiProps}
         items={items}

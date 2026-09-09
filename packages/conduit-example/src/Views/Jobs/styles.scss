@@ -1,0 +1,38 @@
+.job-search .empty-state {
+  display: none;
+}
+
+.job-list {
+  list-style-type: none;
+  outline-offset: 0.5em;
+  border-radius: 0.85em;
+  &:focus {
+    outline: 0.1em solid #fff;
+  }
+  & > li[role="option"] {
+    margin-bottom: 1em;
+    cursor: auto;
+    & > article {
+      border: 1px solid transparent;
+    }
+    &[data-focused="true"] > article {
+      border: 1px solid #ffffffa6;
+    }
+  }
+  & .empty-state {
+    display: none;
+  }
+}
+
+.job-loader {
+  bottom: 1em;
+  left: 50%;
+  translate: -50% 0;
+  position: fixed;
+  --w-size: 60px;
+  opacity: 0;
+  transition: opacity 1s;
+  &.visible {
+    opacity: 1;
+  }
+}
