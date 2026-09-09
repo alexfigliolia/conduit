@@ -67,6 +67,10 @@ export abstract class CacheAbstract<
     return entry;
   }
 
+  protected resetInfiniteCache() {
+    this.InfiniteCache.onReset();
+  }
+
   protected readonly onCacheEntryCreate = <T>(
     node: CacheEntry<T, any>,
     value: NonFunction<T>,
@@ -86,4 +90,11 @@ export abstract class CacheAbstract<
       this.InfiniteCache.deletePageNode(node as any);
     }
   };
+
+  protected get lastInfiniteIDs() {
+    return {
+      lastPageID: this.InfiniteCache.lastPageID,
+      lastInfiniteID: this.InfiniteCache.lastInfiniteID,
+    };
+  }
 }

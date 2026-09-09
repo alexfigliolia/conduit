@@ -20,9 +20,8 @@ export class Cache extends CacheAbstract<
 
   public override serialize(): SerializedGraph {
     return {
+      ...this.lastInfiniteIDs,
       data: this.storage.serialize(this).nodes,
-      lastPageID: this.InfiniteCache.lastPageID,
-      lastInfiniteID: this.InfiniteCache.lastInfiniteID,
     };
   }
 
@@ -53,6 +52,6 @@ export class Cache extends CacheAbstract<
 
   public reset() {
     this.storage.reset();
-    this.InfiniteCache.onReset();
+    super.resetInfiniteCache();
   }
 }
