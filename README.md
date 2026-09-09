@@ -93,7 +93,7 @@ const subscriber = WeatherConduit.subscribeToValue({
 subscriber();
 ```
 
-Let's say you want to know the status of you conduit's operation. You can also subscribe to its internal operation state
+You can also subscribe to its internal operation status
 
 ```typescript
 import { WeatherConduit, TOKIO_POSITION } from "./MyWeatherConduit";
@@ -109,7 +109,7 @@ const subscriber = WeatherConduit.subscribeToStatus({
 subscriber();
 ```
 
-You can also subscribe to both at once
+You can also subscribe to both value and operation status at the same time
 
 ```typescript
 import { WeatherConduit, TOKIO_POSITION } from "./MyWeatherConduit";
@@ -310,7 +310,7 @@ app.get('*', (req, res) => {
 });
 
 // on the client initialize the cache with serverside data
-const ConduitCache = new Cache(window.__CONDUIT_CACHE__);
+const ConduitCache = new Cache({ data: window.__CONDUIT_CACHE__ });
 ```
 
 Using this technique your Conduit cache will be populated with the results of each operation that took place on the server.
@@ -327,12 +327,147 @@ This storages structure uses serialization that is more robust than `JSON.string
 
 These complex types - normally not supported in standard JSON - are decomposed into JSON-valid primitives and reconstructed when building your cache from serialized data.
 
-If there is a JavaScript type you'd like to see supported, that currently isn't, please [file and issue here](https://github.com/alexfigliolia/conduit/issues).
+If there is a JavaScript type you'd like to see supported, that currently isn't, please [file and issue here](https://github.com/alexfigliolia/conduit/issues) or checkout [Creating your own Serializers](#creating-your-own-serializers).
 
 To visualize the storage structure you can clone this repository and run:
 
 ```bash
 pnpm i && pnpm setup:repo && repokit core visualize
+```
+
+
+### Creating your own Serializers
+If using complex types or custom classes in your conduit cache it may be pertinent to understand how to rebuild their prototypes after they've been converted to JSON. Conduit makes this easy by exposing an `AbstractSerializer`. The `AbstractSerializer` is how the cache supports de/re-composing maps, sets, dates, and more after cache data has been serialized.
+
+To create a serializer for your custom type, you can extend the `AbstractSerializer` and pass it into your `Cache's` options.
+
+As a working example, let's consider the following custom type returned by a conduit
+
+```typescript
+export class APIResponse<T, E = unknown> {
+  public readonly statusCode: number;
+  public readonly responseData?: T;
+  public readonly error: E | null = null;
+  constructor({ statusCode, responseData, error = null }) {
+    this.error = error;
+    this.statusCode = statusCode;
+    this.responseData = responseData;
+  }
+
+  public deriveValue() {
+    if(!!this.error && !this.responseData) {
+      return this.error;
+    }
+    return this.responseData;
+  }
+}
+```
+
+If you were to serialize this value to JSON for the purposes or storage or transfer via API the `APIResponse.deriveValue()` would get lost. Any code relying on this prototypal method would also break if it were to not be there when constructing a cache from serialized data. 
+
+Here's how you can teach the Conduit `Cache` how to deconstruct and recompose your custom types:
+
+```typescript
+import { 
+  Cache, 
+  AbstractSerializer, 
+  type OnPrimitive,
+  type IInterativeSerializer
+  type ConduitSerializedValue 
+} from "@figliolia/contuit";
+import { APIResponse } from "./my-custom-api-response"; 
+
+export class APIResponseSerializer extends AbstractSerializer<
+  APIResponse<any, any>
+  { statusCode: number, responseData: unknown, error: null | unknown }
+> {
+    constructor(config: IInterativeSerializer) {
+    super("API RESPONSE SERIALIZER", config);
+  }
+
+  // Override `matchPreserializationInput` so it can identify your objects
+  public override matchPreserializationInput(input: unknown) {
+    return input instanceof APIResponse;
+  }
+
+  // Override `deserialize` to reconstruct your custom types from serialized
+  // inputs
+  public override deserialize(
+    value: ConduitSerializedValue<{ 
+      statusCode: number, responseData: unknown, error: null | unknown 
+    }>
+  ) {
+    const config = this.config.deserialize(value.value);
+    // run any validations you wish after deserializing
+    if (typeof config.statusCode !== "number") {
+      this.sanitationError(config);
+    }
+    // use the config to re-construct an APIResponse instance
+    return new APIResponse(config);
+  }
+
+  // Override `serializeValue` to turn an input into deterministic
+  // serializeable data
+  protected override serializeValue(input: APIResponse<any, any>) {
+    return this.config.serialize(input);
+  }
+
+  // Override toPath - this method is used to generate cache node
+  // paths in the storage graph.
+  public override toPath(
+    value: APIResponse<any, any>,
+    onPrimitive: OnPrimitive,
+  ): boolean {
+    // you can use Conduit's default object path traveral which will 
+    // deconstruct any object's key/value pairs into a graph node path
+    return this.defaultPathSerializer(value, onPrimitive);
+
+    // Or you can create an optimized version of your own based
+    // on the identity properties of you input
+
+    // Create an initial path edge from your serializer's key
+    onPrimitive(this.KEY_INDICATOR);
+    // traverse deterministic only the properties pertinent to your type's
+    // cache identity
+    const requiredProperties = ["statusCode", "responseData", "error"];
+    for(const property in requiredProperties) {
+      // invoke onPrimitive for each JavaScript primitive and 
+      // `this.config.traverse` for non JavaScript primitivese
+      if(
+        !onPrimitive(property) || 
+        !this.config.traverse(value[property], onPrimitive)
+      ) {
+        // break early if a call returns false
+        return false;
+      }
+    }
+    // call onPrimitive once more with your serializer's key to
+    // close your path
+    return onPrimitive(this.KEY_INDICATOR);
+  }
+}
+```
+
+Finally pass your serializer to your conduit cache
+
+```typescript
+import { Cache } from "@figliolia/conduit";
+import { APIResponseSerializer } from "./my-api-response-serializer";
+
+export const cache = new Cache({
+  serializers: [APIResponseSerializer]
+});
+```
+
+Now any usage of your `APIResponse` class can be serialized to JSON and its prototype reconstructed when calling 
+
+```typescript
+const serverData = serverCache.serialize(); 
+
+const clientCache = new Cache({ 
+  data: serverData,  
+  serializers: [APIResponseSerializer]
+});
 ```
 
 ## Usage with React

@@ -138,6 +138,9 @@ export class ListBoxSelection<
 
   public selectItem(id: string) {
     this.activateDescendant(id);
+    if (!this.options.selectable) {
+      return;
+    }
     this.mergeState(previous => {
       if (previous.selectedItems.has(id)) {
         return {
@@ -160,6 +163,9 @@ export class ListBoxSelection<
 
   public forceSelect(id: string) {
     this.activateDescendant(id);
+    if (!this.options.selectable) {
+      return;
+    }
     this.mergeState(previous => {
       if (!this.options.multiple) {
         return { selectedItems: new Set([id]) };
@@ -175,6 +181,9 @@ export class ListBoxSelection<
 
   public deselectItem(id: string) {
     this.activateDescendant(id);
+    if (!this.options.selectable) {
+      return;
+    }
     this.mergeState(previous => {
       if (!this.options.multiple) {
         return { selectedItems: new Set() };

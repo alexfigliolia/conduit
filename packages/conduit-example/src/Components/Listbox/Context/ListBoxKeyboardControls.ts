@@ -11,17 +11,17 @@ export class ListBoxKeyboardControls<
 
   public focusWithScroll(node: Element) {
     this.focusItem(node.getAttribute("id")!);
-    node.scrollIntoView({ block: "nearest" });
+    this.scrollTo(node);
   }
 
   public selectWithScroll(node: Element) {
     this.selectItem(node.getAttribute("id")!);
-    node.scrollIntoView({ block: "nearest" });
+    this.scrollTo(node);
   }
 
   public forceSelectWithScroll(node: Element) {
     this.forceSelect(node.getAttribute("id")!);
-    node.scrollIntoView({ block: "nearest" });
+    this.scrollTo(node);
   }
 
   public readonly onKeyUp = (e: ListBoxKeyboardEvent) => {
@@ -75,7 +75,11 @@ export class ListBoxKeyboardControls<
   };
 
   private onControlA(nodes: NodeListOf<Element>) {
-    if (!this.controlling || !this.options.multiple) {
+    if (
+      !this.controlling ||
+      !this.options.multiple ||
+      !this.options.selectable
+    ) {
       return;
     }
     if (this.getState().selectedItems.size === this.options.items.length) {
@@ -156,5 +160,13 @@ export class ListBoxKeyboardControls<
       return this.incrementCurrentIndex(nodes.length);
     }
     this.decrementCurrentIndex(nodes.length);
+  }
+
+  private scrollTo(node: Element) {
+    if (this.options.scrollToNodeOnFocus) {
+      node.scrollIntoView({
+        [this.options.scrollDirection ?? "block"]: "nearest",
+      });
+    }
   }
 }

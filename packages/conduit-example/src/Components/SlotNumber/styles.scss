@@ -1,11 +1,13 @@
-@use "Styles/Variables";
-
 .slot-machine-numbers {
-  @include Variables.center;
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
   position: relative;
+  --easing: cubic-bezier(0.76, 0, 0.24, 1);
+  --duration: 1s;
   transition:
-    width 1s,
-    height 1s;
+    width var(--duration) var(--easing),
+    height var(--duration) var(--easing);
   & .dummy {
     top: 0;
     left: 0;

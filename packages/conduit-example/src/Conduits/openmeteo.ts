@@ -5,7 +5,6 @@ import { cache } from "./cache";
 
 export const DailyWeatherConduit = new Conduit({
   cache,
-  defaultValue: undefined,
   key: ["daily-weather"],
   operation: (location?: ILocation) => {
     if (!location) {

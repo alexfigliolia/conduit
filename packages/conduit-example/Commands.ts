@@ -8,7 +8,7 @@ export const Commands = new RepoKitCommand({
       command: "vp build",
       description: "Build's the example app for production",
     },
-    dev: {
+    start: {
       command: "vp dev",
       description: "Runs the example app's development server",
     },

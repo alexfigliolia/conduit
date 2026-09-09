@@ -6,6 +6,7 @@ import { cache } from "./cache";
 export const GeocodingConduit = new NetworkConduit({
   key: ["geocoding"],
   cache,
+  defaultValue: [],
   operation: (query: string) => {
     return Geocoding.fetch(query);
   },

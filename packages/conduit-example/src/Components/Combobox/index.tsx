@@ -96,6 +96,8 @@ export const Combobox = <T extends IOption>({
         {inputNode}
         {renderListBox(
           <Listbox<T>
+            selectable
+            scrollToNodeOnFocus
             items={items}
             independent={false}
             multiple={multiple}
