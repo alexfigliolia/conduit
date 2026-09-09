@@ -1,8 +1,13 @@
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
-import { Conduit } from "../Conduits";
-import { Cache, CacheEntry } from "../Cache";
-import { TEST_TYPES } from "../__fixtures__/types";
+import {
+  InfiniteConduitPage,
+  Conduit,
+  InfiniteConduit,
+  InfiniteConduitValue,
+} from "../Conduits";
+import { Cache, CacheEntry, ConduitStatus } from "../Cache";
+import { INFINITE_TEST_ARGS, TEST_TYPES } from "../__fixtures__/types";
 import {
   createNonSpreadArgsConduit,
   createSyncConduit,
@@ -11,31 +16,52 @@ import {
 const cache = new Cache();
 
 const CONDUITS = [
-  ...TEST_TYPES.map(
+  ...TEST_TYPES.flatMap((p, i) => [
+    new Conduit({
+      cache,
+      key: [`c${i}`],
+      defaultValue: p,
+      operation: (..._args: typeof TEST_TYPES) => p,
+    }),
+  ]),
+  ...TEST_TYPES.flatMap(
     (p, i) =>
       new Conduit({
         cache,
-        key: [`c${i}`],
-        defaultValue: structuredClone(p),
-        operation: (..._args: typeof TEST_TYPES) => p,
-      }),
-  ),
-  ...TEST_TYPES.map(
-    (p, i) =>
-      new Conduit({
-        cache,
-        defaultValue: structuredClone(p),
+        defaultValue: p,
         key: [`c${TEST_TYPES.length + i}`],
-        operation: (..._args: typeof TEST_TYPES) => Promise.resolve(p),
+        operation: async (..._args: typeof TEST_TYPES) => p,
       }),
   ),
 ];
+
+const INFINITE_CONDUITS = TEST_TYPES.map(
+  (type, i) =>
+    new InfiniteConduit({
+      cache,
+      key: [`ic${i}`],
+      paginationArgs: ["cursor"],
+      operation: async (_: typeof INFINITE_TEST_ARGS) => type,
+    }),
+);
 
 describe("Cache", () => {
   describe("Cache Building", () => {
     beforeEach(async () => {
       cache.reset();
       await Promise.all(CONDUITS.map(c => c.execute({ args: TEST_TYPES })));
+      await Promise.all(
+        INFINITE_CONDUITS.flatMap(c =>
+          Array.from({ length: 10 }, (_, i) =>
+            c.execute({
+              args: {
+                ...INFINITE_TEST_ARGS,
+                cursor: `${INFINITE_TEST_ARGS.cursor}-${i}`,
+              },
+            }),
+          ),
+        ),
+      );
     });
 
     it("Cache Building - Cold", () => {
@@ -43,25 +69,158 @@ describe("Cache", () => {
         const node = cache.get([`c${i}`], TEST_TYPES);
         expect(node?.lastRead).toEqual(0);
         expect(node?.getValue()).toEqual(type);
+        expect(node).toBeInstanceOf(CacheEntry);
+      });
+      INFINITE_CONDUITS.forEach((conduit, i) => {
+        const node = cache.get<InfiniteConduitValue<any, any>>(
+          [`ic${i}`],
+          [conduit.getInfiniteOptions(INFINITE_TEST_ARGS)],
+        );
+        expect(node?.lastRead).not.toEqual(0);
+        expect(node?.getValue()).toBeInstanceOf(InfiniteConduitValue);
+        expect(node?.getValue().value).toHaveLength(10);
+        expect(node).toBeInstanceOf(CacheEntry);
+      });
+      INFINITE_CONDUITS.forEach((_, i) => {
+        Array.from({ length: 10 }, (_, i) => i).forEach(j => {
+          const node = cache.get<InfiniteConduitPage<any, any>>(
+            [`ic${i}`],
+            [
+              {
+                ...INFINITE_TEST_ARGS,
+                cursor: `${INFINITE_TEST_ARGS.cursor}-${j}`,
+              },
+            ],
+          );
+          expect(node?.lastRead).toEqual(0);
+          const page = node?.getValue();
+          expect(page).toBeInstanceOf(InfiniteConduitPage);
+          expect(page?.infiniteCacheID).toEqual(i.toString());
+          expect(page?.index).toEqual(j);
+          expect(page?.value).toEqual(TEST_TYPES[i]);
+          expect(node).toBeInstanceOf(CacheEntry);
+        });
       });
     });
 
     it("Cache Building - Warm", async () => {
-      expect(new Cache(cache.serialize()).serialize()).toEqual(
+      expect(new Cache({ data: cache.serialize() }).serialize()).toEqual(
         cache.serialize(),
       );
       // simulate initializing the cache from server state
       // and compare it to state that's never been serialized
-      const warmedCache = new Cache(
-        JSON.parse(JSON.stringify(cache.serialize())),
-      );
+      const warmedCache = new Cache({
+        data: JSON.parse(JSON.stringify(cache.serialize())),
+      });
       [...TEST_TYPES, ...TEST_TYPES].forEach((type, i) => {
         const coldNode = cache.get([`c${i}`], TEST_TYPES);
         const warmNode = warmedCache.get([`c${i}`], TEST_TYPES);
-        expect(coldNode?.getValue?.()).toEqual(type);
-        expect(warmNode?.getValue?.()).toEqual(type);
         expect(coldNode?.updatedAt).toEqual(warmNode?.updatedAt);
+        expect(coldNode?.getValue?.()).toEqual(type);
+        expect(coldNode?.getValue?.()).toEqual(warmNode?.getValue());
       });
+      INFINITE_CONDUITS.forEach((conduit, i) => {
+        const coldNode = cache.get<InfiniteConduitValue<any, any>>(
+          [`ic${i}`],
+          [conduit.getInfiniteOptions(INFINITE_TEST_ARGS)],
+        );
+        const warmNode = warmedCache.get<InfiniteConduitValue<any, any>>(
+          [`ic${i}`],
+          [conduit.getInfiniteOptions(INFINITE_TEST_ARGS)],
+        );
+        expect(coldNode?.updatedAt).toEqual(warmNode?.updatedAt);
+        expect(coldNode?.getValue?.()).toEqual(warmNode?.getValue());
+      });
+      INFINITE_CONDUITS.forEach((_, i) => {
+        Array.from({ length: 10 }, (_, i) => i).forEach(j => {
+          const coldNode = cache.get<InfiniteConduitPage<any, any>>(
+            [`ic${i}`],
+            [
+              {
+                ...INFINITE_TEST_ARGS,
+                cursor: `${INFINITE_TEST_ARGS.cursor}-${j}`,
+              },
+            ],
+          );
+          const warmNode = cache.get<InfiniteConduitPage<any, any>>(
+            [`ic${i}`],
+            [
+              {
+                ...INFINITE_TEST_ARGS,
+                cursor: `${INFINITE_TEST_ARGS.cursor}-${j}`,
+              },
+            ],
+          );
+          expect(coldNode?.updatedAt).toEqual(warmNode?.updatedAt);
+          expect(coldNode?.getValue?.()).toEqual(warmNode?.getValue());
+        });
+      });
+    });
+  });
+
+  describe("Sets", () => {
+    const testKey = ["set-test"];
+    const testArgs = [{ testSet: { args: true } }];
+    const testValue = [1, 2, 3];
+    beforeEach(() => {
+      cache.reset();
+    });
+
+    [testValue, () => testValue].forEach(value => {
+      it(`Creates new cache entries - with a ${typeof value === "function" ? "lazy-init setter function" : "specified value"}`, () => {
+        const entry = cache.set(testKey, testArgs, value);
+        expect(entry.lastRead).toEqual(0);
+        expect(entry.updatedAt).not.toEqual(0);
+        expect(entry).toBeInstanceOf(CacheEntry);
+        expect(entry.getValue()).toEqual(testValue);
+        expect(entry.getStatus()).toEqual(ConduitStatus.UNINITIALIZED);
+        expect(cache.get(testKey, testArgs)).toEqual(entry);
+      });
+    });
+
+    it("Overrides existing values of pre-existing cache entries", () => {
+      const entry = cache.set(testKey, testArgs, testValue);
+      expect(entry.getValue()).toEqual(testValue);
+      const entry2 = cache.set(testKey, testArgs, 1);
+      expect(entry.getValue()).toEqual(1);
+      expect(entry.lastRead).not.toEqual(0);
+      expect(entry.updatedAt).not.toEqual(0);
+      expect(Object.is(entry, entry2)).toEqual(true);
+    });
+  });
+
+  describe("Evictions", () => {
+    const testKey = ["set-test"];
+    const testArgs = [{ testSet: { args: true } }];
+    const testValue = [1, 2, 3];
+    beforeEach(() => {
+      cache.reset();
+    });
+
+    it("Evicting cache entries removes the entry from the graph", async () => {
+      const { created } = cache.storage.maybeIndex(
+        testKey,
+        testArgs,
+        testValue,
+      );
+      expect(created).toEqual(true);
+      await cache.evict(testKey, testArgs);
+      const { created: again } = cache.storage.maybeIndex(
+        testKey,
+        testArgs,
+        testValue,
+      );
+      expect(again).toEqual(true);
+    });
+
+    it("Evicting cache entries removes all subscriptions from a node", async () => {
+      const node = cache.set(testKey, testArgs, testValue);
+      node.subscribeToValue(() => {});
+      node.subscribeToStatus(() => {});
+      node.subscribe(() => {});
+      expect(node["subscriptions"].size).toEqual(4);
+      await cache.evict(testKey, testArgs);
+      expect(node["subscriptions"].size).toEqual(0);
     });
   });
 

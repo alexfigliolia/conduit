@@ -3,7 +3,6 @@ import { InfiniteConduitPage } from "../../../Conduits/InfiniteConduit/InfiniteC
 
 import {
   type OnPrimitive,
-  type PathKeyIndicator,
   TypeName,
   type IInterativeSerializer,
   type ConduitSerializedValue,
@@ -12,14 +11,13 @@ import { AbstractSerializer } from "./AbstractSerializer";
 
 export class InfiniteConduitPageSerializer extends AbstractSerializer<
   InfiniteConduitPage<any, any>,
-  any[]
+  IInfiniteConduitPageOptions<any>
 > {
-  public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:ICP`;
-  constructor(public readonly config: IInterativeSerializer) {
-    super(TypeName.INFINITE_CONDUIT_VALUE);
+  constructor(config: IInterativeSerializer) {
+    super(TypeName.INFINITE_CONDUIT_PAGE, config);
   }
 
-  public toPath(
+  public override toPath(
     value: InfiniteConduitPage<any, any>,
     onValue: OnPrimitive,
   ): boolean {
@@ -28,11 +26,13 @@ export class InfiniteConduitPageSerializer extends AbstractSerializer<
     return onValue(this.KEY_INDICATOR);
   }
 
-  public matchPreserializationInput(input: unknown) {
+  public override matchPreserializationInput(input: unknown) {
     return input instanceof InfiniteConduitPage;
   }
 
-  public deserialize(value: ConduitSerializedValue<any[]>) {
+  public override deserialize(
+    value: ConduitSerializedValue<IInfiniteConduitPageOptions<any>>,
+  ) {
     if (!value.value) {
       this.sanitationError(value.value);
     }
@@ -41,6 +41,7 @@ export class InfiniteConduitPageSerializer extends AbstractSerializer<
     ) as IInfiniteConduitPageOptions<any>;
     if (
       typeof config.index !== "number" ||
+      typeof config.pageID !== "string" ||
       typeof config.infiniteCacheID !== "string"
     ) {
       this.sanitationError(config);
@@ -48,7 +49,7 @@ export class InfiniteConduitPageSerializer extends AbstractSerializer<
     return new InfiniteConduitPage(config);
   }
 
-  protected serializeValue(value: InfiniteConduitPage<any, any>) {
-    return this.config.serialize(value);
+  protected override serializeValue(input: InfiniteConduitPage<any, any>) {
+    return this.config.serialize(input.toJSON());
   }
 }

@@ -41,4 +41,14 @@ export class InfiniteConduitPage<T, C extends UnknownCacheAbstract> {
       infiniteCacheID,
     });
   }
+
+  public toJSON() {
+    const { index, value, pageID, infiniteCacheID } = this;
+    return {
+      index,
+      value,
+      pageID,
+      infiniteCacheID,
+    };
+  }
 }

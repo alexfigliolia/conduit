@@ -1,4 +1,4 @@
-import { Serializer } from "../Cache/Serialization";
+import { Serializer } from "../Cache";
 
 import { StringifyCache } from "./StringifyCache";
 

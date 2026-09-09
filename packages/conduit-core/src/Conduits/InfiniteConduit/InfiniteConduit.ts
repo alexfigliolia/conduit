@@ -61,31 +61,28 @@ export class InfiniteConduit<
     args,
     expires = this.expires,
     cachePolicy = this.options.cachePolicy,
-  }: IInfiniteExecuteOptions<O>) {
+  }: IInfiniteExecuteOptions<O>): PageType<IValueType<O>> | ReturnType<O> {
     const infiniteEntry = this.getCacheEntry(args);
     const pageCacheEntry = this.getPageCacheEntry(args, infiniteEntry);
     infiniteEntry.setStatus(ConduitStatus.IN_FLIGHT);
     const result = new ConduitExecutor({
       expires,
       cachePolicy,
+      operation: this.options.operation,
       onCacheRead: (value: InfiniteConduitPage<IValueType<O>, C>) =>
         value.value,
       cacheInterceptor: (previous, next: IValueType<O>) =>
         previous.write(next, this.getCache()),
     }).build(
-      this.options.operation,
       pageCacheEntry,
       // @ts-expect-error typescript bug
     )(args);
-    if (result && (result as unknown) instanceof Promise) {
+    if ((result as any) instanceof Promise) {
       return (result as Promise<IValueType<O>>).then(v =>
         this.onPageExecution(v, infiniteEntry),
-      );
+      ) as ReturnType<O>;
     }
-    return this.onPageExecution(
-      result as PageType<ReturnType<O>>,
-      infiniteEntry,
-    );
+    return this.onPageExecution(result, infiniteEntry);
   }
 
   public override getCacheEntry(args: IInfiniteOperationOptions<O>) {
@@ -104,7 +101,7 @@ export class InfiniteConduit<
       },
     );
     if (created) {
-      cache.registerInfiniteCacheEntry(cacheNode);
+      cache.InfiniteCache.registerInfiniteNode(cacheNode);
     }
     return cacheNode;
   }
@@ -265,7 +262,7 @@ export class InfiniteConduit<
       ReturnType<C["evict"]>
     >;
     if (created) {
-      cache.registerPageCacheEntry(entry);
+      cache.InfiniteCache.registerPageNode(entry);
     }
     return entry;
   }

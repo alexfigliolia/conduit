@@ -1,15 +1,11 @@
-import type {
-  ConduitSerializedValue,
-  OnPrimitive,
-  PathKeyIndicator,
-} from "./types";
+import type { ConduitSerializedValue, OnPrimitive } from "./types";
 import { TypeChecker } from "./TypeChecker";
+import { AbstractPathSerializer } from "./AbstractPathSerializer";
 
-export abstract class AbstractSerializer<T, O> {
-  public abstract readonly KEY_INDICATOR: PathKeyIndicator;
-  public static readonly SERIALIZATION_MARKER = "___CONDUIT___";
-  constructor(public readonly typeName: string) {}
-
+export abstract class AbstractSerializer<
+  T,
+  O,
+> extends AbstractPathSerializer<T> {
   public serialize(value: T): ConduitSerializedValue<O> {
     return {
       [AbstractSerializer.SERIALIZATION_MARKER]: this.typeName,
@@ -42,7 +38,7 @@ export abstract class AbstractSerializer<T, O> {
 
   protected sanitationError(value: unknown) {
     throw new Error(
-      `Deserialization Error: Cannot deserialize the input ${value as any} to type ${this.typeName}`,
+      `Deserialization Error: ${this.constructor.name} cannot deserialize the input ${value as any} to type ${this.typeName}`,
       { cause: value },
     );
   }

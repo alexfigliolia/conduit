@@ -1,23 +1,29 @@
 import {
-  type TokenTraversalFn,
   type OnPrimitive,
-  type PathKeyIndicator,
+  TypeName,
+  type IInterativeSerializer,
 } from "./types";
-import { AbstractSerializer } from "./AbstractSerializer";
+import { AbstractPathSerializer } from "./AbstractPathSerializer";
 
-export class HashTableSerializer {
+export class HashTableSerializer extends AbstractPathSerializer<
+  Record<any, any>
+> {
   public static readonly COLLATOR = new Intl.Collator("en-us", {
     numeric: true,
     sensitivity: "base",
   });
-  public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:{}`;
-  constructor(public readonly traverse: TokenTraversalFn) {}
+  constructor(config: IInterativeSerializer) {
+    super(TypeName.OBJECT, config);
+  }
 
-  public toPath(value: Record<any, any>, onValue: OnPrimitive): boolean {
+  public override toPath(
+    value: Record<any, any>,
+    onValue: OnPrimitive,
+  ): boolean {
     onValue(this.KEY_INDICATOR);
     const keys = HashTableSerializer.sortObjectKeys(value);
     for (const key of keys) {
-      if (!onValue(key) || !this.traverse(value[key], onValue)) {
+      if (!onValue(key) || !this.config.traverse(value[key], onValue)) {
         return false;
       }
     }

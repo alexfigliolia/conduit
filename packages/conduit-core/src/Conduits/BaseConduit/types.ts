@@ -86,10 +86,12 @@ export type ConduitValueType<T extends BaseConduit<any, any>> = ConduitValue<
 >;
 
 export interface IConduitExecutor<
-  T,
-  U = T,
+  O extends IOperation,
+  D = undefined,
+  U = ConduitValue<O, D>,
   C = U,
 > extends Required<IOperationOptions> {
+  operation: O;
   onCacheRead?: (value: U) => C;
-  cacheInterceptor?: (previous: U, value: T) => U;
+  cacheInterceptor?: (previous: U, value: IValueType<O>) => U;
 }

@@ -86,7 +86,7 @@ describe("Infinite Conduits", () => {
       conduit.getStatus({ options: { cursor: "123123", pageSize: 10 } });
     }).toThrow();
     expect(() => {
-      void conduit.execute({
+      conduit.execute({
         args: { options: { cursor: "123123", pageSize: 10 } },
       });
     }).toThrow();

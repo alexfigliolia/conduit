@@ -1,15 +1,14 @@
 import type {
   ConduitSerializedValue,
+  IInterativeSerializer,
   OnPrimitive,
-  PathKeyIndicator,
 } from "./types";
 import { TypeName } from "./types";
 import { AbstractSerializer } from "./AbstractSerializer";
 
 export class BigIntSerializer extends AbstractSerializer<bigint, string> {
-  public override KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:BigInt`;
-  constructor() {
-    super(TypeName.BIGINT);
+  constructor(config: IInterativeSerializer) {
+    super(TypeName.BIGINT, config);
   }
 
   public override toPath(value: bigint, onValue: OnPrimitive) {

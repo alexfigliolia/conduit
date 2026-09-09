@@ -2,12 +2,11 @@ import { type NonFunction, State } from "@figliolia/galena";
 import { AutoIncrementingID } from "@figliolia/event-emitter";
 
 import { Serializer } from "../Serialization";
-import { InfiniteConduitValue } from "../../Conduits/InfiniteConduit/InfiniteConduitValue";
-import { InfiniteConduitPage } from "../../Conduits/InfiniteConduit/InfiniteConduitPage";
 
 import {
-  type UnknownCacheAbstract,
   type ICacheEntry,
+  type EvictionCallback,
+  type ICacheEntryFromSerializedValue,
   type SerializedCacheEntry,
   ConduitStatus,
 } from "./types";
@@ -18,23 +17,32 @@ export class CacheEntry<T, R> {
   public readonly State: State<T>;
   private outstandingTask?: Promise<unknown>;
   private readonly IDs = new AutoIncrementingID();
+  public readonly onEvict?: EvictionCallback<T, R>;
   private readonly subscriptions = new Map<string, () => void>();
   public readonly Status = new State(ConduitStatus.UNINITIALIZED);
-  constructor(public readonly options: ICacheEntry<T, R>) {
-    this.State = new State(options.defaultValue);
+  constructor({
+    value,
+    onEvict,
+    lastRead = 0,
+    updatedAt = 0,
+    status = ConduitStatus.UNINITIALIZED,
+  }: ICacheEntry<T, R>) {
+    this.onEvict = onEvict;
+    this.lastRead = lastRead;
+    this.updatedAt = updatedAt;
+    this.State = new State(value);
+    this.Status = new State(status);
   }
 
-  public static from<T extends NonFunction<any>, R>(
-    entry: SerializedCacheEntry<T>,
-    evict: () => R,
-    cache: UnknownCacheAbstract,
-  ): CacheEntry<T, R> {
-    const value = Serializer.deserialize(entry.value);
-    const cacheNode = new CacheEntry<T, R>({
-      evict,
-      defaultValue: value,
-    });
-    this.invokeRegister(cache, cacheNode);
+  public static from<T extends NonFunction<any>, R>({
+    entry,
+    onEvict,
+    onCreate,
+  }: ICacheEntryFromSerializedValue<T, R>) {
+    const { value: serializedValue, ...rest } = entry;
+    const value = Serializer.deserialize(serializedValue);
+    const cacheNode = new CacheEntry<T, R>({ ...rest, value, onEvict });
+    onCreate?.(cacheNode, value);
     cacheNode.lastRead = entry.lastRead;
     cacheNode.updatedAt = entry.updatedAt;
     cacheNode.setStatus(entry.status);
@@ -68,12 +76,12 @@ export class CacheEntry<T, R> {
   ) {
     const valueSubscriber = this.cacheNotifier(
       this.State.subscribe(value =>
-        onChange({ value, status: this.getStatus() }),
+        onChange({ value, status: this.Status.getState() }),
       ),
     );
     const statusSubscriber = this.cacheNotifier(
       this.Status.subscribe(status =>
-        onChange({ value: this.getValue(), status }),
+        onChange({ value: this.State.getState(), status }),
       ),
     );
     return () => {
@@ -101,13 +109,8 @@ export class CacheEntry<T, R> {
   }
 
   public evict() {
-    const result = this.options.evict();
-    if (result instanceof Promise) {
-      void result.then(() => this.releaseSubscriptions());
-    } else {
-      this.releaseSubscriptions();
-    }
-    return result;
+    this.releaseSubscriptions();
+    return this.onEvict?.(this);
   }
 
   public serialize(): SerializedCacheEntry<T> {
@@ -138,17 +141,5 @@ export class CacheEntry<T, R> {
       subscriber();
     }
     this.subscriptions.clear();
-  }
-
-  private static invokeRegister<R>(
-    cache: UnknownCacheAbstract,
-    cacheEntry: CacheEntry<any, R>,
-  ) {
-    const { defaultValue } = cacheEntry.options;
-    if (defaultValue instanceof InfiniteConduitValue) {
-      cache.registerInfiniteCacheEntry(cacheEntry);
-    } else if (defaultValue instanceof InfiniteConduitPage) {
-      cache.registerPageCacheEntry(cacheEntry);
-    }
   }
 }

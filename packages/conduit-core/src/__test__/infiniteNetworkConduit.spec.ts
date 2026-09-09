@@ -1,7 +1,7 @@
 import { beforeEach, describe, expect, it } from "vitest";
 
 import { ConduitNetworkResult } from "../Conduits/NetworkConduit";
-import { InfiniteConduitPage, InfiniteConduitValue } from "../Conduits";
+import { InfiniteConduitValue } from "../Conduits";
 import { Cache } from "../Cache";
 import {
   syncAndAsyncInfiniteNetworkConduits,
@@ -49,7 +49,7 @@ describe("Infinite Network Conduits", () => {
       for (const args of data) {
         const value = conduit.readPageCache(args);
         expect(value).toBeInstanceOf(ConduitNetworkResult);
-        expect(value).toBeInstanceOf(InfiniteConduitPage);
+        expect(value?.error).toBeInstanceOf(Error);
         expect(value?.data).toEqual(null);
         expect(conduit.readCache(args)[++pointer]?.data).toEqual(null);
       }

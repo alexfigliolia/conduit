@@ -1,6 +1,6 @@
 import type { NonFunction } from "@figliolia/galena";
 
-import type { SerializedGraph, SerializedNode } from "./types";
+import type { CacheOptions, SerializedGraph, SerializedNode } from "./types";
 import { Graph } from "./Graph";
 import { CacheAbstract } from "./CacheAbstract";
 
@@ -8,7 +8,15 @@ export class Cache extends CacheAbstract<
   Graph,
   Record<string, SerializedNode>
 > {
-  public storage = Graph.fromSerialized(this.options.data, this);
+  public readonly storage: Graph<any>;
+  constructor(options?: CacheOptions<Record<string, SerializedNode>>) {
+    super(options);
+    this.storage = Graph.fromSerialized({
+      graph: options?.data?.data,
+      onEvict: this.onCacheEntryEvict,
+      onCreate: this.onCacheEntryCreate,
+    });
+  }
 
   public override serialize(): SerializedGraph {
     return {
@@ -40,14 +48,11 @@ export class Cache extends CacheAbstract<
 
   public evict(key: any[], args: any[]) {
     const entry = this.get(key, args);
-    const result = entry?.evict?.();
-    if (entry) {
-      this.InfiniteCache.onEvict(entry);
-    }
-    return result;
+    return entry?.evict?.();
   }
 
   public reset() {
-    return this.storage.reset();
+    this.storage.reset();
+    this.InfiniteCache.onReset();
   }
 }

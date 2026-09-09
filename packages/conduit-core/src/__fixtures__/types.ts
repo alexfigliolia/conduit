@@ -27,6 +27,12 @@ export const SERIALIZABLE_TEST_TYPES = [
   ...SERIALIZABLE_NON_PRIMITIVES,
 ];
 
+export const INFINITE_TEST_ARGS = {
+  cursor: "test_cursor",
+  pageSize: 10,
+  searchQuery: "search parameter",
+};
+
 function buildObjectTypes(args: any[]) {
   return [
     args.reduce(

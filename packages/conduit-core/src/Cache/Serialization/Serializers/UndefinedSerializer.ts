@@ -1,7 +1,7 @@
 import type {
   ConduitSerializedValue,
+  IInterativeSerializer,
   OnPrimitive,
-  PathKeyIndicator,
 } from "./types";
 import { TypeName } from "./types";
 import { AbstractSerializer } from "./AbstractSerializer";
@@ -11,9 +11,8 @@ export class UndefinedSerializer extends AbstractSerializer<
   "undefined"
 > {
   public static TYPE_OF = "undefined" as const;
-  public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:Undefined`;
-  constructor() {
-    super(TypeName.UNDEFINED);
+  constructor(config: IInterativeSerializer) {
+    super(TypeName.UNDEFINED, config);
   }
 
   public toPath(_value: undefined, onValue: OnPrimitive) {

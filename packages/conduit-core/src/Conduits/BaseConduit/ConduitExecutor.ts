@@ -3,59 +3,64 @@ import type { NonFunction } from "@figliolia/galena";
 import { ConduitStatus } from "../../Cache/Graph/types";
 import type { CacheEntry } from "../../Cache/Graph/CacheEntry";
 
-import type { IConduitExecutor } from "./types";
+import type {
+  ConduitValue,
+  IConduitExecutor,
+  IOperation,
+  IValueType,
+} from "./types";
 
-export class ConduitExecutor<T, U = T, C = U> {
-  constructor(public readonly config: IConduitExecutor<T, U, C>) {}
+export class ConduitExecutor<
+  O extends IOperation,
+  D = undefined,
+  U = ConduitValue<O, D>,
+  C = U,
+> {
+  constructor(public readonly config: IConduitExecutor<O, D, U, C>) {}
 
-  public build<F extends (...args: any[]) => T>(
-    operation: F,
-    cacheEntry: CacheEntry<U, any>,
-  ) {
-    return (...args: Parameters<F>) => {
+  public build(cacheEntry: CacheEntry<U, any>) {
+    return (...args: Parameters<O>) => {
       switch (this.config.cachePolicy) {
         case "cache-only":
           return this.readCache(cacheEntry);
         case "bypass-cache":
-          return this.executeAndCache(cacheEntry, operation, args);
+          return this.executeAndCache(cacheEntry, args);
         case "read-cache-with-respect-to-expiry":
         default:
-          return this.runCacheFirst(cacheEntry, operation, args);
+          return this.runCacheFirst(cacheEntry, args);
       }
     };
   }
 
-  private runCacheFirst<F extends (...args: any[]) => T>(
-    cacheEntry: CacheEntry<U, any>,
-    operation: F,
-    args: Parameters<F>,
-  ) {
+  private runCacheFirst(cacheEntry: CacheEntry<U, any>, args: Parameters<O>) {
     if (Date.now() - cacheEntry.updatedAt >= this.config.expires) {
-      return this.executeAndCache(cacheEntry, operation, args);
+      return this.executeAndCache(cacheEntry, args);
     }
     return this.readCache(cacheEntry);
   }
 
-  private executeAndCache<F extends (...args: any[]) => T>(
+  private executeAndCache(
     cacheEntry: CacheEntry<U, any>,
-    operation: F,
-    args: Parameters<F>,
-  ): ReturnType<F> {
-    const outstandingTask = cacheEntry.getOutstandingTask<ReturnType<F>>();
+    args: Parameters<O>,
+  ): ReturnType<O> {
+    const outstandingTask = cacheEntry.getOutstandingTask<ReturnType<O>>();
     if (outstandingTask) {
       return outstandingTask;
     }
     cacheEntry.setStatus(ConduitStatus.IN_FLIGHT);
-    const result = cacheEntry.registerTask(operation(...args));
+    const result = cacheEntry.registerTask(this.config.operation(...args));
     if (result instanceof Promise) {
       return result.then(v =>
         this.onExecutionResult(cacheEntry, v),
-      ) as ReturnType<F>;
+      ) as ReturnType<O>;
     }
-    return this.onExecutionResult(cacheEntry, result) as ReturnType<F>;
+    return this.onExecutionResult(cacheEntry, result);
   }
 
-  private onExecutionResult(cacheEntry: CacheEntry<U, any>, value: T) {
+  private onExecutionResult(
+    cacheEntry: CacheEntry<U, any>,
+    value: IValueType<O>,
+  ) {
     const { cacheInterceptor } = this.config;
     if (typeof cacheInterceptor === "function") {
       cacheEntry.setValue(
@@ -73,6 +78,6 @@ export class ConduitExecutor<T, U = T, C = U> {
     if (this.config.onCacheRead) {
       return this.config.onCacheRead(cacheValue);
     }
-    return cacheValue as U;
+    return cacheValue as C;
   }
 }

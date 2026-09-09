@@ -1,22 +1,26 @@
 import type { NonFunction } from "@figliolia/galena";
 
-import type { InfiniteConduitValue } from "../../Conduits/InfiniteConduit/InfiniteConduitValue";
-import type { InfiniteConduitPage } from "../../Conduits/InfiniteConduit/InfiniteConduitPage";
-import type { EvictReturnType } from "../../Conduits/BaseConduit/types";
+import { Serializer } from "../Serialization";
+import { InfiniteConduitValue } from "../../Conduits/InfiniteConduit/InfiniteConduitValue";
+import { InfiniteConduitPage } from "../../Conduits/InfiniteConduit/InfiniteConduitPage";
 
-import type { SerializedStorage, UnknownCacheAbstract } from "./types";
+import type { CacheOptions, ICacheEntry, SerializedStorage } from "./types";
 import { InfiniteCache } from "./InfiniteCache";
-import type { CacheEntry } from "./CacheEntry";
+import { CacheEntry } from "./CacheEntry";
 
 export abstract class CacheAbstract<
   Storage extends Record<any, any>,
   StorageSerialized extends Record<any, any> = Storage,
 > {
   public abstract storage: Storage;
-  public readonly InfiniteCache = new InfiniteCache(this.options);
-  constructor(
-    public readonly options: Partial<SerializedStorage<StorageSerialized>> = {},
-  ) {}
+  public readonly InfiniteCache: InfiniteCache<typeof this>;
+  constructor({
+    data = {},
+    serializers = [],
+  }: CacheOptions<StorageSerialized> = {}) {
+    this.InfiniteCache = new InfiniteCache(data);
+    Serializer.registerJSONSerializer(...serializers);
+  }
 
   public abstract serialize(): SerializedStorage<StorageSerialized>;
 
@@ -24,12 +28,12 @@ export abstract class CacheAbstract<
     key: any[],
     args: any[],
     value: T | (() => T),
-  ): CacheEntry<T, unknown>;
+  ): CacheEntry<T, any> | undefined;
 
   public abstract get<T>(
     key: any[],
     args: any[],
-  ): CacheEntry<T, EvictReturnType<UnknownCacheAbstract>> | undefined;
+  ): CacheEntry<T, any> | undefined;
 
   public abstract reset(): void;
 
@@ -39,33 +43,47 @@ export abstract class CacheAbstract<
     key: any[],
     args: any[],
     defaultValue: T | (() => T),
-  ): CacheEntry<T, unknown>;
+  ): CacheEntry<T, any>;
 
-  public getInfiniteCacheEntry<T>(ID: string) {
-    return this.InfiniteCache.getInfiniteNode<T>(ID);
+  public createCacheEntryFromValue<T>(value: NonFunction<T>) {
+    const entry = new CacheEntry<T, void>({
+      value,
+      onEvict: this.onCacheEntryEvict,
+    });
+    this.onCacheEntryCreate(entry, value);
+    return entry;
   }
 
-  public getPageCacheEntry<T>(ID: string) {
-    return this.InfiniteCache.getPageNode<T>(ID);
-  }
-
-  public registerInfiniteCacheEntry<C extends UnknownCacheAbstract>(
-    cacheNode: CacheEntry<InfiniteConduitValue<any, C>, EvictReturnType<C>>,
+  public createCacheEntryFromSerialized<T>(
+    input: Omit<ICacheEntry<T, any>, "serialize">,
   ) {
-    this.InfiniteCache.registerInfiniteNode(cacheNode);
+    const { value, ...rest } = input;
+    const entry = new CacheEntry<T, void>({
+      ...rest,
+      value: Serializer.deserialize(value),
+      onEvict: this.onCacheEntryEvict,
+    });
+    this.onCacheEntryCreate(entry, value);
+    return entry;
   }
 
-  public registerPageCacheEntry<C extends UnknownCacheAbstract>(
-    cacheNode: CacheEntry<InfiniteConduitPage<any, C>, EvictReturnType<C>>,
-  ) {
-    this.InfiniteCache.registerPageNode(cacheNode);
-  }
+  protected readonly onCacheEntryCreate = <T>(
+    node: CacheEntry<T, any>,
+    value: NonFunction<T>,
+  ) => {
+    if (value instanceof InfiniteConduitValue) {
+      this.InfiniteCache.registerInfiniteNode(node as any);
+    } else if (value instanceof InfiniteConduitPage) {
+      this.InfiniteCache.registerPageNode(node as any);
+    }
+  };
 
-  public evictInfiniteCacheEntry(ID: string) {
-    this.InfiniteCache.deleteInfiniteNode(ID);
-  }
-
-  public evictPageCacheEntry(ID: string) {
-    this.InfiniteCache.deletePageNode(ID);
-  }
+  protected readonly onCacheEntryEvict = (node: CacheEntry<any, unknown>) => {
+    const value = node.getValue();
+    if (value instanceof InfiniteConduitValue) {
+      this.InfiniteCache.deleteInfiniteNode(node as any);
+    } else if (value instanceof InfiniteConduitPage) {
+      this.InfiniteCache.deletePageNode(node as any);
+    }
+  };
 }

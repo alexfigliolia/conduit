@@ -17,7 +17,7 @@ export class InfiniteCache<C extends UnknownCacheAbstract> {
     string,
     CacheEntry<InfiniteConduitValue<unknown, C>, EvictReturnType<C>>
   >();
-  constructor({ lastPageID, lastInfiniteID }: IInfiniteCache) {
+  constructor({ lastPageID, lastInfiniteID }: IInfiniteCache = {}) {
     this.pageIDs = new InfiniteCacheIDs(lastPageID);
     this.infiniteIDs = new InfiniteCacheIDs(lastInfiniteID);
   }
@@ -103,5 +103,12 @@ export class InfiniteCache<C extends UnknownCacheAbstract> {
     if (value instanceof InfiniteConduitPage) {
       return this.deletePageNode(entry);
     }
+  }
+
+  public onReset() {
+    this.pageIDs.reset();
+    this.infiniteIDs.reset();
+    this.PageNodes.clear();
+    this.InfiniteNodes.clear();
   }
 }

@@ -11,3 +11,4 @@ export * from "./types";
 export * from "./TypeChecker";
 export * from "./InfiniteConduitPageSerializer";
 export * from "./InfiniteConduitValueSerializer";
+export * from "./AbstractPathSerializer";

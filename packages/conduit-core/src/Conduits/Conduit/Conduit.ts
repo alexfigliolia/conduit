@@ -26,13 +26,11 @@ export class Conduit<
     expires = this.expires,
     cachePolicy = this.options.cachePolicy,
   }: IExecuteOptions<Parameters<O>>) {
-    return new ConduitExecutor<ConduitValue<O, D>>({
+    return new ConduitExecutor<O, D>({
       expires,
       cachePolicy,
-    }).build(
-      this.options.operation,
-      this.getCacheEntry(...args),
-    )(...args);
+      operation: this.options.operation,
+    }).build(this.getCacheEntry(...args))(...args);
   }
 
   public subscribeToValue({
