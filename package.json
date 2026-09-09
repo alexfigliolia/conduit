@@ -17,9 +17,8 @@
   "scripts": {
     "install:repokit": "cargo install repokit",
     "install:rust": "command -v rustc >/dev/null 2>&1 || { curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh -s -- -y; source \"$HOME/.cargo/env\"; }",
-    "install:vite": "command -v vp >/dev/null 2>&1 || { curl -fsSL https://vite.plus | bash; }",
     "lint": "pnpm oxlint --type-aware --report-unused-disable-directives --fix && pnpm oxfmt",
-    "setup:repo": "pnpm i && pnpm install:rust && pnpm install:repokit && pnpm install:vite",
+    "setup:repo": "pnpm i && pnpm install:rust && pnpm install:repokit",
     "test": "vitest"
   },
   "devDependencies": {

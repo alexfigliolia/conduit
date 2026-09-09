@@ -5,16 +5,12 @@ export const Commands = new RepoKitCommand({
   description: "An example application using Conduit",
   commands: {
     build: {
-      command: "vp build",
+      command: "pnpm vite build",
       description: "Build's the example app for production",
     },
     start: {
-      command: "vp dev",
+      command: "pnpm vite",
       description: "Runs the example app's development server",
-    },
-    "vite:install": {
-      command: "vp install",
-      description: "Installs vite plus related dependencies",
     },
     install: {
       command: "pnpm i",
