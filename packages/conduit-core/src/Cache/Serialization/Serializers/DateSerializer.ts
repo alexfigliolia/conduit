@@ -11,9 +11,9 @@ export class DateSerializer extends AbstractSerializer<Date, string> {
     super(TypeName.DATE, config);
   }
 
-  public override toPath(value: Date, onValue: OnPrimitive) {
-    onValue(this.KEY_INDICATOR);
-    return onValue(value.toISOString());
+  public override toPath(value: Date, onPrimitive: OnPrimitive) {
+    onPrimitive(this.KEY_INDICATOR);
+    return onPrimitive(value.toISOString());
   }
 
   public override matchPreserializationInput(input: unknown): input is Date {

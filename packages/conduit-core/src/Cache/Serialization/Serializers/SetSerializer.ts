@@ -11,14 +11,14 @@ export class SetSerializer extends AbstractSerializer<Set<any>, any[]> {
     super(TypeName.SET, config);
   }
 
-  public override toPath(value: Set<any>, onValue: OnPrimitive): boolean {
-    onValue(this.KEY_INDICATOR);
+  public override toPath(value: Set<any>, onPrimitive: OnPrimitive): boolean {
+    onPrimitive(this.KEY_INDICATOR);
     for (const entry of value) {
-      if (!this.config.traverse(entry, onValue)) {
+      if (!this.config.traverse(entry, onPrimitive)) {
         return false;
       }
     }
-    return onValue(this.KEY_INDICATOR);
+    return onPrimitive(this.KEY_INDICATOR);
   }
 
   public override matchPreserializationInput(input: unknown) {

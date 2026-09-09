@@ -11,9 +11,9 @@ export class BigIntSerializer extends AbstractSerializer<bigint, string> {
     super(TypeName.BIGINT, config);
   }
 
-  public override toPath(value: bigint, onValue: OnPrimitive) {
-    onValue(this.KEY_INDICATOR);
-    return onValue(value.toString());
+  public override toPath(value: bigint, onPrimitive: OnPrimitive) {
+    onPrimitive(this.KEY_INDICATOR);
+    return onPrimitive(value.toString());
   }
 
   public override matchPreserializationInput(input: unknown): input is bigint {

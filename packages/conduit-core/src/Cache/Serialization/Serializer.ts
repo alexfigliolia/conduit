@@ -13,6 +13,7 @@ import {
   AbstractPathSerializer,
   type OnPrimitive,
   type Primitive,
+  type CustomSerializer,
   InfiniteConduitValueSerializer,
 } from "./Serializers";
 
@@ -41,18 +42,18 @@ export class Serializer {
   ].map(C => new C(this.BINDINGS));
   public static readonly KEY_SERIALIZATION_INDICATOR = `${AbstractPathSerializer.SERIALIZATION_MARKER}:Key`;
 
-  public static registerJSONSerializer(
-    ...serializers: AbstractSerializer<any, any>[]
-  ) {
-    this.INTERNAL_JSON_SERIALIZERS.push(...serializers);
+  public static registerJSONSerializer(...serializers: CustomSerializer[]) {
+    this.INTERNAL_JSON_SERIALIZERS.push(
+      ...serializers.map(C => new C(this.BINDINGS)),
+    );
   }
 
-  public static toPath(key: any[], args: any[], onValue: OnPrimitive) {
-    if (!this.iterateAndTraverse(key, onValue)) {
+  public static toPath(key: any[], args: any[], onPrimitive: OnPrimitive) {
+    if (!this.iterateAndTraverse(key, onPrimitive)) {
       return false;
     }
-    onValue(Serializer.KEY_SERIALIZATION_INDICATOR);
-    return this.iterateAndTraverse(args, onValue);
+    onPrimitive(Serializer.KEY_SERIALIZATION_INDICATOR);
+    return this.iterateAndTraverse(args, onPrimitive);
   }
 
   public static serialize(value: unknown): any {
@@ -78,7 +79,7 @@ export class Serializer {
 
   private static handleNativeSerializeables(
     value: unknown,
-    onValue: (value: unknown) => unknown,
+    onPrimitive: (value: unknown) => unknown,
   ) {
     if (!TypeChecker.isObjectType(value)) {
       return value;
@@ -86,45 +87,45 @@ export class Serializer {
     if (TypeChecker.isHashTable(value)) {
       return Object.keys(value).reduce(
         (acc, next) => {
-          acc[next] = onValue(value[next]);
+          acc[next] = onPrimitive(value[next]);
           return acc;
         },
         {} as Record<any, any>,
       );
     }
     if (Array.isArray(value)) {
-      return (value as any[]).map(v => onValue(v));
+      return (value as any[]).map(v => onPrimitive(v));
     }
     throw TypeChecker.nonImplementedError(value);
   }
 
-  private static iterateAndTraverse(list: any[], onValue: OnPrimitive) {
+  private static iterateAndTraverse(list: any[], onPrimitive: OnPrimitive) {
     for (const item of list) {
-      if (!this.traverse(item, onValue)) {
+      if (!this.traverse(item, onPrimitive)) {
         return false;
       }
     }
     return true;
   }
 
-  private static traverse(value: unknown, onValue: OnPrimitive): any {
+  private static traverse(value: unknown, onPrimitive: OnPrimitive): any {
     if (!TypeChecker.isObjectType(value) && typeof value !== "undefined") {
-      return onValue(value as Primitive);
+      return onPrimitive(value as Primitive);
     }
     if (value instanceof Function) {
       throw TypeChecker.nonImplementedError(value);
     }
     if (Array.isArray(value)) {
-      return this.ARRAY_SERIALIZER.toPath(value, onValue);
+      return this.ARRAY_SERIALIZER.toPath(value, onPrimitive);
     }
     for (const serializer of this.INTERNAL_JSON_SERIALIZERS) {
       if (serializer.matchPreserializationInput(value)) {
-        return serializer.toPath(value as never, onValue);
+        return serializer.toPath(value as never, onPrimitive);
       }
     }
     return this.HASH_TABLE_SERIALIZER.toPath(
       value as Record<any, any>,
-      onValue,
+      onPrimitive,
     );
   }
 }

@@ -32,7 +32,7 @@ export type OnPrimitive = (current: Primitive) => boolean;
 
 export type TokenTraversalFn = (
   value: unknown,
-  onValue: OnPrimitive,
+  onPrimitive: OnPrimitive,
 ) => boolean;
 
 export type PathKeyIndicator =
@@ -46,3 +46,7 @@ export type SerializedInfiniteConduitValueType<T> = [
   value: ConduitSerializedValue<T>[],
   infiniteCacheID: string,
 ];
+
+export type CustomSerializer = new (
+  args: IInterativeSerializer,
+) => AbstractSerializer<any, any>;

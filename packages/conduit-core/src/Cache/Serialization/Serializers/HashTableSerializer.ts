@@ -18,16 +18,16 @@ export class HashTableSerializer extends AbstractPathSerializer<
 
   public override toPath(
     value: Record<any, any>,
-    onValue: OnPrimitive,
+    onPrimitive: OnPrimitive,
   ): boolean {
-    onValue(this.KEY_INDICATOR);
+    onPrimitive(this.KEY_INDICATOR);
     const keys = HashTableSerializer.sortObjectKeys(value);
     for (const key of keys) {
-      if (!onValue(key) || !this.config.traverse(value[key], onValue)) {
+      if (!onPrimitive(key) || !this.config.traverse(value[key], onPrimitive)) {
         return false;
       }
     }
-    return onValue(this.KEY_INDICATOR);
+    return onPrimitive(this.KEY_INDICATOR);
   }
 
   private static sortObjectKeys(obj: Record<any, any>) {

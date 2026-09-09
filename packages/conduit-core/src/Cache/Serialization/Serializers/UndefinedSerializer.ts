@@ -15,9 +15,9 @@ export class UndefinedSerializer extends AbstractSerializer<
     super(TypeName.UNDEFINED, config);
   }
 
-  public toPath(_value: undefined, onValue: OnPrimitive) {
-    onValue(this.KEY_INDICATOR);
-    return onValue(UndefinedSerializer.TYPE_OF);
+  public toPath(_value: undefined, onPrimitive: OnPrimitive) {
+    onPrimitive(this.KEY_INDICATOR);
+    return onPrimitive(UndefinedSerializer.TYPE_OF);
   }
 
   public override matchPreserializationInput(

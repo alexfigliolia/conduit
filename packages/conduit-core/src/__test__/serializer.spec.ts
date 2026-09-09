@@ -18,6 +18,10 @@ import {
 import { Serializer } from "../Cache/Serialization";
 import { SERIALIZABLE_TEST_TYPES } from "../__fixtures__/types";
 import {
+  CreateCustomSerializer,
+  TestCustomSerializedStructure,
+} from "../__fixtures__/TestCustomSerializer";
+import {
   MapInit,
   MapInitSerialized,
   SetInit,
@@ -266,5 +270,47 @@ describe("Serializer - a serializer JavaScript types that for some reason don't 
         }).toThrow();
       });
     });
+  });
+
+  describe("Custom Serializers", () => {
+    it("The Serializer should accept developer defined serializers for custom structures", () => {
+      const CustomSerializer = CreateCustomSerializer();
+      const original = new TestCustomSerializedStructure(4, {
+        test: [1, 2, 3, { test: true }],
+      });
+      Serializer.registerJSONSerializer(CustomSerializer);
+      const serialized = Serializer.serialize(original);
+      expect(serialized).toEqual({
+        ___CONDUIT___: "Test Custom Serializer",
+        value: [
+          4,
+          {
+            test: [
+              1,
+              2,
+              3,
+              {
+                test: true,
+              },
+            ],
+          },
+        ],
+      });
+      expect(Serializer.deserialize(serialized)).toEqual(original);
+      expect(() => {
+        Serializer.deserialize({
+          ___CONDUIT___: "Test Custom Serializer",
+          // invalid serialized input
+          value: [],
+        });
+      }).toThrow();
+    });
+  });
+
+  it("Serializers with duplicated type-names should trigger an error thrown at registry", () => {
+    const CustomSerializer = CreateCustomSerializer(TypeName.ARRAY);
+    expect(() => {
+      Serializer.registerJSONSerializer(CustomSerializer);
+    }).toThrow();
   });
 });

@@ -6,11 +6,11 @@ import type {
 } from "./types";
 
 export abstract class AbstractPathSerializer<T> {
-  private static readonly memo = new Set<TypeName & string>();
+  private static readonly memo = new Set<TypeName | string>();
   public readonly KEY_INDICATOR: PathKeyIndicator;
   public static readonly SERIALIZATION_MARKER = "___CONDUIT___";
   constructor(
-    public readonly typeName: TypeName & string,
+    public readonly typeName: TypeName | string,
     public readonly config: IInterativeSerializer,
   ) {
     if (AbstractPathSerializer.memo.has(typeName)) {
@@ -22,10 +22,10 @@ export abstract class AbstractPathSerializer<T> {
     this.KEY_INDICATOR = AbstractPathSerializer.toSerializationMarker(typeName);
   }
 
-  public abstract toPath(value: T, onValue: OnPrimitive): boolean;
+  public abstract toPath(value: T, onPrimitive: OnPrimitive): boolean;
 
   public static toSerializationMarker(
-    marker: TypeName & string,
+    marker: TypeName | string,
   ): PathKeyIndicator {
     return `${this.SERIALIZATION_MARKER}:${marker}`;
   }
