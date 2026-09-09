@@ -21,4 +21,5 @@ export const useConduitResolver = <
       void conduit.execute({ args, cachePolicy, expires });
     }
   }, [conduit, expires, cachePolicy, skip, args]);
+  return skip;
 };

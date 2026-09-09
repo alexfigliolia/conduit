@@ -28,11 +28,25 @@ export abstract class AbstractSerializer<
     );
   }
 
-  public abstract toPath(value: T, onValue: OnPrimitive): boolean;
+  public abstract toPath(value: T, onPrimitive: OnPrimitive): boolean;
 
   public abstract matchPreserializationInput(input: unknown): input is T;
 
   public abstract deserialize(value: ConduitSerializedValue<O>): T;
+
+  protected defaultPathSerializer(value: T, onPrimitive: OnPrimitive) {
+    onPrimitive(this.KEY_INDICATOR);
+    for (const key in value) {
+      if (
+        !value[key] ||
+        !onPrimitive(key) ||
+        !this.config.traverse(value[key], onPrimitive)
+      ) {
+        return false;
+      }
+    }
+    return onPrimitive(this.KEY_INDICATOR);
+  }
 
   protected abstract serializeValue(value: T): O;
 

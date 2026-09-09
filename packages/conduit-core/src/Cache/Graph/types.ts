@@ -1,6 +1,6 @@
 import type { NonFunction } from "@figliolia/galena";
 
-import type { AbstractSerializer } from "../Serialization";
+import type { CustomSerializer } from "../Serialization";
 
 import type { NodeParent } from "./NodeParent";
 import type { CacheEntry } from "./CacheEntry";
@@ -65,7 +65,7 @@ export interface IFromSerializedGraph extends Omit<
 }
 
 export interface CacheOptions<StorageSerialized extends Record<any, any>> {
-  serializers?: AbstractSerializer<any, any>[];
+  serializers?: CustomSerializer[];
   data?: Partial<SerializedStorage<StorageSerialized>>;
 }
 

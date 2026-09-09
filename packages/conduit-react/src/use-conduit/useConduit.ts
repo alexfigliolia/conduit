@@ -20,12 +20,11 @@ export const useConduit = <T extends Conduit<any, any, UnknownCacheAbstract>>(
   conduit: T,
   options: IUseOptions<IExecuteOptions<Parameters<T["options"]["operation"]>>>,
 ) => {
-  useConduitResolver(conduit, options);
-  const cacheEntry = useCacheEntry(conduit, options.args);
+  const skip = useConduitResolver(conduit, options);
+  const cacheEntry = useCacheEntry(conduit, options.args, skip);
   const state = useConduitValue(cacheEntry);
   const status = useConduitStatus(cacheEntry);
   const refetch = useConduitRefetch(conduit, options.args);
-  const value = useResolvedValue(state, status);
-
+  const value = useResolvedValue(state, status, skip);
   return useMemo(() => ({ value, status, refetch }), [value, status, refetch]);
 };

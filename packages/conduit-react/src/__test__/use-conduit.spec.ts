@@ -1,14 +1,8 @@
-import { beforeEach } from "node:test";
-
-import { describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it, vi } from "vitest";
 import { act, renderHook } from "@testing-library/react";
-import { Cache, ConduitStatus } from "@figliolia/conduit";
+import { Cache, Conduit, ConduitStatus } from "@figliolia/conduit";
 
 import { useConduit } from "../use-conduit";
-import {
-  createAsyncConduit,
-  createSyncConduit,
-} from "../../../conduit-core/src/__fixtures__/Conduits";
 
 const cache = new Cache();
 
@@ -17,36 +11,68 @@ describe("Use Conduit", () => {
     cache.reset();
   });
 
-  it("It returns a the conduit's value, status, and fetcher as reactive values - sync", () => {
-    // @ts-expect-error using bundled conduit dependencies
-    const conduit = createSyncConduit({ cache });
-    const args = [1, 2, 3];
-    // @ts-expect-error using bundled conduit dependencies
-    const { result } = renderHook(() => useConduit(conduit, { args }));
-    expect(result.current.value).toEqual(args);
+  const args1 = [1, 2, 3];
+  const args2 = [4, 5, 6];
+
+  it("It returns a the conduit's value, status, and fetcher as reactive values - sync", async () => {
+    const conduit = new Conduit({
+      cache,
+      key: ["test"],
+      operation: vi.fn().mockImplementation((...args: number[]) => args),
+    });
+
+    const { result, rerender } = renderHook((args: number[] = args1) =>
+      useConduit(conduit, { args }),
+    );
+    expect(result.current.value).toEqual(args1);
     expect(result.current.status).toEqual(ConduitStatus.IDOL);
     act(() => {
-      expect(result.current.refetch()).toEqual(args);
+      expect(result.current.refetch()).toEqual(args1);
     });
     expect(conduit.options.operation).toHaveBeenCalledTimes(2);
+    rerender(args2);
+    expect(result.current.value).toEqual(args2);
   });
 
   it("It returns a the conduit's value, status, and fetcher as reactive values - async", async () => {
-    vi.useFakeTimers();
-    vi.setTimerTickMode("manual");
-    // @ts-expect-error  using bundled conduit dependencies
-    const conduit = createAsyncConduit({ cache });
-    const args = [1, 2, 3];
-    const { result } = renderHook(() =>
-      // @ts-expect-error using bundled conduit dependencies
+    const conduit = new Conduit({
+      cache,
+      key: ["test"],
+      operation: vi.fn().mockImplementation(async (...args: number[]) => args),
+    });
+    const { result, rerender } = renderHook((args: number[] = args1) =>
       useConduit(conduit, { args }),
     );
     expect(result.current.value).toEqual(undefined);
     expect(result.current.status).toEqual(ConduitStatus.IN_FLIGHT);
-    await act(() => vi.advanceTimersByTime(1100));
-    expect(result.current.value).toEqual([1, 2, 3]);
+    await act(() => Promise.resolve());
+    expect(result.current.value).toEqual(args1);
     expect(result.current.status).toEqual(ConduitStatus.IDOL);
-    act(() => conduit.writeCache({ args, value: [1, 2, 3, 4] }));
-    expect(result.current.value).toEqual([1, 2, 3, 4]);
+    rerender(args2);
+    await act(() => Promise.resolve());
+    expect(conduit.options.operation).toHaveBeenCalledTimes(2);
+  });
+
+  it("It skips operations when the designated skip option is true", async () => {
+    const conduit = new Conduit({
+      cache,
+      key: ["test"],
+      operation: vi.fn().mockImplementation(async (...args: number[]) => args),
+    });
+    const { result, rerender } = renderHook((args: number[] = args1) =>
+      useConduit(conduit, { args, skipWhen: args[0] === 4 }),
+    );
+    expect(result.current.value).toEqual(undefined);
+    expect(result.current.status).toEqual(ConduitStatus.IN_FLIGHT);
+    await act(() => Promise.resolve());
+    expect(result.current.value).toEqual(args1);
+    expect(result.current.status).toEqual(ConduitStatus.IDOL);
+    rerender(args2);
+    await act(() => Promise.resolve());
+    expect(result.current.value).toEqual(args1);
+    expect(conduit.options.operation).toHaveBeenCalledTimes(1);
+    await act(() => result.current.refetch);
+    expect(result.current.value).toEqual(args1);
+    expect(conduit.options.operation).toHaveBeenCalledTimes(1);
   });
 });

@@ -10,13 +10,13 @@ export class ArraySerializer extends AbstractPathSerializer<any[]> {
     super(TypeName.ARRAY, config);
   }
 
-  public override toPath(value: any[], onValue: OnPrimitive): boolean {
-    onValue(this.KEY_INDICATOR);
+  public override toPath(value: any[], onPrimitive: OnPrimitive): boolean {
+    onPrimitive(this.KEY_INDICATOR);
     for (const item of value) {
-      if (!this.config.traverse(item, onValue)) {
+      if (!this.config.traverse(item, onPrimitive)) {
         return false;
       }
     }
-    return onValue(this.KEY_INDICATOR);
+    return onPrimitive(this.KEY_INDICATOR);
   }
 }

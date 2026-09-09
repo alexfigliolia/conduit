@@ -11,9 +11,9 @@ export class RegExpSerializer extends AbstractSerializer<RegExp, string> {
     super(TypeName.REGEXP, config);
   }
 
-  public override toPath(value: RegExp, onValue: OnPrimitive) {
-    onValue(this.KEY_INDICATOR);
-    return onValue(value.toString());
+  public override toPath(value: RegExp, onPrimitive: OnPrimitive) {
+    onPrimitive(this.KEY_INDICATOR);
+    return onPrimitive(value.toString());
   }
 
   public override matchPreserializationInput(input: unknown): input is RegExp {

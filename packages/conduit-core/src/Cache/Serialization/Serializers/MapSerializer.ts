@@ -14,14 +14,17 @@ export class MapSerializer extends AbstractSerializer<
     super(TypeName.MAP, config);
   }
 
-  public override toPath(value: Map<any, any>, onValue: OnPrimitive): boolean {
-    onValue(this.KEY_INDICATOR);
+  public override toPath(
+    value: Map<any, any>,
+    onPrimitive: OnPrimitive,
+  ): boolean {
+    onPrimitive(this.KEY_INDICATOR);
     for (const entry of value) {
-      if (!this.config.traverse(entry, onValue)) {
+      if (!this.config.traverse(entry, onPrimitive)) {
         return false;
       }
     }
-    return onValue(this.KEY_INDICATOR);
+    return onPrimitive(this.KEY_INDICATOR);
   }
 
   public override matchPreserializationInput(input: unknown) {

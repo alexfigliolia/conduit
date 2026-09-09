@@ -19,11 +19,11 @@ export class InfiniteConduitPageSerializer extends AbstractSerializer<
 
   public override toPath(
     value: InfiniteConduitPage<any, any>,
-    onValue: OnPrimitive,
+    onPrimitive: OnPrimitive,
   ): boolean {
-    onValue(this.KEY_INDICATOR);
-    this.config.traverse(value, onValue);
-    return onValue(this.KEY_INDICATOR);
+    onPrimitive(this.KEY_INDICATOR);
+    this.config.traverse(value, onPrimitive);
+    return onPrimitive(this.KEY_INDICATOR);
   }
 
   public override matchPreserializationInput(input: unknown) {
