@@ -2,48 +2,50 @@ import { InfiniteConduitValue } from "../../../Conduits/InfiniteConduit/Infinite
 
 import {
   type OnPrimitive,
-  type PathKeyIndicator,
   TypeName,
   type IInterativeSerializer,
   type ConduitSerializedValue,
+  type SerializedInfiniteConduitValueType,
 } from "./types";
 import { AbstractSerializer } from "./AbstractSerializer";
 
 export class InfiniteConduitValueSerializer extends AbstractSerializer<
-  InfiniteConduitValue<any>,
-  any[]
+  InfiniteConduitValue<any, any>,
+  SerializedInfiniteConduitValueType<any>
 > {
-  public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:ICV`;
-  constructor(public readonly config: IInterativeSerializer) {
-    super(TypeName.INFINITE_CONDUIT_VALUE);
+  constructor(config: IInterativeSerializer) {
+    super(TypeName.INFINITE_CONDUIT_VALUE, config);
   }
 
-  public toPath(
-    value: InfiniteConduitValue<any>,
+  public override toPath(
+    value: InfiniteConduitValue<any, any>,
     onValue: OnPrimitive,
   ): boolean {
     onValue(this.KEY_INDICATOR);
-    const pages = value.value.getState();
-    for (const entry of pages) {
-      if (!this.config.traverse(entry, onValue)) {
-        return false;
-      }
-    }
+    this.config.traverse(value, onValue);
     return onValue(this.KEY_INDICATOR);
   }
 
-  public matchPreserializationInput(input: unknown) {
+  public override matchPreserializationInput(input: unknown) {
     return input instanceof InfiniteConduitValue;
   }
 
-  public deserialize(value: ConduitSerializedValue<any[]>) {
-    if (!Array.isArray(value.value)) {
+  public override deserialize(
+    value: ConduitSerializedValue<SerializedInfiniteConduitValueType<any>>,
+  ) {
+    if (!Array.isArray(value.value) || value.value.length !== 2) {
       this.sanitationError(value.value);
     }
-    return new InfiniteConduitValue(this.config.deserialize(value.value ?? []));
+    const deserialized = this.config.deserialize(value.value);
+    const [infiniteValue, infiniteCacheID] = deserialized;
+    if (typeof infiniteCacheID !== "string" || !Array.isArray(infiniteValue)) {
+      this.sanitationError(value.value);
+    }
+    return new InfiniteConduitValue({ infiniteCacheID, value: infiniteValue });
   }
 
-  protected serializeValue(value: InfiniteConduitValue<any>) {
-    return this.config.serialize(Array.from(value.value.getState()));
+  protected override serializeValue(input: InfiniteConduitValue<any, any>) {
+    const { value, infiniteCacheID } = input;
+    return this.config.serialize([value, infiniteCacheID]);
   }
 }

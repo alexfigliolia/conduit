@@ -2,6 +2,7 @@ import type { IConduit, IValueType, IOperationOptions } from "../BaseConduit";
 import type { ConduitStatus, UnknownCacheAbstract } from "../../Cache";
 
 import type { InfiniteConduitValue } from "./InfiniteConduitValue";
+import type { InfiniteConduitPage } from "./InfiniteConduitPage";
 
 export type IInfiniteOperation<
   T extends Record<string, any> | undefined = Record<string, any>,
@@ -41,10 +42,11 @@ export interface IInfiniteExecuteOptions<
 
 export interface IInfiniteConduitSubscriber<
   O extends IInfiniteOperation<any, any>,
+  C extends UnknownCacheAbstract,
 > {
   args: IInfiniteOperationOptions<O>;
   onChange: (value: {
-    value: InfiniteConduitValue<IValueType<O>>;
+    value: InfiniteConduitValue<IValueType<O>, C>;
     status: ConduitStatus;
   }) => void;
 }
@@ -53,12 +55,12 @@ export interface IInfiniteValueSubscriber<
   O extends IInfiniteOperation<any, any>,
 > {
   args: IInfiniteOperationOptions<O>;
-  onChange: (value: InfiniteConduitValue<IValueType<O>>) => void;
+  onChange: (value: PageType<IValueType<O>>[]) => void;
 }
 
 export interface IPageValueSubscriber<O extends IInfiniteOperation<any, any>> {
   args: IInfiniteOperationOptions<O>;
-  onChange: (value: IValueType<O> | undefined) => void;
+  onChange: (value: PageType<IValueType<O>>) => void;
 }
 
 export interface IInfiniteStatusSubscriber<
@@ -72,3 +74,23 @@ export interface IInfiniteCacheWrite<O extends IInfiniteOperation<any, any>> {
   args: IInfiniteOperationOptions<O>;
   value: IValueType<O> | undefined;
 }
+
+export type PageType<T> = T | undefined;
+
+export interface IInfiniteConduitValue<T, C extends UnknownCacheAbstract> {
+  infiniteCacheID: string;
+  value: InfiniteConduitPage<T, C>[];
+}
+
+export interface IInfiniteConduitPageOptions<T> {
+  index: number;
+  value: PageType<T>;
+  pageID: string;
+  infiniteCacheID: string;
+}
+
+export type IInfiniteConduitPage<
+  T,
+  C extends UnknownCacheAbstract,
+> = IInfiniteConduitPageOptions<T> &
+  ({ write: true; cache: C } | { write?: false; cache?: never });

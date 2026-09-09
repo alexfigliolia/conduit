@@ -5,31 +5,44 @@ import { Serializer } from "../Serialization";
 
 import {
   type ICacheEntry,
+  type EvictionCallback,
+  type ICacheEntryFromSerializedValue,
   type SerializedCacheEntry,
   ConduitStatus,
 } from "./types";
 
-// TODO - clear subscribers on evictions
 export class CacheEntry<T, R> {
   public lastRead = 0;
   public updatedAt = 0;
   public readonly State: State<T>;
   private outstandingTask?: Promise<unknown>;
   private readonly IDs = new AutoIncrementingID();
+  public readonly onEvict?: EvictionCallback<T, R>;
   private readonly subscriptions = new Map<string, () => void>();
   public readonly Status = new State(ConduitStatus.UNINITIALIZED);
-  constructor(public readonly options: ICacheEntry<T, R>) {
-    this.State = new State(options.defaultValue as NonFunction<T>);
+  constructor({
+    value,
+    onEvict,
+    lastRead = 0,
+    updatedAt = 0,
+    status = ConduitStatus.UNINITIALIZED,
+  }: ICacheEntry<T, R>) {
+    this.onEvict = onEvict;
+    this.lastRead = lastRead;
+    this.updatedAt = updatedAt;
+    this.State = new State(value);
+    this.Status = new State(status);
   }
 
-  public static from<T, R>(
-    entry: SerializedCacheEntry<T>,
-    evict: () => R,
-  ): CacheEntry<T, R> {
-    const cacheNode = new CacheEntry<T, R>({
-      evict,
-      defaultValue: Serializer.deserialize(entry.value),
-    });
+  public static from<T extends NonFunction<any>, R>({
+    entry,
+    onEvict,
+    onCreate,
+  }: ICacheEntryFromSerializedValue<T, R>) {
+    const { value: serializedValue, ...rest } = entry;
+    const value = Serializer.deserialize(serializedValue);
+    const cacheNode = new CacheEntry<T, R>({ ...rest, value, onEvict });
+    onCreate?.(cacheNode, value);
     cacheNode.lastRead = entry.lastRead;
     cacheNode.updatedAt = entry.updatedAt;
     cacheNode.setStatus(entry.status);
@@ -47,7 +60,7 @@ export class CacheEntry<T, R> {
   }
 
   public getOutstandingTask<T = unknown>() {
-    return this.outstandingTask as Promise<T> | undefined;
+    return this.outstandingTask as T | undefined;
   }
 
   public subscribeToValue(onChange: (value: T) => void) {
@@ -63,12 +76,12 @@ export class CacheEntry<T, R> {
   ) {
     const valueSubscriber = this.cacheNotifier(
       this.State.subscribe(value =>
-        onChange({ value, status: this.getStatus() }),
+        onChange({ value, status: this.Status.getState() }),
       ),
     );
     const statusSubscriber = this.cacheNotifier(
       this.Status.subscribe(status =>
-        onChange({ value: this.getValue(), status }),
+        onChange({ value: this.State.getState(), status }),
       ),
     );
     return () => {
@@ -96,13 +109,8 @@ export class CacheEntry<T, R> {
   }
 
   public evict() {
-    const result = this.options.evict();
-    if (result instanceof Promise) {
-      void result.then(() => this.releaseSubscriptions());
-    } else {
-      this.releaseSubscriptions();
-    }
-    return result;
+    this.releaseSubscriptions();
+    return this.onEvict?.(this);
   }
 
   public serialize(): SerializedCacheEntry<T> {

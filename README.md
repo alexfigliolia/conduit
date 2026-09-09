@@ -43,12 +43,15 @@ export const WeatherConduit = new Conduit({
   expires: 60 * 1000 * 5,
   // an optional caching policy
   cachePolicy: "read-cache-with-respect-to-expiry",
+  // an optional default value to resolve with when the cache is empty
+  // or operations are in-flight
+  defaultValue: [],
   // the operation associated with this conduit
   operation: async (latitude: number, longitude: number) => {
-    const response = await fetch("https://api.open-meteo.com/v1/forecast", {
-      method: "POST",
-      body: JSON.stringify({ latitude, longitude }),
-    });
+    const params = new URLSearchParams({ latitude, longitude });
+    const response = await fetch(
+      `https://api.open-meteo.com/v1/forecast?${params.toString()}`,
+    );
     return response.json();
   },
 });
@@ -122,11 +125,44 @@ const subscriber = WeatherConduit.subscribe({
 subscriber();
 ```
 
+### Mutation & Eviction
+
+To mutate data in your cache
+
+```typescript
+import { WeatherConduit, TOKIO_POSITION } from "./MyWeatherConduit";
+
+// write a new value to the cache
+const forecast = await WeatherConduit.writeCache({
+  args: TOKIO_POSITION,
+  value: /* your weather forecast */
+});
+
+// or compute the new value using the previous value
+const forecast = await WeatherConduit.writeCache({
+  args: TOKIO_POSITION,
+  value: (previous) => [...previous, /* your weather forecast */]
+});
+```
+
+If there's a time where it's pertinent to evict cache entries, you can do so with your conduit's `evict()` method
+
+```typescript
+import { WeatherConduit, TOKIO_POSITION } from "./MyWeatherConduit";
+
+const forecast = await WeatherConduit.execute({
+  args: TOKIO_POSITION,
+});
+
+// evict the tokio weather forecast
+WeatherConduit.evict(...TOKIO_POSITION);
+```
+
 ## Network Conduits
 
 The default Conduit class will not capture errors thrown if an operation fails. If your operation requires stateful errors as well as stateful values, opt for the `NetworkConduit`
 
-Declaration and usage is identical to that of a `Conduit` with the exception that the underlying value now can hold your data as well as any errors thrown
+Declaration and usage is identical to that of a `Conduit` with the exception that the underlying value now holds your data as well as any errors thrown
 
 ```typescript
 import { NetworkConduit, Cache } from "@figliolia/conduit";
@@ -162,13 +198,11 @@ export const WeatherConduit = new InfiniteConduit({
     // paginate using the date of the forecast data
     paginationArgs: ['date']
     operation: async (
-        position: { latitude: number, longitude: number, date: Date }
+      position: { latitude: number, longitude: number, date: Date }
     ) => {
-        const response = await fetch("https://api.open-meteo.com/v1/forecast", {
-            method: 'POST',
-            body: JSON.stringify({ latitude, longitude, date })
-        });
-        return response.json()
+      const params = new URLSearchParams({...position, date: position.date.toISOString() });
+      const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+      return response.json();
     }
 });
 
@@ -192,9 +226,10 @@ const paginatedWeather = WeatherConduit.readCache({
 // [todaysWeather, tomorrowsWeather]
 ```
 
-With `InfiniteConduits` the subscription models remain the same as with prior examples - with the added option to subscribe to individual pages or the entire paginated dataset:
+With `InfiniteConduits` the subscription models remain the same as with prior examples - with the added option to subscribe, update, or evict individual pages or the paginated dataset:
 
 ```typescript
+InfiniteConduit.getCacheEntry(/* operation args */);
 InfiniteConduit.readCache(/* operation args */);
 InfiniteConduit.readPageCache(/* operation args */);
 InfiniteConduit.getStatus(/* operation args */);
@@ -203,6 +238,10 @@ InfiniteConduit.subscribeToValue(/* operation args */);
 InfiniteConduit.subscribeToPageValue(/* operation args */);
 InfiniteConduit.subscribeToStatus(/* operation args */);
 InfiniteConduit.subscribeToPageStatus(/* operation args */);
+InfiniteConduit.writeCache(/* operation args */);
+InfiniteConduit.evict(/* operation args */);
+InfiniteConduit.evictPage(/* operation args */);
+InfiniteConduit.evictAll(/* operation args */);
 ```
 
 `InfiniteConduit` operations are limited to **one** function parameter of object type. This is designed to allow for `paginationArgs` to be strictly typed against that object type.
@@ -228,11 +267,9 @@ export const WeatherConduit = new InfiniteNetworkConduit({
     operation: async (
         position: { latitude: number, longitude: number, date: Date }
     ) => {
-        const response = await fetch("https://api.open-meteo.com/v1/forecast", {
-            method: 'POST',
-            body: JSON.stringify({ latitude, longitude, date })
-        });
-        return response.json()
+      const params = new URLSearchParams({...position, date: position.date.toISOString() });
+      const response = await fetch(`https://api.open-meteo.com/v1/forecast?${params.toString()}`);
+      return response.json();
     }
 });
 
@@ -248,9 +285,11 @@ const todaysWeather = await WeatherConduit.execute({ args: {
 ```
 
 ## The Cache
+
 The Conduit `Cache` is your data storage and reactivity provider. You will likely never need to interact with the cache directly - as each of your Conduits provide methods for accessing and subscribing to cached data.
 
 However it may be prudent to pre-populate the `Cache` using server-side data if using Conduits in server-rendered applications. To do so, simply serialize your cache data on the server and append it to your request responses:
+
 ```typescript
 // On the server
 import { Cache } from "@figliolia/conduit";
@@ -271,19 +310,20 @@ app.get('*', (req, res) => {
 });
 
 // on the client initialize the cache with serverside data
-const ConduitCache = new Cache(window.__CONDUIT_CACHE__); 
+const ConduitCache = new Cache(window.__CONDUIT_CACHE__);
 ```
+
 Using this technique your Conduit cache will be populated with the results of each operation that took place on the server.
 
 ### The Cache Structure
 
-Your serialized cache data may look unusual if inspecting it via `console.log()`. This is because the underlying storage structure of the cache is a [Graph](https://en.wikipedia.org/wiki/Graph_(abstract_data_type)). The graph is an optimization technique for caching conduit operation results without having to `stringify` keys and arguments. It improves the speed of cache interactions by roughly `5x`.
+Your serialized cache data may look unusual if inspecting it via `console.log()`. This is because the underlying storage structure of the cache is a [Graph](<https://en.wikipedia.org/wiki/Graph_(abstract_data_type)>). The graph is an optimization technique for caching conduit operation results without having to `stringify` keys and arguments. It improves the speed of cache interactions by roughly `5x`.
 
 When inserting a conduit operation result into the cache, the conduit's key, operation arguments, and result are traversed into a deterministic set of JavaScript primitives - used to create edges between graph nodes.
 
 Each of your conduit cache entries sit in the graph at the very bottom of each path these edges create.
 
-This storages structure uses serialization that is more robust than `JSON.stringify()`. With it, you can pass `Maps`, `Sets`, `Regexes`, `Dates`, `BigInts` (and more) over the wire using your conduit cache. 
+This storages structure uses serialization that is more robust than `JSON.stringify()`. With it, you can pass `Maps`, `Sets`, `Regexes`, `Dates`, `BigInts` (and more) over the wire using your conduit cache.
 
 These complex types - normally not supported in standard JSON - are decomposed into JSON-valid primitives and reconstructed when building your cache from serialized data.
 
@@ -306,6 +346,7 @@ If you wish to see support for a specific web-framework, please [file and issue 
 To see Conduit in a simple react application you can head over to [the example app](https://github.com/alexfigliolia/conduit/blob/main/packages/conduit-example).
 
 To run the app, you can clone this repository and run:
+
 ```bash
 pnpm i && pnpm setup:repo && repokit example vite:install && repokit example dev
 ```

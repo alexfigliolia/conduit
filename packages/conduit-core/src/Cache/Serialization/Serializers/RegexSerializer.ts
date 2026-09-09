@@ -1,15 +1,14 @@
 import type {
   ConduitSerializedValue,
+  IInterativeSerializer,
   OnPrimitive,
-  PathKeyIndicator,
 } from "./types";
 import { TypeName } from "./types";
 import { AbstractSerializer } from "./AbstractSerializer";
 
 export class RegExpSerializer extends AbstractSerializer<RegExp, string> {
-  public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:RegExp`;
-  constructor() {
-    super(TypeName.REGEXP);
+  constructor(config: IInterativeSerializer) {
+    super(TypeName.REGEXP, config);
   }
 
   public override toPath(value: RegExp, onValue: OnPrimitive) {

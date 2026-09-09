@@ -4,7 +4,7 @@ import type { Graph } from "./Graph";
 
 export class NodeParent {
   constructor(
-    public readonly parent: Graph<unknown>,
+    public readonly parent: Graph<any>,
     public readonly key: Primitive,
   ) {}
 }

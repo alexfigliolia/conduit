@@ -1,21 +1,47 @@
+import type { NonFunction } from "@figliolia/galena";
+
 import { TypeChecker } from "../Cache/Serialization";
-import { CacheAbstract, CacheEntry } from "../Cache";
+import type { CacheOptions, SerializedCacheEntry } from "../Cache";
+import { CacheEntry, CacheAbstract } from "../Cache";
 
 export class StringifyCache extends CacheAbstract<
-  Record<string, CacheEntry<any, void>>
+  FlatCache,
+  SerializedFlatCache
 > {
-  constructor(initialState: Record<string, CacheEntry<any, void>> = {}) {
-    super(initialState);
+  public override storage: Record<string, CacheEntry<any, void>> = {};
+  constructor(options?: CacheOptions<SerializedFlatCache>) {
+    super(options);
+    const serializedCache = options?.data?.data;
+    if (serializedCache) {
+      for (const key in serializedCache) {
+        if (serializedCache[key]) {
+          this.storage[key] = this.createCacheEntryFromSerialized({
+            ...serializedCache[key],
+            onEvict: () => {
+              delete this.storage[key];
+            },
+          });
+        }
+      }
+    }
   }
 
-  public serialize() {
-    return this.storage;
+  public override serialize() {
+    return {
+      data: Object.keys(this.storage).reduce((acc, next) => {
+        acc[next] = this.storage[next]!.serialize();
+        return acc;
+      }, {} as SerializedFlatCache),
+      lastPageID: this.InfiniteCache.lastPageID,
+      lastInfiniteID: this.InfiniteCache.lastInfiniteID,
+    };
   }
 
-  public set<T>(key: any[], args: any[], value: T) {
-    const entry = new CacheEntry({
-      defaultValue: value,
-      evict: () => this.evict(key, args),
+  public set<T>(key: any[], args: any[], value: NonFunction<T> | (() => T)) {
+    const entry = new CacheEntry<T, void>({
+      onEvict: () => this.evict(key, args),
+      // @ts-expect-error "typescript function discrimination bug"
+      value: typeof value === "function" ? value() : value,
     });
     this.storage[this.hash(key, args)] = entry;
     return entry;
@@ -31,15 +57,20 @@ export class StringifyCache extends CacheAbstract<
     delete this.storage[this.hash(key, args)];
   }
 
-  public createEntryIfNotExists<T>(key: any[], args: any[], defaultValue: T) {
+  public createEntryIfNotExists<T>(
+    key: any[],
+    args: any[],
+    value: NonFunction<T> | (() => NonFunction<T>),
+  ) {
     const hash = this.hash(key, args);
     if (!(hash in this.storage)) {
       this.storage[hash] = new CacheEntry({
-        defaultValue,
-        evict: () => this.evict(key, args),
+        // @ts-expect-error "typescript function discrimination bug"
+        value: typeof value === "function" ? value() : value,
+        onEvict: () => this.evict(key, args),
       });
     }
-    return this.storage[hash]!;
+    return this.storage[hash]! as CacheEntry<T, void>;
   }
 
   public reset() {
@@ -63,3 +94,6 @@ export class StringifyCache extends CacheAbstract<
     });
   }
 }
+
+export type FlatCache = Record<string, CacheEntry<any, void>>;
+export type SerializedFlatCache = Record<string, SerializedCacheEntry>;

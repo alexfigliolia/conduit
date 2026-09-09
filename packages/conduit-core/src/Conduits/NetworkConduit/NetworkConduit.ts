@@ -1,21 +1,30 @@
 import { Conduit } from "../Conduit";
-import { type IOperation, type IValueType } from "../BaseConduit";
+import type { ConduitValue, IOperation } from "../BaseConduit";
 import { type UnknownCacheAbstract } from "../../Cache";
 
-import type { INetworkConduit, INetworkOperation } from "./types";
+import type {
+  INetworkConduit,
+  INetworkOperation,
+  NetworkConduitCacheWrite,
+} from "./types";
 import { ConduitNetworkResult } from "./ConduitNetworkResult";
 
 export class NetworkConduit<
   O extends IOperation,
+  D = undefined,
   C extends UnknownCacheAbstract = UnknownCacheAbstract,
 > extends Conduit<
   INetworkOperation<O>,
-  ConduitNetworkResult<IValueType<O>>,
+  ConduitNetworkResult<ConduitValue<O, D>>,
   C
 > {
-  constructor({ defaultValue, operation, ...options }: INetworkConduit<O, C>) {
+  constructor({
+    defaultValue,
+    operation,
+    ...options
+  }: INetworkConduit<O, D, C>) {
     super({
-      defaultValue: ConduitNetworkResult.from<IValueType<O>>(defaultValue),
+      defaultValue: ConduitNetworkResult.from(defaultValue),
       operation: NetworkConduit.toNetworkOperation(
         operation,
       ) as unknown as INetworkOperation<O>,
@@ -37,5 +46,19 @@ export class NetworkConduit<
         return ConduitNetworkResult.fromError(error);
       }
     };
+  }
+
+  public override writeCache({ args, value }: NetworkConduitCacheWrite<O, D>) {
+    return this.getCacheEntry(...args).setValue(previous => {
+      if (typeof value === "function") {
+        // @ts-expect-error "come back to me"
+        const nextState = value(previous);
+        if (nextState instanceof Promise) {
+          return nextState.then(v => new ConduitNetworkResult(v));
+        }
+        return new ConduitNetworkResult(nextState);
+      }
+      return new ConduitNetworkResult(value);
+    });
   }
 }

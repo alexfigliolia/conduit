@@ -47,10 +47,10 @@ describe("Infinite Network Conduits", () => {
       expect(rootCacheEntry).toBeInstanceOf(InfiniteConduitValue);
       let pointer = -1;
       for (const args of data) {
-        expect(conduit.readPageCache(args)).toBeInstanceOf(
-          ConduitNetworkResult,
-        );
-        expect(conduit.readPageCache(args)?.data).toEqual(null);
+        const value = conduit.readPageCache(args);
+        expect(value).toBeInstanceOf(ConduitNetworkResult);
+        expect(value?.error).toBeInstanceOf(Error);
+        expect(value?.data).toEqual(null);
         expect(conduit.readCache(args)[++pointer]?.data).toEqual(null);
       }
     });

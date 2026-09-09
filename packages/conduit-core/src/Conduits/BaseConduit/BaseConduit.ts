@@ -1,22 +1,22 @@
+import type { NonFunction } from "@figliolia/galena";
+
 import {
+  type ConduitStatus,
   type UnknownCacheAbstract,
-  ConduitStatus,
   type CacheEntry,
 } from "../../Cache";
 
 import type {
   IOperation,
-  IValueType,
   IConduitWithPolicy,
   IConduit,
-  ConduitValue,
   EvictReturnType,
-  IExecutionOptionsWithCacheEntry,
+  CacheGetter,
 } from "./types";
 
 export abstract class BaseConduit<
   O extends IOperation,
-  D = IValueType<O>,
+  D = undefined,
   C extends UnknownCacheAbstract = UnknownCacheAbstract,
 > {
   public readonly options: IConduitWithPolicy<O, D, C>;
@@ -44,12 +44,23 @@ export abstract class BaseConduit<
     return options.cache;
   }
 
-  protected static getCacheEntry<C extends UnknownCacheAbstract, T>(
-    cache: C,
-    key: any[],
-    args: any[],
-    defaultValue: T,
+  public static getCache<C extends UnknownCacheAbstract = UnknownCacheAbstract>(
+    cache: CacheGetter<C>,
   ) {
+    if (typeof cache === "function") {
+      return cache();
+    }
+    return cache;
+  }
+
+  public get expires() {
+    return this.options.expires ?? BaseConduit.DEFAULT_LIFE_TIME;
+  }
+
+  protected static getCacheEntry<
+    C extends UnknownCacheAbstract,
+    T extends NonFunction<any>,
+  >(cache: C, key: any[], args: any[], defaultValue: T | (() => T)) {
     if (!cache) {
       throw new Error(
         "Attempted to interact with a cache entry without specifying the Conduit's 'cache' option",
@@ -60,64 +71,5 @@ export abstract class BaseConduit<
       T,
       EvictReturnType<C>
     >;
-  }
-
-  protected runWithCachePolicy<
-    T extends IExecutionOptionsWithCacheEntry<any, ConduitValue<O, D>>,
-  >({
-    args,
-    cacheEntry,
-    cachePolicy = this.options.cachePolicy,
-    expires = this.options.expires ?? BaseConduit.DEFAULT_LIFE_TIME,
-  }: T) {
-    switch (cachePolicy) {
-      case "cache-only":
-        return cacheEntry.getValue() as ConduitValue<O, D>;
-      case "bypass-cache":
-        return this.executeAndCache(cacheEntry, args) as ReturnType<O>;
-      case "read-cache-with-respect-to-expiry":
-      default:
-        return this.runCacheFirst(cacheEntry, expires, args) as
-          | ConduitValue<O, D>
-          | ReturnType<O>;
-    }
-  }
-
-  protected executeAndCache(
-    cacheEntry: CacheEntry<ConduitValue<O, D>, any>,
-    args: Parameters<O>,
-  ) {
-    const outstandingTask = cacheEntry.getOutstandingTask<ReturnType<O>>();
-    if (outstandingTask) {
-      return outstandingTask;
-    }
-    cacheEntry.setStatus(ConduitStatus.IN_FLIGHT);
-    const result = cacheEntry.registerTask(this.options.operation(...args));
-    if (result instanceof Promise) {
-      void result.then(v => this.onExecutionResult(cacheEntry, v));
-    } else {
-      this.onExecutionResult(cacheEntry, result);
-    }
-    return result as ReturnType<O>;
-  }
-
-  protected runCacheFirst(
-    cacheEntry: CacheEntry<ConduitValue<O, D>, any>,
-    expiry: number,
-    args: Parameters<O>,
-  ) {
-    if (Date.now() - cacheEntry.updatedAt >= expiry) {
-      return this.executeAndCache(cacheEntry, args) as ReturnType<O>;
-    }
-    // TODO - maybe a cache refresh on an interval in the background
-    return cacheEntry.getValue() as ConduitValue<O, D>;
-  }
-
-  protected onExecutionResult(
-    cacheEntry: CacheEntry<ConduitValue<O, D>, any>,
-    value: IValueType<O>,
-  ) {
-    cacheEntry.setValue(value);
-    cacheEntry.setStatus(ConduitStatus.IDOL);
   }
 }

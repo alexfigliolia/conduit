@@ -1,71 +1,27 @@
-import { State } from "@figliolia/galena";
+import type { UnknownCacheAbstract } from "../../Cache";
 
-import type { CacheEntry } from "../../Cache";
+import type { IInfiniteConduitValue } from "./types";
+import type { InfiniteConduitPage } from "./InfiniteConduitPage";
 
-export class InfiniteConduitValue<T> {
-  private cacheLength = 0;
-  public cacheWriter?: () => void;
-  readonly value: State<(T | undefined)[]>;
-  private readonly pageCacheEntries = new Map<
-    number,
-    CacheEntry<T | undefined, unknown>
-  >();
-  private readonly pageSubscribers = new Map<number, () => void>();
-  private caches = new WeakSet<CacheEntry<T | undefined, unknown>>();
-  constructor(value: (T | undefined)[]) {
-    this.value = new State(value);
+export class InfiniteConduitValue<T, C extends UnknownCacheAbstract> {
+  public readonly infiniteCacheID: string;
+  public readonly value: InfiniteConduitPage<T, C>[];
+  constructor({ value, infiniteCacheID }: IInfiniteConduitValue<T, C>) {
+    this.value = value;
+    this.infiniteCacheID = infiniteCacheID;
   }
 
-  public getValue() {
-    return this.value.getState();
+  public setPage(value: InfiniteConduitPage<T, C>) {
+    const { value: pages, infiniteCacheID } = this;
+    const clone = [...pages];
+    clone[value.index] = value;
+    return new InfiniteConduitValue({
+      value: clone,
+      infiniteCacheID,
+    });
   }
 
-  public registerCacheWriter(
-    onChange: (value: InfiniteConduitValue<T>) => void,
-  ) {
-    if (this.cacheWriter) {
-      throw new Error(
-        "Infinite Conduit Value Error: Attempted to register duplicate cache writers",
-        {
-          cause: this,
-        },
-      );
-    }
-    this.cacheWriter = this.value.subscribe(() => onChange(this));
-  }
-
-  public registerPageCacheEntry(entry: CacheEntry<T | undefined, unknown>) {
-    if (this.caches.has(entry)) {
-      return;
-    }
-    this.caches.add(entry);
-    const idx = this.cacheLength++;
-    this.pageCacheEntries.set(idx, entry);
-    this.pageSubscribers.set(
-      idx,
-      entry.subscribeToValue(value => {
-        this.value.update(previous => {
-          const clone = [...previous];
-          clone[idx] = value;
-          return clone;
-        });
-      }),
-    );
-  }
-
-  public destroy() {
-    for (const [idx, subscriber] of this.pageSubscribers) {
-      subscriber();
-      this.pageSubscribers.delete(idx);
-      this.pageCacheEntries.delete(idx);
-    }
-    this.cacheLength = 0;
-    this.caches = new WeakSet();
-    this.cacheWriter?.();
-    this.cacheWriter = undefined;
-  }
-
-  public toJSON() {
-    return this.value;
+  public decompose() {
+    return this.value.map(page => page.value);
   }
 }

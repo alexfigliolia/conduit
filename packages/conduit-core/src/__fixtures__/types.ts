@@ -6,7 +6,7 @@ export const PRIMITIVES = [
   BigInt("123123123123"),
 ];
 
-export const SERIALIZABLE_PRIMITIVES = [...PRIMITIVES].filter(
+export const SERIALIZABLE_PRIMITIVES = PRIMITIVES.filter(
   v => !["bigint", "undefined"].includes(typeof v),
 );
 
@@ -26,6 +26,12 @@ export const SERIALIZABLE_TEST_TYPES = [
   ...SERIALIZABLE_PRIMITIVES,
   ...SERIALIZABLE_NON_PRIMITIVES,
 ];
+
+export const INFINITE_TEST_ARGS = {
+  cursor: "test_cursor",
+  pageSize: 10,
+  searchQuery: "search parameter",
+};
 
 function buildObjectTypes(args: any[]) {
   return [

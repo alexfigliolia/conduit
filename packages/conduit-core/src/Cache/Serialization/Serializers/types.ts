@@ -6,13 +6,16 @@ export interface ConduitSerializedValue<ValueType> {
 }
 
 export enum TypeName {
+  ARRAY = "[]",
+  OBJECT = "{}",
   UNDEFINED = "undefined",
   BIGINT = "bigint",
   MAP = "map",
   SET = "set",
   DATE = "date",
   REGEXP = "regexp",
-  INFINITE_CONDUIT_VALUE = "icv",
+  INFINITE_CONDUIT_PAGE = "ICP",
+  INFINITE_CONDUIT_VALUE = "ICV",
 }
 
 export interface IInterativeSerializer {
@@ -38,3 +41,8 @@ export type PathKeyIndicator =
 export type ThirdPartyTypeName<T extends string> = T extends `${TypeName}`
   ? never
   : T;
+
+export type SerializedInfiniteConduitValueType<T> = [
+  value: ConduitSerializedValue<T>[],
+  infiniteCacheID: string,
+];

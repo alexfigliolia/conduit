@@ -1,18 +1,19 @@
 import {
-  type TokenTraversalFn,
+  type IInterativeSerializer,
+  TypeName,
   type OnPrimitive,
-  type PathKeyIndicator,
 } from "./types";
-import { AbstractSerializer } from "./AbstractSerializer";
+import { AbstractPathSerializer } from "./AbstractPathSerializer";
 
-export class ArraySerializer {
-  public readonly KEY_INDICATOR: PathKeyIndicator = `${AbstractSerializer.SERIALIZATION_MARKER}:[]`;
-  constructor(public readonly traverse: TokenTraversalFn) {}
+export class ArraySerializer extends AbstractPathSerializer<any[]> {
+  constructor(config: IInterativeSerializer) {
+    super(TypeName.ARRAY, config);
+  }
 
-  public toPath(value: any[], onValue: OnPrimitive): boolean {
+  public override toPath(value: any[], onValue: OnPrimitive): boolean {
     onValue(this.KEY_INDICATOR);
     for (const item of value) {
-      if (!onValue(item)) {
+      if (!this.config.traverse(item, onValue)) {
         return false;
       }
     }

@@ -4,47 +4,54 @@ import {
   SetSerializer,
   RegExpSerializer,
   MapSerializer,
-  InfiniteConduitValueSerializer,
+  InfiniteConduitPageSerializer,
   HashTableSerializer,
   DateSerializer,
   BigIntSerializer,
   ArraySerializer,
   AbstractSerializer,
+  AbstractPathSerializer,
   type OnPrimitive,
   type Primitive,
+  InfiniteConduitValueSerializer,
 } from "./Serializers";
 
 export class Serializer {
-  public static readonly SERIALIZATION_MARKER =
-    AbstractSerializer.SERIALIZATION_MARKER;
   public static readonly BINDINGS = {
     traverse: this.traverse.bind(this),
     serialize: this.serialize.bind(this),
     deserialize: this.deserialize.bind(this),
   };
-  public static readonly ARRAY_SERIALIZER = new ArraySerializer(
-    this.BINDINGS.traverse,
-  );
+  public static readonly ARRAY_SERIALIZER = new ArraySerializer(this.BINDINGS);
   public static readonly HASH_TABLE_SERIALIZER = new HashTableSerializer(
-    this.BINDINGS.traverse,
+    this.BINDINGS,
   );
-  public static readonly MAP_SERIALIZER = new MapSerializer(this.BINDINGS);
-  public static readonly INTERNAL_JSON_SERIALIZERS = [
-    this.MAP_SERIALIZER,
-    new SetSerializer(this.BINDINGS),
-    new BigIntSerializer(),
-    new DateSerializer(),
-    new RegExpSerializer(),
-    new UndefinedSerializer(),
-    new InfiniteConduitValueSerializer(this.BINDINGS),
-  ];
-  public static readonly KEY_SERIALIZATION_INDICATOR = `${this.SERIALIZATION_MARKER}:Key`;
+  public static readonly INTERNAL_JSON_SERIALIZERS: AbstractSerializer<
+    any,
+    any
+  >[] = [
+    MapSerializer,
+    SetSerializer,
+    BigIntSerializer,
+    DateSerializer,
+    RegExpSerializer,
+    UndefinedSerializer,
+    InfiniteConduitPageSerializer,
+    InfiniteConduitValueSerializer,
+  ].map(C => new C(this.BINDINGS));
+  public static readonly KEY_SERIALIZATION_INDICATOR = `${AbstractPathSerializer.SERIALIZATION_MARKER}:Key`;
+
+  public static registerJSONSerializer(
+    ...serializers: AbstractSerializer<any, any>[]
+  ) {
+    this.INTERNAL_JSON_SERIALIZERS.push(...serializers);
+  }
 
   public static toPath(key: any[], args: any[], onValue: OnPrimitive) {
     if (!this.iterateAndTraverse(key, onValue)) {
       return false;
     }
-    onValue(this.KEY_SERIALIZATION_INDICATOR);
+    onValue(Serializer.KEY_SERIALIZATION_INDICATOR);
     return this.iterateAndTraverse(args, onValue);
   }
 

@@ -1,44 +1,93 @@
-import type { Setter } from "@figliolia/galena";
+import type { NonFunction, Setter } from "@figliolia/galena";
 
-import type { Primitive } from "../Serialization";
-import { Serializer } from "../Serialization";
+import { Serializer, type Primitive } from "../Serialization";
 
-import { type SerializedNode, type ParentPointer } from "./types";
+import {
+  type IGraph,
+  type IFromSerializedGraph,
+  type EvictionCallback,
+  type IGraphNodeFromSerializedValue,
+  type UnknownCacheAbstract,
+  type SerializedNode,
+  type ParentPointer,
+} from "./types";
 import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";
 
 export class Graph<T = any> {
+  public readonly parent: ParentPointer;
   public nodes: Record<any, Graph> = {};
   public entry?: CacheEntry<T, Promise<void>>;
-  constructor(public parent: ParentPointer = null) {}
+  private readonly evict: EvictionCallback<T, Promise<void>>;
+  constructor({ onEvict, parent = null }: IGraph<T>) {
+    this.parent = parent;
+    this.evict = node => {
+      onEvict(node);
+      return this.treeTrim();
+    };
+  }
 
-  public static from(node: SerializedNode, parent: ParentPointer = null) {
-    const graph = new Graph(parent);
-    if (node.entry) {
-      graph.entry = CacheEntry.from(node.entry, graph.evict);
+  public static from<T>({
+    graph,
+    onEvict,
+    onCreate,
+    parentPointer,
+  }: IGraphNodeFromSerializedValue<T>) {
+    const node = new Graph<T>({
+      onEvict,
+      parent: parentPointer,
+    });
+    if (graph.entry) {
+      node.entry = CacheEntry.from({
+        onCreate,
+        entry: graph.entry,
+        onEvict: node.evict,
+      });
     }
-    for (const key in node.nodes) {
-      const childNode = node.nodes[key];
+    for (const key in graph.nodes) {
+      const childNode = graph.nodes[key];
       if (childNode) {
-        graph.set(key, Graph.from(childNode, new NodeParent(graph, key)));
+        node.set(
+          key,
+          Graph.from({
+            onEvict,
+            onCreate,
+            graph: childNode,
+            parentPointer: new NodeParent(node, key),
+          }),
+        );
       }
     }
-    return graph;
+    return node;
   }
 
-  public static fromSerialized(
-    serialized: Record<string, SerializedNode> = {},
+  public static fromSerialized({
+    onEvict,
+    onCreate,
+    graph = {},
+  }: IFromSerializedGraph) {
+    const root = new Graph({ onEvict, parent: null });
+    for (const key in graph) {
+      if (graph[key]) {
+        root.set(
+          key,
+          Graph.from({
+            onEvict,
+            onCreate,
+            graph: graph[key],
+            parentPointer: new NodeParent(root, key),
+          }),
+        );
+      }
+    }
+    return root;
+  }
+
+  public index<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    value: T | (() => T),
   ) {
-    const graph = new Graph();
-    for (const key in serialized) {
-      if (serialized[key]) {
-        graph.set(key, Graph.from(serialized[key], new NodeParent(graph, key)));
-      }
-    }
-    return graph;
-  }
-
-  public index<T>(key: any[], args: any[], value: T) {
     const { node, created } = this.maybeIndex(key, args, value);
     if (created) {
       node.entry!.updatedAt = Date.now();
@@ -53,7 +102,10 @@ export class Graph<T = any> {
     Serializer.toPath(key, args, primative => {
       let next = current.get(primative);
       if (!next) {
-        next = new Graph(new NodeParent(current, primative));
+        next = new Graph({
+          onEvict: this.evict,
+          parent: new NodeParent(current, primative),
+        });
         current.set(primative, next);
       }
       current = next;
@@ -62,10 +114,10 @@ export class Graph<T = any> {
     return current as Graph<T>;
   }
 
-  public createCacheEntryIfNotExists<T>(
+  public createCacheEntryIfNotExists<T extends NonFunction<any>>(
     key: any[],
     args: any[],
-    defaultValue: T,
+    defaultValue: T | (() => T),
   ) {
     const { node } = this.maybeIndex(key, args, defaultValue);
     return node.entry!;
@@ -84,15 +136,14 @@ export class Graph<T = any> {
     this.nodes[key as any] = node;
   }
 
-  public readonly evict = () => {
+  private async treeTrim() {
     this.entry = undefined;
-    return Promise.resolve().then(async () => {
-      if (await this.treeTrimDownwards(node => !node.entry)) {
-        this.nodes = {};
-        await this.treeTrimUpwards();
-      }
-    });
-  };
+    await Promise.resolve();
+    if (await this.treeTrimDownwards(node => !node.entry)) {
+      this.nodes = {};
+      await this.treeTrimUpwards();
+    }
+  }
 
   public reset() {
     for (const key in this.nodes) {
@@ -100,12 +151,12 @@ export class Graph<T = any> {
     }
   }
 
-  public serialize() {
+  public serialize(cache: UnknownCacheAbstract) {
     const nodes = Object.keys(this.nodes).reduce<
       Record<string, SerializedNode>
     >((acc, next) => {
       if (this.nodes[next]) {
-        acc[next] = this.nodes[next].serialize();
+        acc[next] = this.nodes[next].serialize(cache);
       }
       return acc;
     }, {});
@@ -173,13 +224,19 @@ export class Graph<T = any> {
     }
   }
 
-  public maybeIndex<T>(key: any[], args: any[], defaultValue: T) {
+  public maybeIndex<T extends NonFunction<any>>(
+    key: any[],
+    args: any[],
+    defaultValue: T | (() => T),
+  ) {
     let created = false;
     const node = this.createNodeIfNotExists<T>(key, args);
     if (!node.entry) {
       node.entry = new CacheEntry<T, Promise<void>>({
-        defaultValue,
-        evict: node.evict,
+        value:
+          // @ts-expect-error "typescript function discrimination bug"
+          typeof defaultValue === "function" ? defaultValue() : defaultValue,
+        onEvict: node.evict,
       });
       created = true;
     }

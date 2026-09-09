@@ -1,6 +1,10 @@
-import { beforeEach, describe, expect, it, vi } from "vitest";
+import { beforeEach, describe, expect, it } from "vitest";
 
-import { InfiniteConduit, InfiniteConduitValue } from "../Conduits";
+import {
+  InfiniteConduit,
+  InfiniteConduitPage,
+  InfiniteConduitValue,
+} from "../Conduits";
 import { Cache, ConduitStatus } from "../Cache";
 import {
   createAsyncInfiniteConduit,
@@ -82,7 +86,7 @@ describe("Infinite Conduits", () => {
       conduit.getStatus({ options: { cursor: "123123", pageSize: 10 } });
     }).toThrow();
     expect(() => {
-      void conduit.execute({
+      conduit.execute({
         args: { options: { cursor: "123123", pageSize: 10 } },
       });
     }).toThrow();
@@ -114,46 +118,29 @@ describe("Infinite Conduits", () => {
   });
 
   syncAndAsyncInfiniteConduits(cache).forEach(conduit => {
-    it(`An InfiniteConduit's value holds references to all child page's cache entries - ${conduit.options.key[0]}`, async () => {
+    it(`An InfiniteConduit's value holds references to all child pages - ${conduit.options.key[0]}`, async () => {
       await Promise.all(
         data.map(args => Promise.resolve(conduit.execute({ args }))),
       );
       const conduitValue = conduit.getCacheEntry(data[0]!).getValue();
+      const infiniteEntry = conduit.getCacheEntry(data[0]!);
       expect(conduitValue).toBeInstanceOf(InfiniteConduitValue);
-      for (const [index, cacheEntry] of conduitValue["pageCacheEntries"]) {
-        expect(conduitValue.getValue()[index]).toEqual(cacheEntry.getValue());
-        expect(conduitValue["caches"].has(cacheEntry)).toEqual(true);
-      }
-      expect(conduitValue["pageSubscribers"].size).toEqual(10);
-    });
-  });
-
-  syncAndAsyncInfiniteConduits(cache).forEach(conduit => {
-    it(`Destroying an Infinite Conduit's value releases all page subsscribers and cache references - ${conduit.options.key[0]}`, async () => {
-      const unsubscribeTest = vi.fn();
-      const cacheWriterTest = vi.fn();
-      await Promise.all(
-        data.map(args => Promise.resolve(conduit.execute({ args }))),
-      );
-      const conduitValue = conduit.getCacheEntry(data[0]!).getValue();
-      const originalWriter = conduitValue.cacheWriter;
-      conduitValue.cacheWriter = () => {
-        originalWriter?.();
-        cacheWriterTest();
-      };
-      conduitValue["pageSubscribers"].set(1000000000, unsubscribeTest);
-      const cacheReferences = Array.from(
-        conduitValue["pageCacheEntries"].values(),
-      );
-      conduitValue.destroy();
-      expect(
-        cacheReferences.every(ref => conduitValue["caches"].has(ref)),
-      ).toEqual(false);
-      expect(conduitValue["pageCacheEntries"].size).toEqual(0);
-      expect(conduitValue["pageSubscribers"].size).toEqual(0);
-      expect(unsubscribeTest).toHaveBeenCalled();
-      expect(cacheWriterTest).toHaveBeenCalled();
-      expect(conduitValue["cacheWriter"]).toBeUndefined();
+      expect(conduitValue.value.length).toEqual(10);
+      data.map((args, i) => {
+        expect(conduitValue.value[i]?.value).toEqual(
+          conduit.readPageCache(args),
+        );
+        const page = cache
+          .get(conduit.options.key, [args])
+          ?.State.getState() as InfiniteConduitPage<
+          (typeof data)[number],
+          typeof cache
+        >;
+        expect(page).toBeInstanceOf(InfiniteConduitPage);
+        expect(page.infiniteCacheID).toEqual(
+          infiniteEntry.getValue().infiniteCacheID,
+        );
+      });
     });
   });
 });
