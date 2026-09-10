@@ -22,7 +22,8 @@
     "test": "vitest"
   },
   "devDependencies": {
-    "@repokit/core": "^5.1.9",
+    "@conduit/repokit-templates": "link:./packages/repokit-templates",
+    "@repokit/core": "^5.3.0",
     "@types/node": "^26.2.0",
     "@vitejs/plugin-react": "^6.0.5",
     "@vitest/coverage-v8": "5.0.0",
