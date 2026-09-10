@@ -1,7 +1,9 @@
 import { RepoKitConfig } from "@repokit/core";
+import { TypeScriptLibraryTemplate } from "@conduit/repokit-templates";
 
 export const RepoKit = new RepoKitConfig({
   project: "Conduit",
+  templates: [TypeScriptLibraryTemplate],
   commands: {
     lint: {
       command:
