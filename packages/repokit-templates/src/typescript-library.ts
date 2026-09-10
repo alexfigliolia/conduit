@@ -5,7 +5,7 @@ export const TypeScriptLibraryTemplate = new RepoKitTemplate({
   description: "<INSERT DESCRIPTION>",
   commands: {
     build: {
-      command: "npx tsdown",
+      command: "pnpm tsdown",
       description: "Build the typescript library for production",
     },
     install: {

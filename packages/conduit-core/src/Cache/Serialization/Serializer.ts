@@ -94,7 +94,7 @@ export class Serializer {
       );
     }
     if (Array.isArray(value)) {
-      return (value as any[]).map(v => onPrimitive(v));
+      return (value as any[]).map(onPrimitive);
     }
     throw TypeChecker.nonImplementedError(value);
   }

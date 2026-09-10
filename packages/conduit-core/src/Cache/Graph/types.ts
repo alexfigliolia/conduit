@@ -69,11 +69,6 @@ export interface CacheOptions<StorageSerialized extends Record<any, any>> {
   data?: Partial<SerializedStorage<StorageSerialized>>;
 }
 
-export interface IGraph<T> {
-  parent?: ParentPointer;
-  onEvict: EvictionCallback<T, Promise<void>, void>;
-}
-
 export interface ICacheEntry<T, R> extends Partial<SerializedCacheEntry<T>> {
   value: NonFunction<T>;
   onEvict?: EvictionCallback<T, R>;

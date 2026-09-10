@@ -132,22 +132,25 @@ importers:
         version: 8.0.0(supports-color@8.1.1)(typescript@6.0.3)
       oxfmt:
         specifier: ^0.67.0
-        version: 0.67.0(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)))
+        version: 0.67.0(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)))
       oxlint:
         specifier: ^1.80.0
-        version: 1.80.0(oxlint-tsgolint@0.25.0)(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)))
+        version: 1.80.0(oxlint-tsgolint@0.25.0)(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)))
       oxlint-tsgolint:
         specifier: ^0.25.0
         version: 0.25.0
       tsdown:
         specifier: ^0.22.2
-        version: 0.22.14(tsx@4.23.12)(typescript@6.0.3)
+        version: 0.22.14(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)
       tsx:
         specifier: ^4.22.4
         version: 4.23.12
       typescript:
         specifier: ^6.0.3
         version: 6.0.3
+      unrun:
+        specifier: ^0.3.1
+        version: 0.3.1
       vitest:
         specifier: ^5.0.0
         version: 5.0.0(@types/node@26.3.0)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
@@ -3509,6 +3512,16 @@ packages:
     resolution: {integrity: sha512-gptHNQghINnc/vTGIk0SOFGFNXw7JVrlRUtConJRlvaw6DuX0wO5Jeko9sWrMBhh+PsYAZ7oXAiOnf/UKogyiw==}
     engines: {node: '>= 10.0.0'}
 
+  unrun@0.3.1:
+    resolution: {integrity: sha512-onIck/oNnCaytwths1ZVp1LK2Gq2hPoyFhiHebObuUXqR3S0uHuLLaBK8K6mRRgV7Ptip8AnNvaUsgzwWwBZuA==}
+    engines: {node: ^22.13.0 || >=24.0.0}
+    hasBin: true
+    peerDependencies:
+      synckit: ^0.11.11
+    peerDependenciesMeta:
+      synckit:
+        optional: true
+
   util-deprecate@1.0.2:
     resolution: {integrity: sha512-EPD5q1uXyFxJpCrLnCc1nHnq3gOa6DZBocAIiI2TaSCA7VCJ1UJDMagCzIkXNsUYfD1daK//LTEQ8xiIbrHtcw==}
 
@@ -4758,7 +4771,7 @@ snapshots:
       tinyrainbow: 3.1.1
     optional: true
 
-  '@voidzero-dev/vite-plus-core@0.2.9(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)':
+  '@voidzero-dev/vite-plus-core@0.2.9(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)':
     dependencies:
       '@oxc-project/runtime': 0.143.0
       '@oxc-project/types': 0.143.0
@@ -4782,6 +4795,7 @@ snapshots:
       sass-embedded: 1.102.0
       tsx: 4.23.12
       typescript: 6.0.3
+      unrun: 0.3.1
     optional: true
 
   '@voidzero-dev/vite-plus-darwin-arm64@0.2.9':
@@ -5776,7 +5790,7 @@ snapshots:
       stdin-discarder: 0.3.2
       string-width: 8.2.2
 
-  oxfmt@0.62.0(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))):
+  oxfmt@0.62.0(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))):
     dependencies:
       tinypool: 2.1.0
     optionalDependencies:
@@ -5799,10 +5813,10 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.62.0
       '@oxfmt/binding-win32-ia32-msvc': 0.62.0
       '@oxfmt/binding-win32-x64-msvc': 0.62.0
-      vite-plus: 0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
+      vite-plus: 0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
     optional: true
 
-  oxfmt@0.67.0(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))):
+  oxfmt@0.67.0(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))):
     dependencies:
       tinypool: 2.1.2
     optionalDependencies:
@@ -5825,7 +5839,7 @@ snapshots:
       '@oxfmt/binding-win32-arm64-msvc': 0.67.0
       '@oxfmt/binding-win32-ia32-msvc': 0.67.0
       '@oxfmt/binding-win32-x64-msvc': 0.67.0
-      vite-plus: 0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
+      vite-plus: 0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
 
   oxlint-tsgolint@0.25.0:
     optionalDependencies:
@@ -5846,7 +5860,7 @@ snapshots:
       '@oxlint-tsgolint/win32-x64': 7.0.2001
     optional: true
 
-  oxlint@1.77.0(oxlint-tsgolint@7.0.2001)(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))):
+  oxlint@1.77.0(oxlint-tsgolint@7.0.2001)(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.77.0
       '@oxlint/binding-android-arm64': 1.77.0
@@ -5868,10 +5882,10 @@ snapshots:
       '@oxlint/binding-win32-ia32-msvc': 1.77.0
       '@oxlint/binding-win32-x64-msvc': 1.77.0
       oxlint-tsgolint: 7.0.2001
-      vite-plus: 0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
+      vite-plus: 0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
     optional: true
 
-  oxlint@1.80.0(oxlint-tsgolint@0.25.0)(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))):
+  oxlint@1.80.0(oxlint-tsgolint@0.25.0)(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))):
     optionalDependencies:
       '@oxlint/binding-android-arm-eabi': 1.80.0
       '@oxlint/binding-android-arm64': 1.80.0
@@ -5893,7 +5907,7 @@ snapshots:
       '@oxlint/binding-win32-ia32-msvc': 1.80.0
       '@oxlint/binding-win32-x64-msvc': 1.80.0
       oxlint-tsgolint: 0.25.0
-      vite-plus: 0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
+      vite-plus: 0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
 
   parse-ms@2.1.0: {}
 
@@ -6349,7 +6363,7 @@ snapshots:
       minimist: 1.2.8
       strip-bom: 3.0.0
 
-  tsdown@0.22.14(tsx@4.23.12)(typescript@6.0.3):
+  tsdown@0.22.14(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1):
     dependencies:
       ansis: 4.3.1
       cac: 7.0.0
@@ -6369,6 +6383,7 @@ snapshots:
     optionalDependencies:
       tsx: 4.23.12
       typescript: 6.0.3
+      unrun: 0.3.1
     transitivePeerDependencies:
       - '@typescript/native-preview'
       - '@volar/typescript'
@@ -6398,6 +6413,10 @@ snapshots:
 
   universalify@2.0.1: {}
 
+  unrun@0.3.1:
+    dependencies:
+      rolldown: 1.2.5
+
   util-deprecate@1.0.2: {}
 
   v8-compile-cache-lib@3.0.1: {}
@@ -6406,7 +6425,7 @@ snapshots:
 
   verkit@0.3.2: {}
 
-  vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)):
+  vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)):
     dependencies:
       '@oxc-project/types': 0.143.0
       '@oxlint/plugins': 1.73.0
@@ -6419,9 +6438,9 @@ snapshots:
       '@vitest/snapshot': 4.1.10
       '@vitest/spy': 4.1.10
       '@vitest/utils': 4.1.10
-      '@voidzero-dev/vite-plus-core': 0.2.9(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)
-      oxfmt: 0.62.0(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)))
-      oxlint: 1.77.0(oxlint-tsgolint@7.0.2001)(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)))
+      '@voidzero-dev/vite-plus-core': 0.2.9(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)
+      oxfmt: 0.62.0(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)))
+      oxlint: 1.77.0(oxlint-tsgolint@7.0.2001)(vite-plus@0.2.9(@types/node@26.3.0)(@vitest/coverage-v8@5.0.0)(esbuild@0.28.2)(jsdom@30.0.1)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)(typescript@6.0.3)(unrun@0.3.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12)))
       oxlint-tsgolint: 7.0.2001
       vitest: 4.1.10(@types/node@26.3.0)(@vitest/browser-preview@4.1.10)(@vitest/coverage-v8@5.0.0)(jsdom@30.0.1)(vite@8.2.1(@types/node@26.3.0)(esbuild@0.28.2)(sass-embedded@1.102.0)(sass@1.102.0)(tsx@4.23.12))
     optionalDependencies:

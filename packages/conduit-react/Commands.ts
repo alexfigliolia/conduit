@@ -5,7 +5,7 @@ export const Commands = new RepoKitCommand({
   description: "React bindings for Conduit",
   commands: {
     build: {
-      command: "npx tsdown",
+      command: "pnpm tsdown",
       description: "Build the typescript library for production",
     },
     install: {

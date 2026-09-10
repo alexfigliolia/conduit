@@ -335,8 +335,8 @@ To visualize the storage structure you can clone this repository and run:
 pnpm i && pnpm setup:repo && repokit core visualize
 ```
 
-
 ### Creating your own Serializers
+
 If using complex types or custom classes in your conduit cache it may be pertinent to understand how to rebuild their prototypes after they've been converted to JSON. Conduit makes this easy by exposing an `AbstractSerializer`. The `AbstractSerializer` is how the cache supports de/re-composing maps, sets, dates, and more after cache data has been serialized.
 
 To create a serializer for your custom type, you can extend the `AbstractSerializer` and pass it into your `Cache's` options.
@@ -355,7 +355,7 @@ export class APIResponse<T, E = unknown> {
   }
 
   public deriveValue() {
-    if(!!this.error && !this.responseData) {
+    if (!!this.error && !this.responseData) {
       return this.error;
     }
     return this.responseData;
@@ -363,19 +363,19 @@ export class APIResponse<T, E = unknown> {
 }
 ```
 
-If you were to serialize this value to JSON for the purposes or storage or transfer via API the `APIResponse.deriveValue()` would get lost. Any code relying on this prototypal method would also break if it were to not be there when constructing a cache from serialized data. 
+If you were to serialize this value to JSON for the purposes or storage or transfer via API the `APIResponse.deriveValue()` would get lost. Any code relying on this prototypal method would also break if it were to not be there when constructing a cache from serialized data.
 
 Here's how you can teach the Conduit `Cache` how to deconstruct and recompose your custom types:
 
 ```typescript
-import { 
-  Cache, 
-  AbstractSerializer, 
+import {
+  Cache,
+  AbstractSerializer,
   type OnPrimitive,
   type IInterativeSerializer
-  type ConduitSerializedValue 
+  type ConduitSerializedValue
 } from "@figliolia/contuit";
-import { APIResponse } from "./my-custom-api-response"; 
+import { APIResponse } from "./my-custom-api-response";
 
 export class APIResponseSerializer extends AbstractSerializer<
   APIResponse<any, any>
@@ -393,8 +393,8 @@ export class APIResponseSerializer extends AbstractSerializer<
   // Override `deserialize` to reconstruct your custom types from serialized
   // inputs
   public override deserialize(
-    value: ConduitSerializedValue<{ 
-      statusCode: number, responseData: unknown, error: null | unknown 
+    value: ConduitSerializedValue<{
+      statusCode: number, responseData: unknown, error: null | unknown
     }>
   ) {
     const config = this.config.deserialize(value.value);
@@ -418,7 +418,7 @@ export class APIResponseSerializer extends AbstractSerializer<
     value: APIResponse<any, any>,
     onPrimitive: OnPrimitive,
   ): boolean {
-    // you can use Conduit's default object path traveral which will 
+    // you can use Conduit's default object path traveral which will
     // deconstruct any object's key/value pairs into a graph node path
     return this.defaultPathSerializer(value, onPrimitive);
 
@@ -431,10 +431,10 @@ export class APIResponseSerializer extends AbstractSerializer<
     // cache identity
     const requiredProperties = ["statusCode", "responseData", "error"];
     for(const property in requiredProperties) {
-      // invoke onPrimitive for each JavaScript primitive and 
+      // invoke onPrimitive for each JavaScript primitive and
       // `this.config.traverse` for non JavaScript primitivese
       if(
-        !onPrimitive(property) || 
+        !onPrimitive(property) ||
         !this.config.traverse(value[property], onPrimitive)
       ) {
         // break early if a call returns false
@@ -455,22 +455,23 @@ import { Cache } from "@figliolia/conduit";
 import { APIResponseSerializer } from "./my-api-response-serializer";
 
 export const cache = new Cache({
-  serializers: [APIResponseSerializer]
+  serializers: [APIResponseSerializer],
 });
 ```
 
-Now any usage of your `APIResponse` class can be serialized to JSON and its prototype reconstructed when calling 
+Now any usage of your `APIResponse` class can be serialized to JSON and its prototype reconstructed when calling
 
 ```typescript
-const serverData = serverCache.serialize(); 
+const serverData = serverCache.serialize();
 
-const clientCache = new Cache({ 
-  data: serverData,  
-  serializers: [APIResponseSerializer]
+const clientCache = new Cache({
+  data: serverData,
+  serializers: [APIResponseSerializer],
 });
 ```
 
 ### Using Custom Caches
+
 Conduits are designed to accept custom caches for storing Conduit data. The default cache is a reactive graph data store that benchmarks at `~4-5x` more performant than flat JavaScript objects and uses less memory on average.
 
 Understanding that this structure may not always be the most optimal schema, this library exposes the `CacheAbstract`. It allows developers to build a cache optimized for their data and use it with their conduits.
@@ -478,7 +479,11 @@ Understanding that this structure may not always be the most optimal schema, thi
 To build and use your own cache, simply extend the `CacheAbstract`:
 
 ```typescript
-import { CacheAbstract, type CacheOptions, CacheEntry } from "@figliolia/conduit";
+import {
+  CacheAbstract,
+  type CacheOptions,
+  CacheEntry,
+} from "@figliolia/conduit";
 
 export class MyCustomCache extends CacheAbstract<MySchema, MySerializedSchema> {
   public storage: MySchema;
@@ -495,8 +500,8 @@ export class MyCustomCache extends CacheAbstract<MySchema, MySerializedSchema> {
     // implement your cache serialization
     return {
       ...super.lastInfiniteIDs,
-      data: { /* your custom serializer */ }
-    }
+      data: {/* your custom serializer */},
+    };
   }
 
   public override set<T extends NonFunction<any>>(
@@ -504,7 +509,7 @@ export class MyCustomCache extends CacheAbstract<MySchema, MySerializedSchema> {
     args: any[],
     value: T | (() => T),
   ): CacheEntry<T, any> | undefined {
-    // implement your mechanism for storing cached data based on 
+    // implement your mechanism for storing cached data based on
     // conduit keys and operation args
   }
 
@@ -512,7 +517,7 @@ export class MyCustomCache extends CacheAbstract<MySchema, MySerializedSchema> {
     key: any[],
     args: any[],
   ): CacheEntry<T, any> | undefined {
-    // implement your mechanism for retrieving cached entries based on 
+    // implement your mechanism for retrieving cached entries based on
     // conduit keys and operation args
   }
 
@@ -545,12 +550,12 @@ import { MyCustomCache } from "./my-custom-cache";
 const cache = new MyCustomCache();
 
 const myConduit = new Conduit({
-  cache
+  cache,
   // ... other arguments
 });
 ```
 
-Now your conduits will use your own custom cache as the underlying data store. 
+Now your conduits will use your own custom cache as the underlying data store.
 
 ## Usage with React
 

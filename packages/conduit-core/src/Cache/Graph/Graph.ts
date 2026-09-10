@@ -3,7 +3,6 @@ import type { NonFunction, Setter } from "@figliolia/galena";
 import { Serializer, type Primitive } from "../Serialization";
 
 import {
-  type IGraph,
   type IFromSerializedGraph,
   type EvictionCallback,
   type IGraphNodeFromSerializedValue,
@@ -15,14 +14,15 @@ import { NodeParent } from "./NodeParent";
 import { CacheEntry } from "./CacheEntry";
 
 export class Graph<T = any> {
-  public readonly parent: ParentPointer;
   public nodes: Record<any, Graph> = {};
   public entry?: CacheEntry<T, Promise<void>>;
   private readonly evict: EvictionCallback<T, Promise<void>>;
-  constructor({ onEvict, parent = null }: IGraph<T>) {
-    this.parent = parent;
+  constructor(
+    private readonly onEvict: EvictionCallback<T, Promise<void>, void>,
+    public readonly parent: ParentPointer = null,
+  ) {
     this.evict = node => {
-      onEvict(node);
+      this.onEvict(node);
       return this.treeTrim();
     };
   }
@@ -33,10 +33,7 @@ export class Graph<T = any> {
     onCreate,
     parentPointer,
   }: IGraphNodeFromSerializedValue<T>) {
-    const node = new Graph<T>({
-      onEvict,
-      parent: parentPointer,
-    });
+    const node = new Graph<T>(onEvict, parentPointer);
     if (graph.entry) {
       node.entry = CacheEntry.from({
         onCreate,
@@ -66,7 +63,7 @@ export class Graph<T = any> {
     onCreate,
     graph = {},
   }: IFromSerializedGraph) {
-    const root = new Graph({ onEvict, parent: null });
+    const root = new Graph(onEvict);
     for (const key in graph) {
       if (graph[key]) {
         root.set(
@@ -102,10 +99,7 @@ export class Graph<T = any> {
     Serializer.toPath(key, args, primative => {
       let next = current.get(primative);
       if (!next) {
-        next = new Graph({
-          onEvict: this.evict,
-          parent: new NodeParent(current, primative),
-        });
+        next = new Graph(this.onEvict, new NodeParent(current, primative));
         current.set(primative, next);
       }
       current = next;
@@ -138,7 +132,6 @@ export class Graph<T = any> {
 
   private async treeTrim() {
     this.entry = undefined;
-    await Promise.resolve();
     if (await this.treeTrimDownwards(node => !node.entry)) {
       this.nodes = {};
       await this.treeTrimUpwards();
@@ -195,9 +188,6 @@ export class Graph<T = any> {
           continue;
         }
         const nextDepth = depth + 1;
-        if (nextDepth % 4 === 0) {
-          await Promise.resolve();
-        }
         if (
           !this.treeTrimDownwards(onNode, nextDepth, nodes[key].nodes) ||
           !onNode(nodes[key])
@@ -217,9 +207,6 @@ export class Graph<T = any> {
         current.nodes = {};
       }
       current = current?.parent?.parent;
-      if (depth % 20 === 0) {
-        await Promise.resolve();
-      }
       depth++;
     }
   }
