@@ -9,11 +9,11 @@ export const Commands = new RepoKitCommand({
       description: "Run graph storage benchmarks against flat hash tables",
     },
     build: {
-      command: "npx tsdown",
+      command: "pnpm tsdown",
       description: "Build the typescript library for production",
     },
     visualize: {
-      command: "pnpx tsx src/__examples__/storage.ts",
+      command: "pnpm tsx src/__examples__/storage.ts",
       description:
         "Prints an example of the graph storage structure to the console",
     },

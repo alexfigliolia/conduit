@@ -37,11 +37,7 @@ export abstract class AbstractSerializer<
   protected defaultPathSerializer(value: T, onPrimitive: OnPrimitive) {
     onPrimitive(this.KEY_INDICATOR);
     for (const key in value) {
-      if (
-        !value[key] ||
-        !onPrimitive(key) ||
-        !this.config.traverse(value[key], onPrimitive)
-      ) {
+      if (!onPrimitive(key) || !this.config.traverse(value[key], onPrimitive)) {
         return false;
       }
     }

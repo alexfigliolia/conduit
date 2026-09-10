@@ -248,7 +248,7 @@ export class InfiniteConduit<
       [args],
       () => {
         created = true;
-        return new InfiniteConduitPage({
+        return new InfiniteConduitPage<IValueType<O>, C>({
           cache,
           index,
           write: true,
@@ -257,10 +257,7 @@ export class InfiniteConduit<
           pageID: cache.InfiniteCache.getPageID(),
         });
       },
-    ) as unknown as CacheEntry<
-      InfiniteConduitPage<IValueType<O>, C>,
-      ReturnType<C["evict"]>
-    >;
+    );
     if (created) {
       cache.InfiniteCache.registerPageNode(entry);
     }
