@@ -1,5 +1,6 @@
 packages:
   - "packages/*"
+  - "devtools/*"
 allowBuilds:
   "@parcel/watcher": true
   "@swc/core": true
@@ -9,6 +10,7 @@ minimumReleaseAgeExclude:
   - "@figliolia/galena"
   - "@figliolia/react-galena"
   - "@figliolia/event-emitter"
+  - "@figliolia/semver"
   - "@oxfmt/binding-android-arm-eabi@0.64.0 || 0.66.0"
   - "@oxfmt/binding-android-arm64@0.64.0 || 0.66.0"
   - "@oxfmt/binding-darwin-arm64@0.64.0 || 0.66.0"

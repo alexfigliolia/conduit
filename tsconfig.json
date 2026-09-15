@@ -16,6 +16,6 @@
     "isolatedModules": true,
     "noEmit": true
   },
-  "include": ["./packages", "**/*.json", "**/*.ts", "**/*.js"],
+  "include": ["./packages", "./devtools", "**/*.json", "**/*.ts", "**/*.js"],
   "exclude": ["coverage", "dist", "node_modules"]
 }
