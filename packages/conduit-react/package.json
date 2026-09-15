@@ -1,6 +1,6 @@
 {
   "name": "@figliolia/conduit-react",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "React bindings for conduit",
   "keywords": [
     "conduit",

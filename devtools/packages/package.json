@@ -1,6 +1,6 @@
 {
   "name": "@conduit/packages",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "Repokit package management utilities",
   "license": "MIT",
   "author": "Alex Figliolia",

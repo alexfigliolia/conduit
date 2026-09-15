@@ -1,6 +1,6 @@
 {
   "name": "@figliolia/conduit",
-  "version": "0.0.1",
+  "version": "1.0.1",
   "description": "A framework agnostic state composition library based on Galena",
   "keywords": [
     "conduit",
