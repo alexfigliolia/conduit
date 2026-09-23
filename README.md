@@ -423,16 +423,15 @@ export class APIResponseSerializer extends AbstractSerializer<
     return this.defaultPathSerializer(value, onPrimitive);
 
     // Or you can create an optimized version of your own based
-    // on the identity properties of you input
+    // on the identity properties of your input
 
     // Create an initial path edge from your serializer's key
     onPrimitive(this.KEY_INDICATOR);
-    // traverse deterministic only the properties pertinent to your type's
-    // cache identity
+    // traverse the properties pertinent to your type's cache identity
     const requiredProperties = ["statusCode", "responseData", "error"];
     for(const property in requiredProperties) {
       // invoke onPrimitive for each JavaScript primitive and
-      // `this.config.traverse` for non JavaScript primitivese
+      // `this.config.traverse` for non JavaScript primitives
       if(
         !onPrimitive(property) ||
         !this.config.traverse(value[property], onPrimitive)
