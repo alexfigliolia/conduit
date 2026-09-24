@@ -26,7 +26,7 @@ export const Jobs = memo(function (_: Propless) {
   const labelID = useId();
   const listBoxID = useId();
   const [search, setSearch] = useState("");
-  const [cursor, setCursor] = useState<string | undefined>(undefined);
+  const [cursor, setCursor] = useState<number | undefined>(undefined);
 
   const { status, value } = useInfiniteConduit(JobListingsConduit, {
     args: { search, cursor },
@@ -44,7 +44,7 @@ export const Jobs = memo(function (_: Propless) {
   );
 
   const renderItem = useCallback((item: Props) => {
-    return <Job {...item} />;
+    return <Job key={item.id} {...item} />;
   }, []);
 
   const lastCursor = useMemo(
@@ -63,7 +63,7 @@ export const Jobs = memo(function (_: Propless) {
     setCursor(lastCursor);
   }, [lastCursor, cursor]);
 
-  const debouncer = useDebouncer(onScroll, 150);
+  const debouncer = useDebouncer(onScroll, 250);
 
   useEffect(() => {
     window.addEventListener("scroll", debouncer.execute);
@@ -81,7 +81,7 @@ export const Jobs = memo(function (_: Propless) {
         status={status}
         className="job-search"
         onSearchQueryChange={setSearch}
-        onSelectionChange={setSearch}
+        onSelectionChange={() => {}}
         renderEmptyState={() => null}
       />
       <Listbox

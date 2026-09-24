@@ -1,5 +1,3 @@
-@use "Styles/Variables";
-
 .job-listing {
   width: 100%;
   display: flex;
@@ -9,7 +7,11 @@
   padding: 1em;
   color: #fff;
   border-radius: 0.85em;
-  animation: fade-in 0.5s forwards;
+  opacity: 0;
+  transition: opacity 0.5s;
+  &.fade-in {
+    opacity: 1;
+  }
   & > div {
     width: 100%;
     display: flex;

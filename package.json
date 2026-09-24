@@ -1,6 +1,6 @@
 {
   "name": "conduit",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "private": true,
   "description": "A framework agnostic state composition library for server-derived data",
   "keywords": [],

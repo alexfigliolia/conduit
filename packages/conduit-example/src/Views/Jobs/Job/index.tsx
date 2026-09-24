@@ -1,14 +1,26 @@
+import { useState } from "react";
 import { Question } from "@ui/UIIcons/Question";
 import { LocationFilled } from "@ui/UIIcons/Location";
-import type { ListBoxItem } from "@ui/Components/Listbox";
+import type { ListBoxItem, ListBoxValueID } from "@ui/Components/Listbox";
 import { GlassContainer } from "@ui/Components/GlassContainer";
 import type { JobListing } from "@ui/API";
+import { useMount } from "@figliolia/react-hooks";
 import { useClassNames } from "@figliolia/classnames";
 
 import "./styles.scss";
 
 export const Job = ({ item, focused, selected }: Props) => {
-  const classes = useClassNames("job-listing", { focused, selected });
+  const [fadeIn, setFadeIn] = useState(false);
+
+  useMount(() => {
+    setFadeIn(true);
+  });
+
+  const classes = useClassNames("job-listing", {
+    focused,
+    selected,
+    "fade-in": fadeIn,
+  });
   return (
     <GlassContainer Tag="article" className={classes}>
       <div className="job-listing__title">
@@ -37,4 +49,4 @@ export const Job = ({ item, focused, selected }: Props) => {
   );
 };
 
-export type Props = ListBoxItem<JobListing & { value: string }>;
+export type Props = ListBoxItem<JobListing & { value: ListBoxValueID }>;

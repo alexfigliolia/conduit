@@ -14,6 +14,7 @@ export interface EmptyStateProps {
 export type ListBoxCommonUIProps<T extends IOption> = EmptyStateProps &
   WithListBoxLabelOptions<{
     className?: string;
+    keyExtractor?: KeyExtractor<T>;
     onItemClick?: ListBoxEventCallback;
     renderItem?: ListBoxItemRenderer<T>;
   }>;
@@ -43,3 +44,8 @@ export type ListBoxLabelOptions =
   | { independent: false; label?: never; "aria-labelledby"?: string };
 
 export type WithListBoxLabelOptions<T> = T & ListBoxLabelOptions;
+
+export type KeyExtractor<T extends IOption> = (
+  item: T,
+  index: number,
+) => string | number;

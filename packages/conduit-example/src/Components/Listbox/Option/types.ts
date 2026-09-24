@@ -9,9 +9,11 @@ export interface OptionProps<T extends IOption> {
 
 export type ListBoxOptionQuery = (id: string) => boolean;
 
-export type IListBoxOption = { value: string };
+export type ListBoxValueID = string | number;
 
-export type IOption = string | IListBoxOption;
+export type IListBoxOption = { value: ListBoxValueID };
+
+export type IOption = ListBoxValueID | IListBoxOption;
 
 export type ListBoxEventCallback = (id: string, index: number) => void;
 

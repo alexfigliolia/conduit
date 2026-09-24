@@ -74,16 +74,12 @@ export class CacheEntry<T, R> {
   public subscribe(
     onChange: ({ value, status }: { value: T; status: ConduitStatus }) => void,
   ) {
-    const valueSubscriber = this.cacheNotifier(
-      this.State.subscribe(value =>
-        onChange({ value, status: this.Status.getState() }),
-      ),
-    );
-    const statusSubscriber = this.cacheNotifier(
-      this.Status.subscribe(status =>
-        onChange({ value: this.State.getState(), status }),
-      ),
-    );
+    const valueSubscriber = this.subscribeToValue(value => {
+      onChange({ value, status: this.Status.getState() });
+    });
+    const statusSubscriber = this.subscribeToStatus(status => {
+      onChange({ value: this.State.getState(), status });
+    });
     return () => {
       valueSubscriber();
       statusSubscriber();

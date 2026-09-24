@@ -2,6 +2,7 @@ import type { ChangeEventHandler, ReactNode, RefObject } from "react";
 
 import type {
   IOption,
+  KeyExtractor,
   ListBoxItemRenderer,
   ListBoxProviderProps,
 } from "../Listbox";
@@ -15,6 +16,7 @@ export interface Props<T extends IOption> extends Omit<
   inputValue: string;
   className?: string;
   placeholder?: string;
+  keyExtractor?: KeyExtractor<T>;
   onInputChange: (text: string) => void;
   renderInput?: (props: ComboboxInputProps<T>) => ReactNode;
   renderItem?: ListBoxItemRenderer<T>;
