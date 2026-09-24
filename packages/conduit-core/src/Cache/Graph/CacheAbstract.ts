@@ -22,7 +22,12 @@ export abstract class CacheAbstract<
     Serializer.registerJSONSerializer(...serializers);
   }
 
-  public abstract serialize(): SerializedStorage<StorageSerialized>;
+  public serialize(): SerializedStorage<StorageSerialized> {
+    return {
+      data: this.toSerialized(),
+      ...this.lastInfiniteIDs,
+    };
+  }
 
   public abstract set<T extends NonFunction<any>>(
     key: any[],
@@ -67,6 +72,8 @@ export abstract class CacheAbstract<
     return entry;
   }
 
+  protected abstract toSerialized(): StorageSerialized;
+
   protected resetInfiniteCache() {
     this.InfiniteCache.onReset();
   }
@@ -91,7 +98,7 @@ export abstract class CacheAbstract<
     }
   };
 
-  protected get lastInfiniteIDs() {
+  private get lastInfiniteIDs() {
     return {
       lastPageID: this.InfiniteCache.lastPageID,
       lastInfiniteID: this.InfiniteCache.lastInfiniteID,

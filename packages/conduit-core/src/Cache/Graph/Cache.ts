@@ -1,6 +1,6 @@
 import type { NonFunction } from "@figliolia/galena";
 
-import type { CacheOptions, SerializedGraph, SerializedNode } from "./types";
+import type { CacheOptions, SerializedNode } from "./types";
 import { Graph } from "./Graph";
 import { CacheAbstract } from "./CacheAbstract";
 
@@ -18,11 +18,8 @@ export class Cache extends CacheAbstract<
     });
   }
 
-  public override serialize(): SerializedGraph {
-    return {
-      ...this.lastInfiniteIDs,
-      data: this.storage.serialize(this).nodes,
-    };
+  public override toSerialized(): Record<string, SerializedNode> {
+    return this.storage.serialize(this).nodes;
   }
 
   public set<T extends NonFunction<any>>(

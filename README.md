@@ -461,8 +461,10 @@ export const cache = new Cache({
 Now any usage of your `APIResponse` class can be serialized to JSON and its prototype reconstructed when calling
 
 ```typescript
+// On the server
 const serverData = serverCache.serialize();
 
+// On the client
 const clientCache = new Cache({
   data: serverData,
   serializers: [APIResponseSerializer],
@@ -495,12 +497,9 @@ export class MyCustomCache extends CacheAbstract<MySchema, MySerializedSchema> {
     // build and return your custom data structure
   }
 
-  public override serialize(): SerializedStorage<MySerializedSchema> {
-    // implement your cache serialization
-    return {
-      ...super.lastInfiniteIDs,
-      data: {/* your custom serializer */},
-    };
+  public override toSerialized(): MySerializedSchema {
+    {/* your custom serializer or JSON.stringify */}
+    return this.storage.myCustomSerializer();
   }
 
   public override set<T extends NonFunction<any>>(
