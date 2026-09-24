@@ -9,7 +9,7 @@ export interface JobListingResponse {
 }
 
 export interface JobListing {
-  job_id: string;
+  job_id: number;
   job_title: string;
   employer_name: string;
   job_description: string;

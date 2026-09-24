@@ -35,13 +35,10 @@ export const Combobox = <T extends IOption>({
   className,
   placeholder,
   onInputChange,
-  renderItem,
-  onChange,
-  renderEmptyState,
-  multiple = false,
   renderInput = DEFAULT_RENDER_INPUT,
   renderListBox = DEFAULT_LISTBOX_RENDERER,
   initialSelected = DEFAULT_INITIAL_SELECTED,
+  ...listboxProps
 }: Props<T>) => {
   const listBoxId = useId();
   const classes = useClassNames("combobox", className);
@@ -100,16 +97,13 @@ export const Combobox = <T extends IOption>({
             scrollToNodeOnFocus
             items={items}
             independent={false}
-            multiple={multiple}
-            onChange={onChange}
             ref={controls.listbox}
             containerID={listBoxId}
-            renderItem={renderItem}
             onEscape={controls.close}
             onItemClick={onItemClick}
             className={containerClass}
             initialSelected={initialSelected}
-            renderEmptyState={renderEmptyState}
+            {...listboxProps}
           />,
           isOpen,
         )}

@@ -8,11 +8,13 @@ import { useListBoxContext } from "./Context";
 
 export const ListboxUI = <T extends IOption>({
   items,
+  // @ts-expect-error bug
   label,
   className,
   onItemClick,
   renderItem,
   containerID,
+  keyExtractor,
   multiple = false,
   independent = true,
   renderEmptyState,
@@ -26,6 +28,19 @@ export const ListboxUI = <T extends IOption>({
   const onOptionClick = useCallback((id: string, index: number) => {
     onItemClick?.(id, index);
   }, []);
+
+  const key = useCallback(
+    (item: T, index: number) => {
+      if (keyExtractor) {
+        return keyExtractor(item, index);
+      }
+      if (typeof item === "string" || typeof item === "number") {
+        return `${index}-${item}`;
+      }
+      return `${index}-${item.value}`;
+    },
+    [keyExtractor],
+  );
 
   return (
     <Fragment>
@@ -47,7 +62,7 @@ export const ListboxUI = <T extends IOption>({
               index={index}
               onClick={onOptionClick}
               renderItem={renderItem}
-              key={`${index}-${items.length}-${typeof item === "string" ? item : item.value}`}
+              key={key(item, index)}
             />
           ))
         ) : (

@@ -65,7 +65,9 @@ function SearchComponent<T extends IOption>({
   );
 
   const format = useCallback((item: T) => {
-    return typeof item === "string" ? item : item.value;
+    return typeof item === "string" || typeof item === "number"
+      ? item.toString()
+      : item.value.toString();
   }, []);
 
   const onSelection = useCallback(
